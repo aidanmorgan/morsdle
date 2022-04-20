@@ -5,27 +5,27 @@
 #define LETTER_WIDTH_PX 50U
 #define LETTER_HEIGHT_PX 50U
 
-struct letter_operation_data_t {
+typedef struct {
     char letter;
     char* bitmap;
-};
+} letter_operation_data_t;
 
-struct letter_command_data_t{
+typedef struct {
     char letter;
     float opacity;
-} ;
+} letter_command_data_t;
 
-drawing_operation_error_t letter_draw(display_surface_t surface, struct drawing_rectangle_t bbox, void*operation_data, void*command_data) {
-    struct letter_operation_data_t * data = (struct letter_operation_data_t*)operation_data;
+drawing_operation_error_t letter_draw(display_surface_t surface, drawing_rectangle_t bbox, void*operation_data, void*command_data) {
+    letter_operation_data_t * data = (letter_operation_data_t*)operation_data;
     // we know what letter we have, but how the fuck do we render it
 
     // do drawing process
     return DRAWING_OPERATION_OK;
 }
 
-void letter_bbox(struct drawing_rectangle_t* bbox, void* operation_data, void*command_data) {
-    bbox->top_left = (struct drawing_point_t){ .x = 0, .y = 0};
-    bbox->bottom_right = (struct drawing_point_t){ .x = LETTER_WIDTH_PX, .y = LETTER_HEIGHT_PX};
+void letter_bbox(drawing_rectangle_t* bbox, void* operation_data, void*command_data) {
+    bbox->top_left = *(drawing_point_t*)INLINE_MALLOC(drawing_point_t, .x = 0, .y = 0);
+    bbox->bottom_right = *(drawing_point_t*)INLINE_MALLOC(drawing_point_t, .x = LETTER_WIDTH_PX, .y = LETTER_HEIGHT_PX);
 }
 
 drawing_command_t letter_create(char letter, float opacity) {
@@ -33,16 +33,19 @@ drawing_command_t letter_create(char letter, float opacity) {
     char command_name[9];
     sprintf(command_name, "letter_%c", letter);
 
-    drawing_command_t command = INLINE_MALLOC(struct drawing_command_instance_t,
+    drawing_command_t command = (drawing_command_t)INLINE_MALLOC(drawing_command,
             .name = command_name,
-            .command_data = INLINE_MALLOC(struct letter_command_data_t,
+            .command_data = INLINE_MALLOC(letter_command_data_t,
                 .letter = letter,
                 .opacity = opacity
-    ));
+            )
+        );
 
-    return (drawing_command_t)command;
+    return command;
 }
 
-REGISTER_DRAWING_OPERATION_WITH_DATA("letter_a", letter_draw, letter_bbox, ((struct letter_operation_data_t) {.letter = 'A', .bitmap = "a.bmp"}))
-REGISTER_DRAWING_OPERATION_WITH_DATA("letter_b", letter_draw, letter_bbox, ((struct letter_operation_data_t) {.letter = 'B', .bitmap = "b.bmp"}))
-REGISTER_DRAWING_OPERATION_WITH_DATA("letter_c", letter_draw, letter_bbox, ((struct letter_operation_data_t) {.letter = 'C', .bitmap = "c.bmp"}))
+/*
+drawing_register_operation("letter_a", letter_draw, letter_bbox, INLINE_MALLOC(letter_operation_data_t, .letter = 'A', .bitmap = "a.bmp"));
+drawing_register_operation("letter_b", letter_draw, letter_bbox, INLINE_MALLOC(letter_operation_data_t, .letter = 'A', .bitmap = "a.bmp"));
+drawing_register_operation("letter_c", letter_draw, letter_bbox, INLINE_MALLOC(letter_operation_data_t, .letter = 'A', .bitmap = "a.bmp"));
+*/

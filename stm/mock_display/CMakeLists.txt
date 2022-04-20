@@ -13,4 +13,4 @@ target_sources(
         mock_display.c
 )
 
-target_link_libraries(morsdle-core-lib)
+target_link_libraries(morsdle-core)

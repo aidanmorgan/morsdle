@@ -7,7 +7,8 @@
 #include "drawing.h"
 #include "display.h"
 
-extern drawing_command_t letter_create(char letter, float opacity);
+drawing_command_t letter_create(char letter, float opacity);
+void letter_destroy(drawing_command_t cmd);
 
 
 #endif //LETTER_OPERATIONS_H
