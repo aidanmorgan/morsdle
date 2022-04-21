@@ -9,22 +9,50 @@ static struct llist_node* _llist_new_node() {
 }
 
 llist_t llist_create() {
-    return (llist_t)malloc(sizeof(llist));
+    llist_t list = (llist_t)malloc(sizeof(llist));
+    list->count = 0;
+    list->head = NULL;
+    list->tail = NULL;
+
+    return list;
 }
+
+void llist_dispose(llist_t list) {
+    llist_dispose_all(list, NULL);
+}
+void llist_dispose_all(llist_t list, void (*deallocate)(void*)) {
+    if(list->count == 0) {
+        free(list);
+    }
+    else {
+        struct llist_node* current = list->head;
+        while(current != NULL) {
+            struct llist_node* tmp = current->next;
+
+            if(deallocate != NULL) {
+                deallocate(current->data);
+            }
+
+            free(current);
+            current = tmp;
+        }
+    }
+}
+
 
 void llist_insert(llist_t list, void* data) {
     struct llist_node* new_node = _llist_new_node();
     new_node->data = data;
 
     if(list->head == NULL) {
-        (*list->head) = *new_node;
-        (*list->tail) = *new_node;
+        list->head = new_node;
+        list->tail = new_node;
     }
     else {
         struct llist_node *current = list->tail;
         current->next = new_node;
         new_node->previous = current;
-        (*list->tail) = *new_node;
+        list->tail = new_node;
     }
 
     list->count++;
@@ -44,18 +72,24 @@ llist_find_result_t llist_find(llist_t list, bool (*filter)(void*,void*), void*p
         current = current->next;
     }
 
-    struct llist_find_result* result = (struct llist_find_result*)malloc(sizeof(struct llist_find_result));
+    llist_find_result* result = (llist_find_result*)malloc(sizeof(llist_find_result));
     result->count = found_count;
-    result->items = malloc(sizeof(void*) * found_count);
 
-    for(size_t i = 0; i < found_count; i++) {
-        result->items[i] = found[i];
+    if(found_count > 0) {
+        result->items = malloc(sizeof(void *) * found_count);
+
+        for (size_t i = 0; i < found_count; i++) {
+            result->items[i] = found[i];
+        }
+    }
+    else {
+        result->items = NULL;
     }
 
     return (llist_find_result_t)result;
 }
 
-void llist_find_result_free(llist_find_result_t result) {
+void llist_dispose_find_result(llist_find_result_t result) {
     free(result->items);
     free(result);
 }
@@ -70,7 +104,7 @@ void llist_iterate(llist_t list, void (*it)(void*,void*), void*context) {
     }
 }
 
-void llist_remove_and_free(llist_t list, void* data, void (*deallocate)(void*)) {
+void llist_remove_and_dispose(llist_t list, void* data, void (*deallocate)(void*)) {
     if(list->count == 0) {
         return;
     }
@@ -80,6 +114,7 @@ void llist_remove_and_free(llist_t list, void* data, void (*deallocate)(void*)) 
 
         if(list->head->next == NULL) {
             list->head = NULL;
+            list->tail = NULL;
             list->count = 0;
 
             if(deallocate != NULL) {
@@ -90,7 +125,7 @@ void llist_remove_and_free(llist_t list, void* data, void (*deallocate)(void*)) 
         }
         else {
             list->head = node->next;
-            list->count--;
+            list->count-=1;
 
             node->next->previous = NULL;
 
@@ -106,6 +141,7 @@ void llist_remove_and_free(llist_t list, void* data, void (*deallocate)(void*)) 
         struct llist_node* node = list->tail;
 
         if(node->previous == NULL) {
+            list->head = NULL;
             list->tail = NULL;
             list->count = 0;
 
@@ -119,7 +155,7 @@ void llist_remove_and_free(llist_t list, void* data, void (*deallocate)(void*)) 
         else {
             list->tail = node->previous;
             list->tail->next = NULL;
-            list->count--;
+            list->count-=1;
 
             if(deallocate != NULL) {
                 deallocate(node->data);
@@ -139,7 +175,7 @@ void llist_remove_and_free(llist_t list, void* data, void (*deallocate)(void*)) 
             previous->next = next;
             next->previous = previous;
 
-            list->count--;
+            list->count-=1;
 
             if(deallocate != NULL) {
                 deallocate(current->data);
@@ -159,5 +195,5 @@ void llist_remove(llist_t list, void*data) {
         return;
     }
 
-    llist_remove_and_free(list, data, NULL);
+    llist_remove_and_dispose(list, data, NULL);
 }

@@ -1,27 +1,26 @@
-add_executable(test-game)
+add_executable(test-util)
 
 add_dependencies(
-        test-game
-        morsdle-game
+        test-util
         morsdle-util
         unity
 )
 
 target_include_directories(
-        test-game
+        test-util
         PUBLIC
         include
 )
 
 target_sources(
-        test-game
+        test-util
         PUBLIC
-        test_morsdle.c
+        test-llist.c
 )
 
 target_link_libraries(
-        test-game
+        test-util
         unity
-        morsdle-game
+        morsdle-util
 )
 

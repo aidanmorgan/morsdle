@@ -23,19 +23,24 @@ typedef struct {
 } llist;
 typedef llist* llist_t;
 
-struct llist_find_result {
+typedef struct  {
     void** items;
     size_t count;
-};
-typedef struct llist_find_result* llist_find_result_t;
+} llist_find_result;
+typedef llist_find_result* llist_find_result_t;
 
 llist_t llist_create();
+void llist_dispose(llist_t list);
+void llist_dispose_all(llist_t list, void (*deallocate)(void*));
+
 void llist_insert(llist_t list, void* data);
+
 void llist_remove(llist_t list, void*data);
-void llist_remove_and_free(llist_t list, void* data, void (*deallocate)(void*));
+void llist_remove_and_dispose(llist_t list, void* data, void (*deallocate)(void*));
 
 void llist_iterate(llist_t list, void (*it)(void*,void*), void*context);
+
 llist_find_result_t llist_find(llist_t list, bool (*filter)(void*,void*), void*params);
-void llist_find_result_free(llist_find_result_t result);
+void llist_dispose_find_result(llist_find_result_t result);
 
 #endif //__LLIST_H__

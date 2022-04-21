@@ -53,17 +53,17 @@ drawing_error_t drawing_draw_one(display_surface_t surface, drawing_command_t co
     struct llist_find_result* result = llist_find(drawing_registered_operations, _find_drawing_operation_callback, command->operation_name);
 
     if(result->count == 0) {
-        llist_find_result_free(result);
+        llist_dispose_find_result(result);
         return DRAWING_ERR_NOSUCHCOMMAND;
     }
     else if(result->count > 1) {
-        llist_find_result_free(result);
+        llist_dispose_find_result(result);
         return DRAWING_ERR_MULTIPLECOMMANDS;
     }
     else {
         drawing_operation_t operation = result->items[0];
         // clean up the find result now we have the 1 item we actually want.
-        llist_find_result_free(result);
+        llist_dispose_find_result(result);
 
         drawing_point_t top_left = command->top_left;
 
