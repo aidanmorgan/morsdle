@@ -37,6 +37,8 @@ void llist_insert(llist_t list, void* data);
 
 void llist_remove(llist_t list, void*data);
 void llist_remove_and_dispose(llist_t list, void* data, void (*deallocate)(void*));
+void llist_clear(llist_t list);
+void llist_clear_and_dispose(llist_t list, void (*deallocate)(void*));
 
 void llist_iterate(llist_t list, void (*it)(void*,void*), void*context);
 

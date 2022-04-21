@@ -197,3 +197,29 @@ void llist_remove(llist_t list, void*data) {
 
     llist_remove_and_dispose(list, data, NULL);
 }
+
+void llist_clear(llist_t list) {
+    llist_clear_and_dispose(list, NULL);
+}
+
+void llist_clear_and_dispose(llist_t list, void(*deallocate)(void*)) {
+    if(list->count == 0) {
+        return;
+    }
+
+    struct llist_node* current = list->head;
+    while(current != NULL) {
+        struct llist_node* tmp = current->next;
+
+        if(deallocate != NULL) {
+            deallocate(current->data);
+        }
+
+        free(current);
+        current = tmp;
+    }
+
+    list->count = 0;
+    list->head = NULL;
+    list->tail = NULL;
+}

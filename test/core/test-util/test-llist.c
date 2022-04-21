@@ -170,6 +170,38 @@ void test_llist_iterate() {
     llist_dispose(list);
 }
 
+void test_llist_clear() {
+    llist_t list = llist_create();
+
+    // test clearing an empty list
+    llist_clear(list);
+    TEST_ASSERT_EQUAL(0, list->count);
+    TEST_ASSERT_NULL(list->head);
+    TEST_ASSERT_NULL(list->tail);
+
+    // test clearing one item
+    llist_insert(list, (void*)5);
+    llist_clear(list);
+    TEST_ASSERT_EQUAL(0, list->count);
+    TEST_ASSERT_NULL(list->head);
+    TEST_ASSERT_NULL(list->tail);
+
+    // test clearing multiple items
+    llist_insert(list, (void*)1);
+    llist_insert(list, (void*)2);
+    llist_insert(list, (void*)3);
+    llist_insert(list, (void*)4);
+    llist_insert(list, (void*)5);
+    llist_clear(list);
+    TEST_ASSERT_EQUAL(0, list->count);
+    TEST_ASSERT_NULL(list->head);
+    TEST_ASSERT_NULL(list->tail);
+
+
+
+    llist_dispose(list);
+}
+
 int main(void)
 {
     UNITY_BEGIN();
@@ -178,6 +210,7 @@ int main(void)
     RUN_TEST(test_llist_remove);
     RUN_TEST(test_llist_find);
     RUN_TEST(test_llist_iterate);
+    RUN_TEST(test_llist_clear);
 
     return UNITY_END();
 }

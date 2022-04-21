@@ -42,6 +42,16 @@ typedef enum {
 
 } game_state_t;
 
+typedef enum {
+    EVENT_GAME_CREATED,
+    EVENT_LETTER_ADDED,
+    EVENT_LETTER_REMOVED,
+    EVENT_WORD_STARTED,
+    EVENT_WORD_COMPLETED,
+    EVENT_GAME_COMPLETED
+} game_event_t;
+
+
 typedef struct {
     char letter;
     letter_state_t state;
@@ -58,8 +68,19 @@ typedef struct {
     char * word;
     morsdle_word** answers;
     game_state_t state;
+    llist_t events;
 } morsdle_game;
 typedef morsdle_game* morsdle_game_t;
+
+
+typedef struct {
+    game_event_t type;
+    morsdle_game_t game;
+    morsdle_word_t word;
+    morsdle_letter_t letter;
+} game_change_event;
+typedef game_change_event* game_change_event_t;
+
 
 void morsdle_init_game(morsdle_game_t game);
 morsdle_err_t morsdle_add_letter(morsdle_game_t game, char letter);

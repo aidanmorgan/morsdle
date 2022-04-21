@@ -7,6 +7,7 @@
 void morsdle_init_game(morsdle_game_t game) {
     game->answers = (morsdle_word**)malloc(sizeof(morsdle_word) * WORDS_PER_GAME);
     game->state = GAME_STATE_IN_PROGRESS;
+    game->events = llist_create();
 
     for(uint8_t w = 0; w < WORDS_PER_GAME; w++) {
         morsdle_word* word = (morsdle_word*)malloc(sizeof(morsdle_word));
@@ -22,6 +23,8 @@ void morsdle_init_game(morsdle_game_t game) {
 
         game->answers[w] = word;
     }
+
+    llist_insert(game->events, INLINE_MALLOC(game_change_event, .type = EVENT_GAME_CREATED));
 }
 
 static morsdle_word_t get_next_word(morsdle_game_t game, word_state_t state) {
@@ -73,6 +76,8 @@ morsdle_err_t morsdle_add_letter(morsdle_game_t game, char l) {
     letter->letter = l;
     letter->state = LETTER_STATE_SET;
 
+    llist_insert(game->events, INLINE_MALLOC(game_change_event, .type = EVENT_LETTER_ADDED, .game = game, .word = word, .letter = letter));
+
     return MORSDLE_OK;
 }
 
@@ -111,9 +116,13 @@ morsdle_err_t morsdle_submit_word(morsdle_game_t game) {
         }
     }
 
+    llist_insert(game->events, INLINE_MALLOC(game_change_event, .type = EVENT_WORD_COMPLETED, .game = game, .word = word));
+
     if(validcount == LETTERS_PER_WORD) {
         word->state = WORD_STATE_CORRECT;
         game->state = GAME_STATE_SUCCESS;
+
+        llist_insert(game->events, INLINE_MALLOC(game_change_event, .type = EVENT_GAME_COMPLETED, .game = game));
     }
     else {
         word->state = WORD_STATE_COMPLETE;
@@ -122,8 +131,10 @@ morsdle_err_t morsdle_submit_word(morsdle_game_t game) {
         morsdle_word_t nextword = get_next_word(game, WORD_STATE_NEW);
         if (nextword == NULL) {
             game->state = GAME_STATE_FAILED;
+            llist_insert(game->events, INLINE_MALLOC(game_change_event, .type = EVENT_GAME_COMPLETED, .game = game));
         } else {
             nextword->state = WORD_STATE_IN_PROGRESS;
+            llist_insert(game->events, INLINE_MALLOC(game_change_event, .type = EVENT_WORD_STARTED, .game = game, .word = nextword));
         }
     }
 
@@ -147,5 +158,7 @@ morsdle_err_t morsdle_remove_letter(morsdle_game_t game) {
 
     letter->letter = (char)0;
     letter->state = LETTER_STATE_UNSET;
+
+    llist_insert(game->events, (void*)EVENT_LETTER_REMOVED);
     return MORSDLE_OK;
 }
