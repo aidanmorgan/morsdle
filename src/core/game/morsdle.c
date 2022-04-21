@@ -13,18 +13,39 @@ void morsdle_init_game(morsdle_game_t game) {
         morsdle_word* word = (morsdle_word*)malloc(sizeof(morsdle_word));
         word->state = w == 0 ? WORD_STATE_IN_PROGRESS : WORD_STATE_NEW;
         word->letters = (morsdle_letter**)malloc(sizeof(morsdle_letter*) * LETTERS_PER_WORD);
+        word->y = w;
 
         for(uint8_t l = 0; l< LETTERS_PER_WORD;l++) {
             morsdle_letter* letter = (morsdle_letter *)malloc(sizeof(morsdle_letter));
             letter->state = LETTER_STATE_UNSET;
 
             word->letters[l] = letter;
+            letter->x = l;
+            letter->y = w;
         }
 
         game->answers[w] = word;
     }
 
     llist_insert(game->events, INLINE_MALLOC(game_change_event, .type = EVENT_GAME_CREATED));
+}
+
+void morsdle_clear(morsdle_game_t game) {
+    game->state = GAME_STATE_IN_PROGRESS;
+    llist_clear(game->events);
+
+    for(uint8_t w = 0; w < WORDS_PER_GAME; w++) {
+        morsdle_word_t  word = game->answers[w];
+        word->state = WORD_STATE_NEW;
+
+        for(uint8_t l = 0; l < LETTERS_PER_WORD; l++) {
+            morsdle_letter_t  letter = word->letters[l];
+
+            letter->letter = (char)0;
+            letter->state = LETTER_STATE_UNSET;
+        }
+    }
+
 }
 
 static morsdle_word_t get_next_word(morsdle_game_t game, word_state_t state) {

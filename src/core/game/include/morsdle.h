@@ -5,8 +5,8 @@
 #ifndef __MORSDLE_H__
 #define __MORSDLE_H__
 
-#include "../../gfx/include/display.h"
-#include "../../gfx/include/drawing.h"
+#include "llist.h"
+#include "allocations.h"
 
 #define LETTERS_PER_WORD 5
 #define WORDS_PER_GAME 6
@@ -55,12 +55,18 @@ typedef enum {
 typedef struct {
     char letter;
     letter_state_t state;
+
+    uint8_t x;
+    uint8_t y;
+
 } morsdle_letter;
 typedef morsdle_letter* morsdle_letter_t;
 
 typedef struct {
     morsdle_letter** letters;
     word_state_t state;
+
+    uint8_t y;
 } morsdle_word;
 typedef morsdle_word* morsdle_word_t;
 
@@ -72,19 +78,20 @@ typedef struct {
 } morsdle_game;
 typedef morsdle_game* morsdle_game_t;
 
-
 typedef struct {
     game_event_t type;
     morsdle_game_t game;
     morsdle_word_t word;
     morsdle_letter_t letter;
 } game_change_event;
-typedef game_change_event* game_change_event_t;
+typedef game_change_event* morsdle_game_change_event_t;
 
 
 void morsdle_init_game(morsdle_game_t game);
 morsdle_err_t morsdle_add_letter(morsdle_game_t game, char letter);
 morsdle_err_t morsdle_remove_letter(morsdle_game_t game);
 morsdle_err_t morsdle_submit_word(morsdle_game_t game);
+void morsdle_clear(morsdle_game_t game);
+
 
 #endif //__MORSDLE_H__

@@ -1,25 +1,28 @@
+add_library(waveshare-display)
 
-add_library(mock-display)
 add_dependencies(
-        mock-display
+        waveshare-display
         morsdle-util
+        morsdle-game
         morsdle-gfx
 )
 
 target_include_directories(
-        mock-display
+        waveshare-display
         PUBLIC
         include
 )
 
 target_sources(
-        mock-display
+        waveshare-display
         PUBLIC
-        mock_display.c
+        waveshare_display.c
 )
 
 target_link_libraries(
-        mock-display
+        waveshare-display
         morsdle-util
+        morsdle-game
         morsdle-gfx
 )
+

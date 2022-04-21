@@ -7,6 +7,7 @@ add_subdirectory(lib/unity)
 
 # build the core libraries
 add_subdirectory(src/core)
+add_subdirectory(src/drivers/waveshare)
 add_subdirectory(src/stm)
 
 #optionally build unit tests
