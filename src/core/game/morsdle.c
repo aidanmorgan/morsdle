@@ -5,23 +5,27 @@
 #include "include/morsdle.h"
 
 void morsdle_init_game(morsdle_game_t game) {
-    game->answers = (morsdle_word**)malloc(sizeof(morsdle_word*) * WORDS_PER_GAME);
+    game->answers = (morsdle_word**)malloc(sizeof(morsdle_word) * WORDS_PER_GAME);
     game->state = GAME_STATE_IN_PROGRESS;
 
     for(uint8_t w = 0; w < WORDS_PER_GAME; w++) {
-        morsdle_word* word = game->answers[w];
-        word->state = WORD_STATE_NEW;
+        morsdle_word* word = (morsdle_word*)malloc(sizeof(morsdle_word));
+        word->state = w == 0 ? WORD_STATE_IN_PROGRESS : WORD_STATE_NEW;
         word->letters = (morsdle_letter**)malloc(sizeof(morsdle_letter*) * LETTERS_PER_WORD);
 
         for(uint8_t l = 0; l< LETTERS_PER_WORD;l++) {
-            morsdle_letter* letter = word->letters[l];
+            morsdle_letter* letter = (morsdle_letter *)malloc(sizeof(morsdle_letter));
             letter->state = LETTER_STATE_UNSET;
+
+            word->letters[l] = letter;
         }
+
+        game->answers[w] = word;
     }
 }
 
 static morsdle_word_t get_next_word(morsdle_game_t game, word_state_t state) {
-    for(uint8_t i = 0; i < WORDS_PER_GAME; i++) {
+    for(int8_t i = 0; i < WORDS_PER_GAME; i++) {
         if(game->answers[i]->state == state) {
             return game->answers[i];
         }
@@ -31,7 +35,18 @@ static morsdle_word_t get_next_word(morsdle_game_t game, word_state_t state) {
 }
 
 static morsdle_letter_t get_next_letter(morsdle_word_t word, letter_state_t state) {
-    for(uint8_t i = 0; i < LETTERS_PER_WORD; i++) {
+    for(int8_t i = 0; i < LETTERS_PER_WORD; i++) {
+        if(word->letters[i]->state == state) {
+            return word->letters[i];
+        }
+    }
+
+    return NULL;
+}
+
+static morsdle_letter_t get_last_letter(morsdle_word_t word, letter_state_t state) {
+    // need to use a signed int as we're working backwards
+    for(int8_t i = LETTERS_PER_WORD -1; i >= 0 ; i--) {
         if(word->letters[i]->state == state) {
             return word->letters[i];
         }
@@ -102,12 +117,13 @@ morsdle_err_t morsdle_submit_word(morsdle_game_t game) {
     }
     else {
         word->state = WORD_STATE_COMPLETE;
-        // get the next word and update it's state to start filling it
+        // get the next word and update it's state to start filling it, if it's null then we're at the end of the
+        // list and the game is over - you failed.
         morsdle_word_t nextword = get_next_word(game, WORD_STATE_NEW);
-        if (nextword != NULL) {
-            nextword->state = WORD_STATE_IN_PROGRESS;
+        if (nextword == NULL) {
+            game->state = GAME_STATE_FAILED;
         } else {
-            game->state == GAME_STATE_FAILED;
+            nextword->state = WORD_STATE_IN_PROGRESS;
         }
     }
 
@@ -124,7 +140,7 @@ morsdle_err_t morsdle_remove_letter(morsdle_game_t game) {
         return MORSDLE_ERR_NOINPROGRESSWORD;
     }
 
-    morsdle_letter_t letter = get_next_letter(word, LETTER_STATE_SET);
+    morsdle_letter_t letter = get_last_letter(word, LETTER_STATE_SET);
     if(letter == NULL) {
         return MORSDLE_ERR_NOSETLETTER;
     }
