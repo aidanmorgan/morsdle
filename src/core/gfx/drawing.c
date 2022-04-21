@@ -1,21 +1,26 @@
-#include "drawing.h"
+#include "include/drawing.h"
 #include <string.h>
 
-drawing_operation_t drawing_find_operation(const char* name) {
-    drawing_operation_t op;
-    uint8_t counter = 0;
-
-    while(op == NULL && counter < drawing_operation_count) {
-        if(strcmp(DRAWING_OPERATIONS[counter].name, name) == 0) {
-            op = (drawing_operation_t)&DRAWING_OPERATIONS[counter];
-        }
-        else {
-            counter++;
-        }
-    }
-
-    return op;
+void drawing_init()
+{
+    drawing_registered_operations = llist_create();
 }
+
+void drawing_register_operation(char * const name,
+                                drawing_operation_error_t (*draw)(display_surface_t, drawing_rectangle_t, void*,void*),
+                                void (*bbox)(drawing_rectangle_t * bbox, void*, void*),
+                                void*opData) {
+
+    drawing_operation* op = (drawing_operation*)malloc(sizeof(drawing_operation));
+
+    strcpy(op->operation_name, name);
+    op->draw = draw;
+    op->bbox = bbox;
+    op->operation_data = opData;
+
+    llist_insert(drawing_registered_operations, op);
+}
+
 
 bool drawing_is_in_bounds(display_surface_t surface, drawing_rectangle_t bbox) {
     if(bbox.bottom_right.x < 0 || bbox.bottom_right.x > surface->width) {
@@ -37,18 +42,35 @@ bool drawing_is_in_bounds(display_surface_t surface, drawing_rectangle_t bbox) {
     return true;
 }
 
-drawing_error_t drawing_draw_one(display_surface_t surface, drawing_command_t command) {
-    drawing_operation_t operation = drawing_find_operation(command->name);
+static bool _find_drawing_operation_callback(void*context, void*item) {
+    char* name = (char*)context;
+    drawing_operation_t op = (drawing_operation_t)item;
 
-    if(operation == NULL) {
+    return strcmp(name, op->operation_name) == 0;
+}
+
+drawing_error_t drawing_draw_one(display_surface_t surface, drawing_command_t command) {
+    struct llist_find_result* result = llist_find(drawing_registered_operations, _find_drawing_operation_callback, command->operation_name);
+
+    if(result->count == 0) {
+        llist_find_result_free(result);
         return DRAWING_ERR_NOSUCHCOMMAND;
     }
+    else if(result->count > 1) {
+        llist_find_result_free(result);
+        return DRAWING_ERR_MULTIPLECOMMANDS;
+    }
     else {
+        drawing_operation_t operation = result->items[0];
+        // clean up the find result now we have the 1 item we actually want.
+        llist_find_result_free(result);
+
         drawing_point_t top_left = command->top_left;
 
         drawing_rectangle_t operation_bbox;
         // request the operation to calculate the bounding-box that we're going to need to draw into
-        // so we can check if we're going to draw off the extents of the display
+        // so we can check if we're going to draw off the extents of the display, stack based so we don't need to worry
+        // about freeing this memory.
         operation->bbox(&operation_bbox, operation->operation_data, command->command_data);
 
         // stack allocation is fine here, it's only needed for the scope of the call

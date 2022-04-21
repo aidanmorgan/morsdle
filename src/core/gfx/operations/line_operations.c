@@ -3,7 +3,7 @@
 typedef struct {
     drawing_point_t start;
     drawing_point_t end;
-    float opacity;
+    surface_options_t options;
 } line_command_data_t;
 
 void line_bbox_impl(drawing_rectangle_t* bbox, void* operation_data, void* command_data);
@@ -15,7 +15,7 @@ drawing_operation_error_t line_draw_impl(display_surface_t surface, drawing_rect
     for(uint8_t y = bbox.top_left.y; y < bbox.bottom_right.y; y++) {
         for(uint8_t x = bbox.top_left.x; x < bbox.bottom_right.x; x++) {
             uint8_t x_dash = (uint8_t)round((y-bbox.top_left.y)*(bbox.bottom_right.x-bbox.top_left.x)/(bbox.bottom_right.y-bbox.top_left.y) + x);
-            display_surface_set(surface, x_dash, y, line_data->opacity);
+            display_surface_set(surface, x_dash, y, line_data->options);
         }
     }
 
@@ -33,7 +33,7 @@ void line_bbox_impl(drawing_rectangle_t* bbox, void* operation_data, void* comma
     bbox->bottom_right.y = data->end.y;
 }
 
-drawing_command_t line_create(drawing_point_t* top_left, drawing_point_t* bottom_right, float opacity) {
+drawing_command_t line_create(drawing_point_t* top_left, drawing_point_t* bottom_right, surface_options_t opts) {
     drawing_point_t* start = (drawing_point_t*)INLINE_MALLOC(drawing_point_t,
                                                            .x = top_left->x,
                                                            .y = top_left->y
@@ -46,7 +46,12 @@ drawing_command_t line_create(drawing_point_t* top_left, drawing_point_t* bottom
 
     drawing_command_t command = (drawing_command_t)INLINE_MALLOC(drawing_command,
             .top_left = *top_left,
-            .name = "line"
+            .operation_name = "line",
+            .command_data = (line_command_data_t*)INLINE_MALLOC(line_command_data_t,
+                                                                .end = *end,
+                                                                .start = *start,
+                                                                .options = opts)
+
         );
 
 

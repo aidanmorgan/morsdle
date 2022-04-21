@@ -1,4 +1,4 @@
-#include "drawing.h"
+#include "../include/drawing.h"
 #include "operations/letter_operations.h"
 
 
@@ -12,7 +12,7 @@ typedef struct {
 
 typedef struct {
     char letter;
-    float opacity;
+    surface_options_t options;
 } letter_command_data_t;
 
 drawing_operation_error_t letter_draw(display_surface_t surface, drawing_rectangle_t bbox, void*operation_data, void*command_data) {
@@ -28,16 +28,16 @@ void letter_bbox(drawing_rectangle_t* bbox, void* operation_data, void*command_d
     bbox->bottom_right = *(drawing_point_t*)INLINE_MALLOC(drawing_point_t, .x = LETTER_WIDTH_PX, .y = LETTER_HEIGHT_PX);
 }
 
-drawing_command_t letter_create(char letter, float opacity) {
+drawing_command_t letter_create(char letter, surface_options_t opts) {
     // dodgy, I know, but we know that the name is fixed as there are only 26 letters in the alphabet
     char command_name[9];
     sprintf(command_name, "letter_%c", letter);
 
     drawing_command_t command = (drawing_command_t)INLINE_MALLOC(drawing_command,
-            .name = command_name,
+            .operation_name = command_name,
             .command_data = INLINE_MALLOC(letter_command_data_t,
                 .letter = letter,
-                .opacity = opacity
+                .options = opts
             )
         );
 

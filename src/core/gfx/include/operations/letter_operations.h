@@ -4,10 +4,10 @@
 
 #ifndef LETTER_OPERATIONS_H
 #define LETTER_OPERATIONS_H
-#include "drawing.h"
-#include "display.h"
+#include "../drawing.h"
+#include "../display.h"
 
-drawing_command_t letter_create(char letter, float opacity);
+drawing_command_t letter_create(char letter, surface_options_t opts);
 void letter_destroy(drawing_command_t cmd);
 
 
