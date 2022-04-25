@@ -4,6 +4,7 @@ project(morsdle)
 
 # build this first before the remainder
 add_subdirectory(lib/unity)
+add_subdirectory(lib/svg)
 
 # build the core libraries
 add_subdirectory(src/core)

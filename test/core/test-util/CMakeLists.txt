@@ -15,7 +15,7 @@ target_include_directories(
 target_sources(
         test-util
         PUBLIC
-        test-llist.c
+        test_llist.c
 )
 
 target_link_libraries(

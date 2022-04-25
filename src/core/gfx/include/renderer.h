@@ -5,8 +5,9 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#include "drawing_ops.h"
+#include "display.h"
 #include "morsdle.h"
+
 
 typedef struct {
     uint16_t height;
@@ -27,7 +28,6 @@ typedef struct {
 
     uint8_t font_size;
 
-
     colour_t background_colour;
     colour_t grid_line_colour;
 
@@ -35,12 +35,12 @@ typedef struct {
     colour_t cell_background_colours[5];
     colour_t cell_foreground_colours[5];
 
-} renderer_opts;
-typedef renderer_opts* renderer_opts_t;
+} renderer_options;
+typedef renderer_options* renderer_options_t;
 
-void init_renderer(renderer_opts_t renderopts, drawing_ops_t drawops);
+extern void init_renderer(display_operations_t drawops, renderer_options_t renderopts);
 
-void handle_event(renderer_opts_t renderopts, drawing_ops_t drawops, morsdle_game_change_event_t event);
-void clear(renderer_opts_t renderopts, drawing_ops_t drawops);
+void renderer_handle_event(display_operations_t drawops, renderer_options_t renderopts, morsdle_game_event_t *event);
+void renderer_clear(display_operations_t drawops, renderer_options_t renderopts);
 
 #endif //RENDERER_H

@@ -1,28 +1,33 @@
-add_executable(test-game)
+add_executable(test-gfx)
 
 add_dependencies(
-        test-game
+        test-gfx
         unity
+        svg
         morsdle-util
         morsdle-game
+        morsdle-gfx
 )
 
 target_include_directories(
-        test-game
+        test-gfx
         PUBLIC
         include
 )
 
 target_sources(
-        test-game
+        test-gfx
         PUBLIC
-        test_morsdle.c
+        mock_display.c
+        test_renderer.c
 )
 
 target_link_libraries(
-        test-game
+        test-gfx
         unity
+        svg
         morsdle-util
         morsdle-game
+        morsdle-gfx
 )
 

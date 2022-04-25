@@ -1,13 +1,13 @@
-add_library(morsdle-util)
+add_library(svg)
 
 target_include_directories(
-        morsdle-util
+        svg
         PUBLIC
         include
 )
 
 target_sources(
-        morsdle-util
+        svg
         PUBLIC
-        llist.c
+        svg.c
 )

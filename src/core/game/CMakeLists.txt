@@ -1,4 +1,3 @@
-
 add_library(morsdle-game)
 
 add_dependencies(

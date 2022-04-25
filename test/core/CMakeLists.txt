@@ -4,3 +4,4 @@ project(test-core)
 
 add_subdirectory(test-util)
 add_subdirectory(test-game)
+add_subdirectory(test-gfx)
