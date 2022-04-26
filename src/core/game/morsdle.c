@@ -4,9 +4,10 @@
 
 #include "include/morsdle.h"
 
+static morsdle_game_event_t eventbuffer[EVENTS_PER_GAME];
+
 void morsdle_init_game(morsdle_game_t* game) {
     game->state = GAME_STATE_IN_PROGRESS;
-    morsdle_clear_events(game);
 
     for(uint8_t w = 0; w < WORDS_PER_GAME; w++) {
         morsdle_word_t* word = &game->answers[w];
@@ -22,8 +23,15 @@ void morsdle_init_game(morsdle_game_t* game) {
         }
     }
 
-    morsdle_game_event_t* event = morsdle_next_event(game);
-    event->type = EVENT_GAME_CREATED;
+    cbuff_t buffer = (cbuff_t)&(struct cbuff) {};
+    cbuff_init(buffer, &eventbuffer, EVENTS_PER_GAME, sizeof(morsdle_game_event_t));
+    game->events = buffer;
+
+    morsdle_game_event_t event = (morsdle_game_event_t) {
+        .type = EVENT_GAME_CREATED
+    };
+
+    morsdle_append_event(game, &event);
 }
 
 void morsdle_clear(morsdle_game_t* game) {
@@ -64,10 +72,9 @@ static morsdle_letter_t* get_next_letter(morsdle_word_t* word, letter_state_t st
 }
 
 static morsdle_letter_t* get_last_letter(morsdle_word_t* word, letter_state_t state) {
-    // need to use a signed int as we're working backwards
-    for(int8_t i = LETTERS_PER_WORD -1; i >= 0 ; i--) {
-        if(word->letters[i].state == state) {
-            return &word->letters[i];
+    for(uint8_t i = LETTERS_PER_WORD; i > 0 ; i--) {
+        if(word->letters[i-1].state == state) {
+            return &word->letters[i-1];
         }
     }
 
@@ -92,10 +99,13 @@ morsdle_err_t morsdle_add_letter(morsdle_game_t* game, char l) {
     letter->letter = l;
     letter->state = LETTER_STATE_SET;
 
-    morsdle_game_event_t * event = morsdle_next_event(game);
-    event->type = EVENT_LETTER_ADDED;
-    event->word = word;
-    event->letter = letter;
+    morsdle_game_event_t event = (morsdle_game_event_t) {
+        .type = EVENT_LETTER_ADDED,
+        .word = word,
+        .letter = letter
+    };
+
+    morsdle_append_event(game, &event);
 
     return MORSDLE_OK;
 }
@@ -135,16 +145,20 @@ morsdle_err_t morsdle_submit_word(morsdle_game_t* game) {
         }
     }
 
-    morsdle_game_event_t* ev = morsdle_next_event(game);
-    ev->type = EVENT_WORD_COMPLETED;
-    ev->word = word;
+    morsdle_game_event_t event = (morsdle_game_event_t) {
+            .type = EVENT_WORD_COMPLETED,
+            .word = word,
+    };
+    morsdle_append_event(game, &event);
 
     if(validcount == LETTERS_PER_WORD) {
         word->state = WORD_STATE_CORRECT;
         game->state = GAME_STATE_SUCCESS;
 
-        ev = morsdle_next_event(game);
-        ev->type = EVENT_GAME_COMPLETED;
+        morsdle_game_event_t event = (morsdle_game_event_t) {
+                .type = EVENT_GAME_COMPLETED
+        };
+        morsdle_append_event(game, &event);
     }
     else {
         word->state = WORD_STATE_COMPLETE;
@@ -154,14 +168,18 @@ morsdle_err_t morsdle_submit_word(morsdle_game_t* game) {
         if (nextword == NULL) {
             game->state = GAME_STATE_FAILED;
 
-            ev = morsdle_next_event(game);
-            ev->type = EVENT_GAME_COMPLETED;
+            morsdle_game_event_t event = (morsdle_game_event_t) {
+                    .type = EVENT_GAME_COMPLETED
+            };
+            morsdle_append_event(game, &event);
         } else {
             nextword->state = WORD_STATE_IN_PROGRESS;
 
-            ev = morsdle_next_event(game);
-            ev->type = EVENT_WORD_STARTED;
-            ev->word = word;
+            morsdle_game_event_t event = (morsdle_game_event_t) {
+                    .type = EVENT_WORD_STARTED,
+                    .word = word
+            };
+            morsdle_append_event(game, &event);
         }
     }
 
@@ -186,25 +204,23 @@ morsdle_err_t morsdle_remove_letter(morsdle_game_t* game) {
     letter->letter = (char)0;
     letter->state = LETTER_STATE_UNSET;
 
-    morsdle_game_event_t*  ev = morsdle_next_event(game);
-    ev->type = EVENT_LETTER_REMOVED;
+    morsdle_game_event_t event = (morsdle_game_event_t) {
+            .type = EVENT_LETTER_REMOVED,
+            .word = word,
+            .letter = letter
+    };
+    morsdle_append_event(game, &event);
 
     return MORSDLE_OK;
 }
 
-morsdle_game_event_t* morsdle_next_event(morsdle_game_t* game) {
-    morsdle_game_event_t* event = &game->events[game->event_counter++];
-    game->event_counter++;
-    return event;
+void morsdle_append_event(morsdle_game_t* game, morsdle_game_event_t* event) {
+    cbuff_write(game->events, event);
+}
+void morsdle_read_event(morsdle_game_t* game, morsdle_game_event_t * event) {
+    cbuff_read(game->events, event);
 }
 
 void morsdle_clear_events(morsdle_game_t* game) {
-    game->event_counter = 0;
-
-    for(uint8_t i = 0; i <EVENTS_PER_GAME; i++) {
-        morsdle_game_event_t* event = &game->events[i];
-        event->type = EVENT_NONE;
-        event->word = NULL;
-        event->letter = NULL;
-    }
+    cbuff_clear(game->events);
 }

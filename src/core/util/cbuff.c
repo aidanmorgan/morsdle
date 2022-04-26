@@ -12,9 +12,6 @@ void cbuff_init(cbuff_t buff, void* buffer, size_t capacity, size_t itemsize) {
     cbuff_clear(buff);
 }
 
-#define BUFFER_START(x) (x->buffer)
-#define BUFFER_END(x) (x->buffer + (x->item_sz * x->capacity))
-
 bool cbuff_write(cbuff_t buff, const void* data) {
     if(!cbuff_canwrite(buff)) {
         return false;

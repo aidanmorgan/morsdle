@@ -6,7 +6,9 @@
 #define __MORSDLE_H__
 
 #include "allocations.h"
-#include "stdint.h"
+#include "cbuff.h"
+
+#include <stdint.h>
 
 #define LETTERS_PER_WORD 5
 #define WORDS_PER_GAME 6
@@ -81,8 +83,7 @@ typedef struct {
     morsdle_word_t answers[WORDS_PER_GAME];
     game_state_t state;
 
-    morsdle_game_event_t events[EVENTS_PER_GAME];
-    size_t event_counter;
+    cbuff_t events;
 } morsdle_game_t;
 
 void morsdle_init_game(morsdle_game_t* game);
@@ -92,7 +93,8 @@ morsdle_err_t morsdle_submit_word(morsdle_game_t* game);
 void morsdle_clear(morsdle_game_t* game);
 
 // event management stuff here
-morsdle_game_event_t* morsdle_next_event(morsdle_game_t* game);
+void morsdle_append_event(morsdle_game_t* game, morsdle_game_event_t* event);
+void morsdle_read_event(morsdle_game_t* game, morsdle_game_event_t * event);
 void morsdle_clear_events(morsdle_game_t* game);
 
 #endif //__MORSDLE_H__

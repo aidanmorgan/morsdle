@@ -38,7 +38,7 @@ typedef struct {
 } renderer_options;
 typedef renderer_options* renderer_options_t;
 
-extern void init_renderer(display_operations_t drawops, renderer_options_t renderopts);
+void init_renderer(display_operations_t drawops, renderer_options_t renderopts);
 
 void renderer_handle_event(display_operations_t drawops, renderer_options_t renderopts, morsdle_game_event_t *event);
 void renderer_clear(display_operations_t drawops, renderer_options_t renderopts);
