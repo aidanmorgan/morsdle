@@ -15,8 +15,6 @@ void test_cbuff_init() {
     cbuff_init(buff, (void**)&backing, 16, sizeof(uint8_t));
 
     TEST_ASSERT_EQUAL(16, buff->capacity);
-    TEST_ASSERT_EQUAL(0, buff->write_idx);
-    TEST_ASSERT_EQUAL(0, buff->read_idx);
 }
 
 void test_cbuff_insert_empty() {
@@ -94,8 +92,6 @@ void test_cbuff_fill_and_empty() {
         TEST_ASSERT_EQUAL(count, result);
         count += 100;
     }
-
-    TEST_ASSERT_EQUAL(buff->read_idx, buff->write_idx);
 }
 
 int main(void)

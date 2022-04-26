@@ -11,18 +11,20 @@
 #include <string.h>
 
 struct cbuff {
-    void ** buffer;
-    size_t capacity;
-    size_t item_sz;
+    void * buffer;
 
-    size_t write_idx;
-    size_t read_idx;
+    void* head;
+    void* tail;
+
+    size_t capacity;
+    size_t count;
+    size_t item_sz;
 };
 
 typedef struct cbuff * cbuff_t;
 
-void cbuff_init(cbuff_t buff, void** buffer, size_t capacity, size_t itemsize);
-bool cbuff_write(cbuff_t buff, void* data);
+void cbuff_init(cbuff_t buff, void* buffer, size_t capacity, size_t itemsize);
+bool cbuff_write(cbuff_t buff, const void* data);
 bool cbuff_read(cbuff_t buff, void* data);
 void cbuff_clear(cbuff_t buff);
 
