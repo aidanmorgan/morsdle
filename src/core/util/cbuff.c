@@ -20,14 +20,16 @@ bool cbuff_write(cbuff_t buff, const void* data) {
         return false;
     }
 
-    memcpy(buff->head, data, buff->item_sz);
+    void* entry = buff->buffer + (buff->write_idx * buff->item_sz);
+    memcpy(entry, data, buff->item_sz);
 
-    buff->head = buff->head + buff->item_sz;
-    if(buff->head == BUFFER_END(buff)) {
-        buff->head = BUFFER_START(buff);
+    buff->write_idx++;
+
+    if(buff->write_idx >= buff->capacity) {
+        buff->write_idx = 0;
     }
 
-    buff->count++;
+    buff->size++;
 
     return true;
 }
@@ -37,29 +39,39 @@ bool cbuff_read(cbuff_t buff, void* data) {
         return false;
     }
 
-    memcpy(data, buff->tail, buff->item_sz);
-    buff->tail = buff->tail + buff->item_sz;
-    if(buff->tail == BUFFER_END(buff)) {
-        buff->tail = buff->buffer;
+    void* entry = buff->buffer + (buff->read_idx * buff->item_sz);
+
+    memcpy(data, entry, buff->item_sz);
+    buff->read_idx++;
+
+    if(buff->read_idx >= buff->capacity) {
+        buff->read_idx = 0;
     }
 
-    buff->count--;
+    buff->size--;
 
     return true;
 }
 
 void cbuff_clear(cbuff_t buff) {
-    buff->count = 0;
-    buff->head = buff->buffer;
-    buff->tail = buff->buffer;
+    buff->read_idx = 0;
+    buff->write_idx = 0;
 
     memset(buff->buffer, 0, buff->item_sz * buff->capacity);
 }
 
 bool cbuff_canread(cbuff_t buff) {
-    return buff->count > 0;
+    if(buff->size == 0) {
+        return false;
+    }
+
+    return buff->size > 0;
 }
 
 bool cbuff_canwrite(cbuff_t buff) {
-    return buff->count < buff->capacity;
+    if(buff->size == 0) {
+        return true;
+    }
+
+    return buff->size < buff->capacity;
 }

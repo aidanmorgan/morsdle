@@ -17,7 +17,7 @@ void test_cbuff_init() {
     TEST_ASSERT_EQUAL(16, buff->capacity);
 }
 
-void test_cbuff_insert_empty() {
+void test_cbuff_insertempty() {
     cbuff_t buff = &(struct cbuff){ };
     uint8_t backing[16];
 
@@ -25,17 +25,17 @@ void test_cbuff_insert_empty() {
 
     TEST_ASSERT_TRUE(cbuff_canwrite(buff));
     uint8_t value = 32;
-    cbuff_write(buff, &value);
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
 
     TEST_ASSERT_TRUE(cbuff_canread( buff));
 
     uint8_t result = 0;
-    cbuff_read(buff, &result);
+    TEST_ASSERT_TRUE(cbuff_read(buff, &result));
 
     TEST_ASSERT_EQUAL(32, result);
 }
 
-void test_cbuff_read_empty() {
+void test_cbuff_readempty() {
     cbuff_t buff = &(struct cbuff){ };
     uint8_t backing[16];
 
@@ -46,34 +46,34 @@ void test_cbuff_read_empty() {
     TEST_ASSERT_FALSE(cbuff_read(buff, &result));
 }
 
-void test_cbuff_write_full() {
+void test_cbuff_writefull() {
     cbuff_t buff = &(struct cbuff){ };
     uint32_t backing[8];
 
     cbuff_init(buff, (void**)&backing, 8, sizeof(uint32_t));
 
     uint32_t value = 1;
-    cbuff_write(buff, &value);
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
     value++;
-    cbuff_write(buff, &value);
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
     value++;
-    cbuff_write(buff, &value);
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
     value++;
-    cbuff_write(buff, &value);
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
     value++;
-    cbuff_write(buff, &value);
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
     value++;
-    cbuff_write(buff, &value);
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
     value++;
-    cbuff_write(buff, &value);
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
     value++;
-    cbuff_write(buff, &value);
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
 
     TEST_ASSERT_FALSE(cbuff_canwrite(buff));
     TEST_ASSERT_FALSE(cbuff_write(buff, &value));
 }
 
-void test_cbuff_fill_and_empty() {
+void test_cbuff_fillandempty() {
     cbuff_t buff = &(struct cbuff){ };
     uint32_t backing[8];
 
@@ -94,13 +94,33 @@ void test_cbuff_fill_and_empty() {
     }
 }
 
+void test_cbuff_alternatewriteandread() {
+    cbuff_t buff = &(struct cbuff){ };
+    uint32_t backing[8];
+
+    cbuff_init(buff, (void**)&backing, 8, sizeof(uint32_t));
+
+    // the maximum length of the backing buffer is 8 items, but we're going to keep chasing the
+    // read and write pointers around the buffer, so we should be able to keep doing this over
+    // and over
+    for(uint32_t i = 0; i < 256; i++) {
+        TEST_ASSERT_TRUE(cbuff_write(buff, &i));
+        uint32_t read = 0;
+        TEST_ASSERT_TRUE(cbuff_read(buff, &read));
+        TEST_ASSERT_EQUAL(i, read);
+    }
+
+    TEST_ASSERT_EQUAL(buff->size, 0);
+}
+
 int main(void)
 {
     UNITY_BEGIN();
     RUN_TEST(test_cbuff_init);
-    RUN_TEST(test_cbuff_insert_empty);
-    RUN_TEST(test_cbuff_write_full);
-    RUN_TEST(test_cbuff_read_empty);
-    RUN_TEST(test_cbuff_fill_and_empty);
+    RUN_TEST(test_cbuff_insertempty);
+    RUN_TEST(test_cbuff_writefull);
+    RUN_TEST(test_cbuff_readempty);
+    RUN_TEST(test_cbuff_fillandempty);
+    RUN_TEST(test_cbuff_alternatewriteandread);
     return UNITY_END();
 }

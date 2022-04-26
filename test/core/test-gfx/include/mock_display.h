@@ -8,7 +8,6 @@
 #include <stdint.h>
 #include <math.h>
 #include "display.h"
-#include "llist.h"
 #include "allocations.h"
 #include "svg.h"
 
