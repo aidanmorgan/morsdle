@@ -1,26 +1,24 @@
-add_executable(test-util)
+
+add_library(morse)
 
 add_dependencies(
-        test-util
+        morse
         morsdle-util
-        unity
 )
 
 target_include_directories(
-        test-util
+        morse
         PUBLIC
         include
 )
 
 target_sources(
-        test-util
+        morse
         PUBLIC
-        test_cbuff.c
+        morse.c
 )
 
 target_link_libraries(
-        test-util
-        unity
+        morse
         morsdle-util
 )
-

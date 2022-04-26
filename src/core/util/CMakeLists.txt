@@ -9,5 +9,5 @@ target_include_directories(
 target_sources(
         morsdle-util
         PUBLIC
-        llist.c
+        cbuff.c
 )

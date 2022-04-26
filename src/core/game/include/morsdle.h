@@ -5,8 +5,8 @@
 #ifndef __MORSDLE_H__
 #define __MORSDLE_H__
 
-#include "llist.h"
 #include "allocations.h"
+#include "stdint.h"
 
 #define LETTERS_PER_WORD 5
 #define WORDS_PER_GAME 6
