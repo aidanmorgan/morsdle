@@ -50,11 +50,12 @@ bool cbuff_read(cbuff_t buff, void* data) {
     return true;
 }
 
-void cbuff_clear(cbuff_t buff) {
+bool cbuff_clear(cbuff_t buff) {
     buff->read_idx = 0;
     buff->write_idx = 0;
 
     memset(buff->buffer, 0, buff->item_sz * buff->capacity);
+    return true;
 }
 
 bool cbuff_canread(cbuff_t buff) {

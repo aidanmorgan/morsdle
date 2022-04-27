@@ -1,3 +1,6 @@
 [submodule "lib/unity"]
 	path = lib/unity
 	url = https://github.com/ThrowTheSwitch/Unity.git
+[submodule "lib/stm32l4xx"]
+	path = lib/stm32l4xx
+	url = https://github.com/STMicroelectronics/STM32CubeL4

@@ -2,9 +2,8 @@
 // Created by aidan on 20/04/2022.
 //
 
-#include "include/morsdle.h"
+#include "morsdle.h"
 
-#define NULL_CHAR (char)0
 
 // TODO : consider if these should actually be added to the game struct rather than being global
 static morsdle_game_event_t event_buffer_storage[EVENTS_PER_GAME];
@@ -220,13 +219,18 @@ morsdle_err_t morsdle_remove_letter(morsdle_game_t* game) {
     return MORSDLE_OK;
 }
 
-void morsdle_append_event(morsdle_game_t* game, morsdle_game_event_t* event) {
-    cbuff_write(game->events, event);
-}
-void morsdle_read_event(morsdle_game_t* game, morsdle_game_event_t * event) {
-    cbuff_read(game->events, event);
+static bool morsdle_append_event(morsdle_game_t* game, morsdle_game_event_t* event) {
+    return cbuff_write(game->events, event);
 }
 
-void morsdle_clear_events(morsdle_game_t* game) {
-    cbuff_clear(game->events);
+bool morsdle_has_events(morsdle_game_t* game) {
+    return cbuff_canread(game->events);
+}
+
+bool morsdle_read_event(morsdle_game_t* game, morsdle_game_event_t * event) {
+    return cbuff_read(game->events, event);
+}
+
+static bool morsdle_clear_events(morsdle_game_t* game) {
+    return cbuff_clear(game->events);
 }

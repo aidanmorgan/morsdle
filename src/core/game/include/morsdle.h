@@ -14,6 +14,8 @@
 #define WORDS_PER_GAME 6
 #define EVENTS_PER_GAME 25
 
+#define NULL_CHAR (char)0
+
 typedef enum {
     MORSDLE_OK,
     MORSDLE_ERR_GAMENOTINPROGRESS,
@@ -93,8 +95,8 @@ morsdle_err_t morsdle_submit_word(morsdle_game_t* game);
 void morsdle_clear(morsdle_game_t* game);
 
 // event management stuff here
-void morsdle_append_event(morsdle_game_t* game, morsdle_game_event_t* event);
-void morsdle_read_event(morsdle_game_t* game, morsdle_game_event_t * event);
-void morsdle_clear_events(morsdle_game_t* game);
+static bool morsdle_append_event(morsdle_game_t* game, morsdle_game_event_t* event);
+bool morsdle_read_event(morsdle_game_t* game, morsdle_game_event_t * event);
+static bool morsdle_clear_events(morsdle_game_t* game);
 
 #endif //__MORSDLE_H__

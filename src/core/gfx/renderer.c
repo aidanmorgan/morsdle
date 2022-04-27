@@ -29,7 +29,7 @@ void init_renderer(display_operations_t drawops, renderer_options_t renderopts) 
         renderopts->letter_cell_height = renderopts->letter_cell_width;
     }
     else {
-
+        // TODO : implement this from a height-calculation perspective
     }
 
     renderopts->background_colour = COLOUR_WHITE;
@@ -128,7 +128,7 @@ static void render_letter_cell(display_operations_t drawops, renderer_options_t 
                        background_colour
                    );
 
-    if(c != (char)0) {
+    if(c != NULL_CHAR) {
          start_x = renderopts->grid_left_border + (letter_idx * renderopts->grid_line_width) + (letter_idx * renderopts->letter_cell_width) + (letter_idx * renderopts->cell_padding * 2);
          start_y = renderopts->grid_top_border + (word_idx * renderopts->grid_line_width) + (word_idx * renderopts->letter_cell_width) + (word_idx * renderopts->cell_padding * 2);
 
@@ -160,7 +160,7 @@ void renderer_handle_event(display_operations_t drawops, renderer_options_t rend
 
         case EVENT_LETTER_REMOVED: {
             // we need to go through and blank out the contents that was there and replace it with something else
-            render_letter_cell(drawops, renderopts, event->letter->x, event->letter->y, (char) 0,
+            render_letter_cell(drawops, renderopts, event->letter->x, event->letter->y, NULL_CHAR,
                                renderopts->background_colour, renderopts->background_colour);
             break;
         }

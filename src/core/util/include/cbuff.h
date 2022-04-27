@@ -32,7 +32,7 @@ typedef struct cbuff* cbuff_t;
 void cbuff_init(cbuff_t buff, void* buffer, size_t capacity, size_t itemsize);
 bool cbuff_write(cbuff_t buff, const void* data);
 bool cbuff_read(cbuff_t buff, void* data);
-void cbuff_clear(cbuff_t buff);
+bool cbuff_clear(cbuff_t buff);
 
 bool cbuff_canread(cbuff_t buff);
 bool cbuff_canwrite(cbuff_t buff);
