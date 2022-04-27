@@ -113,6 +113,37 @@ void test_cbuff_alternatewriteandread() {
     TEST_ASSERT_EQUAL(buff->size, 0);
 }
 
+void test_cbuff_complexobject() {
+    typedef struct {
+        uint32_t x;
+        uint32_t y;
+        double area;
+    } rectangle_t;
+
+    cbuff_t buff = &(struct cbuff){ };
+    rectangle_t backing[8];
+
+    cbuff_init(buff, (void**)&backing, 4, sizeof(rectangle_t));
+
+    TEST_ASSERT_TRUE(cbuff_write(buff, &(rectangle_t) { .x = 1, .y = 1, .area = 1.0}));
+    TEST_ASSERT_TRUE(cbuff_write(buff, &(rectangle_t) { .x = 2, .y = 2, .area = 4.0}));
+    TEST_ASSERT_TRUE(cbuff_write(buff, &(rectangle_t) { .x = 3, .y = 3, .area = 9.0}));
+    TEST_ASSERT_TRUE(cbuff_write(buff, &(rectangle_t) { .x = 4, .y = 4, .area = 16.0}));
+
+    rectangle_t read;
+    TEST_ASSERT_TRUE(cbuff_read(buff, &read));
+    TEST_ASSERT_EQUAL(1.0, read.area);
+
+    TEST_ASSERT_TRUE(cbuff_read(buff, &read));
+    TEST_ASSERT_EQUAL(4.0, read.area);
+
+    TEST_ASSERT_TRUE(cbuff_read(buff, &read));
+    TEST_ASSERT_EQUAL(9.0, read.area);
+
+    TEST_ASSERT_TRUE(cbuff_read(buff, &read));
+    TEST_ASSERT_EQUAL(16.0, read.area);
+}
+
 int main(void)
 {
     UNITY_BEGIN();
@@ -122,5 +153,6 @@ int main(void)
     RUN_TEST(test_cbuff_readempty);
     RUN_TEST(test_cbuff_fillandempty);
     RUN_TEST(test_cbuff_alternatewriteandread);
+    RUN_TEST(test_cbuff_complexobject);
     return UNITY_END();
 }

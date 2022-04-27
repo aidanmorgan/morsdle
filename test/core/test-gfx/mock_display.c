@@ -42,7 +42,7 @@ void init_drawing_ops(display_operations* ops) {
     ops->handle = (display_handle_t*)INLINE_MALLOC(display_handle_t, .buffer = svg_create(MOCK_DISPLAY_WIDTH, MOCK_DISPLAY_HEIGHT), .width = MOCK_DISPLAY_WIDTH, .height = MOCK_DISPLAY_HEIGHT);
 
     ops->fill_rect=mockdisplay_fill_rect;
-    ops->draw_text=mockdisplay_draw_text;
+    ops->draw_char=mockdisplay_draw_text;
     ops->draw_line=mockdisplay_draw_line;
 }
 

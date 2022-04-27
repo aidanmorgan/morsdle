@@ -31,3 +31,7 @@ target_link_libraries(
         morsdle-gfx
 )
 
+add_test(
+        NAME test-gfx
+        COMMAND test-gfx
+)

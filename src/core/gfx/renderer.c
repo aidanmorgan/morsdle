@@ -132,7 +132,7 @@ static void render_letter_cell(display_operations_t drawops, renderer_options_t 
          start_x = renderopts->grid_left_border + (letter_idx * renderopts->grid_line_width) + (letter_idx * renderopts->letter_cell_width) + (letter_idx * renderopts->cell_padding * 2);
          start_y = renderopts->grid_top_border + (word_idx * renderopts->grid_line_width) + (word_idx * renderopts->letter_cell_width) + (word_idx * renderopts->cell_padding * 2);
 
-         drawops->draw_text(drawops->handle,
+         drawops->draw_char(drawops->handle,
                             c,
                             (point_t){start_x, start_y},
                             renderopts->font_size,

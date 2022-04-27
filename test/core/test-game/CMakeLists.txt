@@ -26,3 +26,9 @@ target_link_libraries(
         morsdle-game
 )
 
+add_test(
+        NAME test-game
+        COMMAND test-game
+)
+
+

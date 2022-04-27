@@ -4,7 +4,11 @@
 
 #include "include/morsdle.h"
 
-static morsdle_game_event_t eventbuffer[EVENTS_PER_GAME];
+#define NULL_CHAR (char)0
+
+// TODO : consider if these should actually be added to the game struct rather than being global
+static morsdle_game_event_t event_buffer_storage[EVENTS_PER_GAME];
+static cbuff_t event_buffer = (cbuff_t)&(struct cbuff){};
 
 void morsdle_init_game(morsdle_game_t* game) {
     game->state = GAME_STATE_IN_PROGRESS;
@@ -16,22 +20,24 @@ void morsdle_init_game(morsdle_game_t* game) {
 
         for(uint8_t l = 0; l< LETTERS_PER_WORD;l++) {
             morsdle_letter_t* letter = &word->letters[l];
-            letter->state = LETTER_STATE_UNSET;
 
+            letter->state = LETTER_STATE_UNSET;
+            letter->letter = NULL_CHAR;
             letter->x = l;
             letter->y = w;
         }
     }
 
-    cbuff_t buffer = (cbuff_t)&(struct cbuff) {};
-    cbuff_init(buffer, &eventbuffer, EVENTS_PER_GAME, sizeof(morsdle_game_event_t));
-    game->events = buffer;
+    cbuff_init(event_buffer, (void**)&event_buffer_storage, EVENTS_PER_GAME, sizeof(morsdle_game_event_t));
+    game->events = event_buffer;
 
-    morsdle_game_event_t event = (morsdle_game_event_t) {
-        .type = EVENT_GAME_CREATED
-    };
-
-    morsdle_append_event(game, &event);
+    morsdle_append_event(game, &(morsdle_game_event_t) {
+            .type = EVENT_GAME_CREATED
+    });
+    morsdle_append_event(game, &(morsdle_game_event_t) {
+            .type = EVENT_WORD_STARTED,
+            .word = &game->answers[0]
+    });
 }
 
 void morsdle_clear(morsdle_game_t* game) {
@@ -45,7 +51,7 @@ void morsdle_clear(morsdle_game_t* game) {
         for(uint8_t l = 0; l < LETTERS_PER_WORD; l++) {
             morsdle_letter_t*  letter = &word->letters[l];
 
-            letter->letter = (char)0;
+            letter->letter = NULL_CHAR;
             letter->state = LETTER_STATE_UNSET;
         }
     }
@@ -201,7 +207,7 @@ morsdle_err_t morsdle_remove_letter(morsdle_game_t* game) {
         return MORSDLE_ERR_NOSETLETTER;
     }
 
-    letter->letter = (char)0;
+    letter->letter = NULL_CHAR;
     letter->state = LETTER_STATE_UNSET;
 
     morsdle_game_event_t event = (morsdle_game_event_t) {

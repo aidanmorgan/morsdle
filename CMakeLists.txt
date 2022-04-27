@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 
 project(morsdle)
 
+enable_testing()
+
 # build this first before the remainder
 add_subdirectory(lib/unity)
 add_subdirectory(lib/svg)

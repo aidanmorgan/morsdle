@@ -24,3 +24,7 @@ target_link_libraries(
         morsdle-util
 )
 
+add_test(
+        NAME test-util
+        COMMAND test-util
+)
