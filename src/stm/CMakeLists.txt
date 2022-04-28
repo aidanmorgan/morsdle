@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
 
-set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/cmake/stm32_gcc.cmake)
-
 project(morsdle-stm C ASM)
 
 set(STM32_LOCAL_CMSIS_LIB_PATH ${CMAKE_SOURCE_DIR}/lib/stm32l4xx/Drivers/CMSIS)
@@ -30,6 +28,7 @@ target_include_directories(
 target_sources(
         morsdle-stm
         PUBLIC
+        main.c
 )
 
 target_link_libraries(
@@ -44,5 +43,7 @@ target_link_libraries(
         CMSIS::STM32::L476RG
         STM32::NoSys
 )
+
+stm32_print_size_of_target(morsdle-stm)
 
 
