@@ -12,9 +12,9 @@ add_subdirectory(lib/svg)
 
 # build the core libraries
 add_subdirectory(src/core)
-add_subdirectory(src/drivers/waveshare)
-message(${CMAKE_SYSTEM_NAME})
+
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL arm)
+    add_subdirectory(src/drivers/waveshare)
     add_subdirectory(src/stm)
 endif()
 
