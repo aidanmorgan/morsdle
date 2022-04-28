@@ -57,6 +57,7 @@ message(STATUS "Search for CMSIS families: ${CMSIS_FIND_COMPONENTS_FAMILIES}")
 message(STATUS "Search for CMSIS RTOS: ${CMSIS_FIND_COMPONENTS_RTOS}")
 
 include(stm32/devices)
+include(stm32/common)
 
 function(cmsis_generate_default_linker_script FAMILY DEVICE CORE)
     if(CORE)
@@ -149,30 +150,31 @@ foreach(COMP ${CMSIS_FIND_COMPONENTS_FAMILIES})
         message(STATUS "ENV STM32_CUBE_${FAMILY}_PATH specified, using STM32_CUBE_${FAMILY}_PATH: ${STM32_CUBE_${FAMILY}_PATH}")
     endif()
 
-    if((NOT STM32_CMSIS_${FAMILY}_PATH) AND (NOT STM32_CUBE_${FAMILY}_PATH))
+    if((NOT STM32_CMSIS_${FAMILY}_PATH) AND (NOT STM32_CUBE_${FAMILY}_PATH) AND (NOT ${STM32_LOCAL_CMSIS_LIB_PATH}))
         set(STM32_CUBE_${FAMILY}_PATH /opt/STM32Cube${FAMILY} CACHE PATH "Path to STM32Cube${FAMILY}")
-        message(STATUS "Neither STM32_CUBE_${FAMILY}_PATH nor STM32_CMSIS_${FAMILY}_PATH specified using default STM32_CUBE_${FAMILY}_PATH: ${STM32_CUBE_${FAMILY}_PATH}")
+        message("Neither STM32_CUBE_${FAMILY}_PATH nor STM32_CMSIS_${FAMILY}_PATH nor STM32_LOCAL_CMSIS_LIB_PATH specified. Using default STM32_CUBE_${FAMILY}_PATH: ${STM32_CUBE_${FAMILY}_PATH}")
     endif()
      
     # search for Include/cmsis_gcc.h
     find_path(CMSIS_${FAMILY}${CORE_U}_CORE_PATH
         NAMES Include/cmsis_gcc.h
-        PATHS "${STM32_CMSIS_PATH}" "${STM32_CUBE_${FAMILY}_PATH}/Drivers/CMSIS"
+        PATHS "${STM32_CMSIS_PATH}" "${STM32_CUBE_${FAMILY}_PATH}/Drivers/CMSIS" "${STM32_LOCAL_CMSIS_LIB_PATH}"
         NO_DEFAULT_PATH
     )
+
     if (NOT CMSIS_${FAMILY}${CORE_U}_CORE_PATH)
-        message(VERBOSE "FindCMSIS: cmsis_gcc.h for ${FAMILY}${CORE_U} has not been found")
+        message("FindCMSIS: cmsis_gcc.h for ${FAMILY}${CORE_U} has not been found")
         continue()
     endif()
 	
     # search for Include/stm32[XX]xx.h
     find_path(CMSIS_${FAMILY}${CORE_U}_PATH
         NAMES Include/stm32${FAMILY_L}xx.h
-        PATHS "${STM32_CMSIS_${FAMILY}_PATH}" "${STM32_CUBE_${FAMILY}_PATH}/Drivers/CMSIS/Device/ST/STM32${FAMILY}xx"
+        PATHS "${STM32_CMSIS_${FAMILY}_PATH}" "${STM32_CUBE_${FAMILY}_PATH}/Drivers/CMSIS/Device/ST/STM32${FAMILY}xx" "${STM32_LOCAL_CMSIS_LIB_PATH}/Device/ST/STM32${FAMILY}xx"
         NO_DEFAULT_PATH
     )
     if (NOT CMSIS_${FAMILY}${CORE_U}_PATH)
-        message(VERBOSE "FindCMSIS: stm32${FAMILY_L}xx.h for ${FAMILY}${CORE_U} has not been found")
+        message("FindCMSIS: stm32${FAMILY_L}xx.h for ${FAMILY}${CORE_U} has not been found")
         continue()
     endif()
     list(APPEND CMSIS_INCLUDE_DIRS "${CMSIS_${FAMILY}${CORE_U}_CORE_PATH}/Include" "${CMSIS_${FAMILY}${CORE_U}_PATH}/Include")
@@ -197,7 +199,7 @@ foreach(COMP ${CMSIS_FIND_COMPONENTS_FAMILIES})
     set(CMSIS_VERSION ${CMSIS_${COMP}_VERSION})
 
     if(NOT (TARGET CMSIS::STM32::${FAMILY}${CORE_C}))
-        message(TRACE "FindCMSIS: creating library CMSIS::STM32::${FAMILY}${CORE_C}")
+        message("FindCMSIS: creating library CMSIS::STM32::${FAMILY}${CORE_C}")
         add_library(CMSIS::STM32::${FAMILY}${CORE_C} INTERFACE IMPORTED)
         #STM32::${FAMILY}${CORE_C} contains compile options and is define in <family>.cmake
         target_link_libraries(CMSIS::STM32::${FAMILY}${CORE_C} INTERFACE STM32::${FAMILY}${CORE_C})
@@ -214,7 +216,7 @@ foreach(COMP ${CMSIS_FIND_COMPONENTS_FAMILIES})
     list(APPEND CMSIS_SOURCES "${CMSIS_${FAMILY}${CORE_U}_SYSTEM}")
     
     if(NOT CMSIS_${FAMILY}${CORE_U}_SYSTEM)
-        message(VERBOSE "FindCMSIS: system_stm32${FAMILY_L}xx.c for ${FAMILY}${CORE_U} has not been found")
+        message("FindCMSIS: system_stm32${FAMILY_L}xx.c for ${FAMILY}${CORE_U} has not been found")
         continue()
     endif()
     
