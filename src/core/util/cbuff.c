@@ -50,9 +50,11 @@ bool cbuff_read(cbuff_t buff, void* data) {
     return true;
 }
 
+
 bool cbuff_clear(cbuff_t buff) {
     buff->read_idx = 0;
     buff->write_idx = 0;
+    buff->size = 0;
 
     memset(buff->buffer, 0, buff->item_sz * buff->capacity);
     return true;
@@ -73,3 +75,116 @@ bool cbuff_canwrite(cbuff_t buff) {
 
     return buff->size < buff->capacity;
 }
+
+size_t cbuff_size(cbuff_t buff) {
+    return buff->size;
+}
+
+size_t cbuff_readmany(cbuff_t buff, void* result, size_t count) {
+    if(!cbuff_canread(buff)) {
+        return 0;
+    }
+
+    // if we attempt to read more entries than the capacity of the buffer, then clamp the
+    // request to the maximum size of the buffer
+    if(count > buff->capacity) {
+        count = buff->capacity;
+    }
+
+    // check to see how many items we are attempting to read, if it's less than the amount
+    // of entries available then clamp the read attempt to that value.
+    //
+    // we'll return the number we actually read anyway
+    if(count > buff->size) {
+        count = buff->size;
+    }
+
+    // grab a pointer to the first element of the array
+    void* array = result;
+
+    for(size_t i = 0; i < count; i++) {
+        if(!cbuff_read(buff, array)) {
+            return i;
+        }
+
+        array = array + (buff->item_sz);
+    }
+
+    return count;
+}
+
+size_t cbuff_peektail(cbuff_t buff, void* result, size_t count) {
+    if(count > buff->capacity) {
+        count = buff->capacity;
+    }
+
+    if(count > buff->size) {
+        count = buff->size;
+    }
+
+    void* array = result;
+    size_t readindex = buff->read_idx;
+
+    for(size_t i = 0; i < count; i++) {
+        void* entry = buff->buffer + (readindex * buff->item_sz);
+
+        memcpy(array, entry, buff->item_sz);
+        readindex++;
+
+        if(readindex >= buff->capacity) {
+            readindex = 0;
+        }
+
+        array = array + (buff->item_sz);
+    }
+
+    return count;
+}
+
+size_t cbuff_peekhead(cbuff_t buff, void* result, size_t count) {
+    if(count > buff->capacity) {
+        count = buff->capacity;
+    }
+
+    if(count > buff->size) {
+        count = buff->size;
+    }
+
+    void* array = result;
+    // can't use a size_t here as we're potentially going into negative numbers
+    int64_t idx = buff->write_idx - count;
+
+    // prevent an underrun if the number is negative, so move back to the tail-end
+    if(idx < 0) {
+        idx = buff->capacity + idx;
+    }
+
+    for(size_t i = 0; i < count; i++) {
+        void* entry = buff->buffer + (idx * buff->item_sz);
+
+        memcpy(array, entry, buff->item_sz);
+        idx++;
+
+        if(idx >= buff->capacity) {
+            idx = 0;
+        }
+
+        array = array + (buff->item_sz);
+    }
+
+    return count;
+}
+
+bool cbuff_seek(cbuff_t buff, size_t count) {
+    if(count > buff->size) {
+        return false;
+    }
+
+    if(count > buff->capacity) {
+        return false;
+    }
+
+    buff->read_idx = (buff->read_idx + count) % buff->capacity;
+    return true;
+}
+

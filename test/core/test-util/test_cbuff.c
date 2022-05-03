@@ -144,6 +144,188 @@ void test_cbuff_complexobject() {
     TEST_ASSERT_EQUAL(16.0, read.area);
 }
 
+void test_cbuff_readmany() {
+    cbuff_t buff = &(struct cbuff){ };
+    uint32_t backing[8];
+
+    cbuff_init(buff, (void**)&backing, 8, sizeof(uint32_t));
+
+    uint32_t value = 5;
+    cbuff_write(buff, &value);
+    value++;
+    cbuff_write(buff, &value);
+    value++;
+    cbuff_write(buff, &value);
+    value++;
+    cbuff_write(buff, &value);
+
+    uint32_t readback[4];
+
+    size_t num_read = cbuff_readmany(buff, &readback, 4);
+    TEST_ASSERT_EQUAL(4, num_read);
+
+    TEST_ASSERT_EQUAL(5, readback[0]);
+    TEST_ASSERT_EQUAL(6, readback[1]);
+    TEST_ASSERT_EQUAL(7, readback[2]);
+    TEST_ASSERT_EQUAL(8, readback[3]);
+}
+
+void test_cbuff_readmany_lessentries() {
+    cbuff_t buff = &(struct cbuff){ };
+    uint32_t backing[8];
+
+    cbuff_init(buff, (void**)&backing, 8, sizeof(uint32_t));
+
+    uint32_t value = 10;
+    cbuff_write(buff, &value);
+    value*=2;
+    cbuff_write(buff, &value);
+
+    uint32_t readback[4];
+
+    size_t num_read = cbuff_readmany(buff, &readback, 4);
+
+    TEST_ASSERT_EQUAL(2, num_read);
+    TEST_ASSERT_EQUAL(10, readback[0]);
+    TEST_ASSERT_EQUAL(20, readback[1]);
+}
+
+void test_cbuff_peektail() {
+    cbuff_t buff = &(struct cbuff){ };
+    uint32_t backing[8];
+
+    cbuff_init(buff, (void**)&backing, 8, sizeof(uint32_t));
+
+    uint32_t value = 1000;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+
+    uint32_t readback;
+    TEST_ASSERT_EQUAL(1, cbuff_peektail(buff, &readback, 1));
+    TEST_ASSERT_EQUAL(1000, readback);
+    TEST_ASSERT_EQUAL(0, buff->read_idx);
+
+    uint32_t multireadback[3];
+    TEST_ASSERT_EQUAL(3, cbuff_peektail(buff, &multireadback, 3));
+    TEST_ASSERT_EQUAL(1000, multireadback[0]);
+    TEST_ASSERT_EQUAL(1001, multireadback[1]);
+    TEST_ASSERT_EQUAL(1002, multireadback[2]);
+    TEST_ASSERT_EQUAL(0, buff->read_idx);
+
+    // now we want to move the read index to the end of the buffer and to check the loop around, we will
+    // need to move the write index as well as it's at the end of the array
+    buff->read_idx = 6;
+    buff->size = buff->size -1;
+
+    // now we can add one more entry given we've shifted the pointer around
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+
+    TEST_ASSERT_EQUAL(3, cbuff_peektail(buff, &multireadback, 3));
+    TEST_ASSERT_EQUAL(1006, multireadback[0]);
+    TEST_ASSERT_EQUAL(1007, multireadback[1]);
+    TEST_ASSERT_EQUAL(1008, multireadback[2]);
+
+}
+
+void test_cbuff_peekhead() {
+    cbuff_t buff = &(struct cbuff){ };
+    uint32_t backing[8];
+
+    cbuff_init(buff, (void**)&backing, 8, sizeof(uint32_t));
+
+    uint32_t value = 1000;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+
+    uint32_t readback;
+    TEST_ASSERT_EQUAL(1, cbuff_peekhead(buff, &readback, 1));
+    TEST_ASSERT_EQUAL(1007, readback);
+    TEST_ASSERT_EQUAL(0, buff->write_idx);
+
+    uint32_t multireadback[3];
+    TEST_ASSERT_EQUAL(3, cbuff_peekhead(buff, &multireadback, 3));
+    TEST_ASSERT_EQUAL(1005, multireadback[0]);
+    TEST_ASSERT_EQUAL(1006, multireadback[1]);
+    TEST_ASSERT_EQUAL(1007, multireadback[2]);
+    TEST_ASSERT_EQUAL(0, buff->write_idx);
+
+    // intentionally overrun the end of the buffer to check the boundary, to be able to do this
+    // we need to move the read index first before trying to write another entry
+    buff->read_idx = 2;
+    buff->size = buff->size - 1;
+
+    // now we can add one more entry given we've shifted the pointer around
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+
+
+    TEST_ASSERT_EQUAL(3, cbuff_peekhead(buff, &multireadback, 3));
+    TEST_ASSERT_EQUAL(1006, multireadback[0]);
+    TEST_ASSERT_EQUAL(1007, multireadback[1]);
+    TEST_ASSERT_EQUAL(1008, multireadback[2]);
+    TEST_ASSERT_EQUAL(1, buff->write_idx);
+}
+
+void test_cbuff_seek() {
+    cbuff_t buff = &(struct cbuff){ };
+    uint32_t backing[8];
+
+    cbuff_init(buff, (void**)&backing, 8, sizeof(uint32_t));
+
+    uint32_t value = 3000;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+    value++;
+    TEST_ASSERT_TRUE(cbuff_write(buff, &value));
+
+    TEST_ASSERT_TRUE(cbuff_seek(buff, 6));
+    TEST_ASSERT_EQUAL(6, buff->read_idx);
+
+    uint32_t readback;
+    TEST_ASSERT_TRUE(cbuff_read(buff, &readback));
+    TEST_ASSERT_EQUAL(3006, readback);
+    TEST_ASSERT_TRUE(cbuff_read(buff, &readback));
+    TEST_ASSERT_EQUAL(3007, readback);
+}
+
 int main(void)
 {
     UNITY_BEGIN();
@@ -154,5 +336,11 @@ int main(void)
     RUN_TEST(test_cbuff_fillandempty);
     RUN_TEST(test_cbuff_alternatewriteandread);
     RUN_TEST(test_cbuff_complexobject);
+    RUN_TEST(test_cbuff_readmany);
+    RUN_TEST(test_cbuff_readmany_lessentries);
+    RUN_TEST(test_cbuff_peekhead);
+    RUN_TEST(test_cbuff_peektail);
+    RUN_TEST(test_cbuff_seek);
+
     return UNITY_END();
 }

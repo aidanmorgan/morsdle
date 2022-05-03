@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(morsdle-stm C ASM)
-
 set(STM32_LOCAL_CMSIS_LIB_PATH ${CMAKE_SOURCE_DIR}/lib/stm32l4xx/Drivers/CMSIS)
 set(STM32_LOCAL_HAL_LIB_PATH ${CMAKE_SOURCE_DIR}/lib/stm32l4xx/Drivers/STM32L4xx_HAL_Driver)
+
+project(morsdle-stm C ASM)
 
 find_package(CMSIS COMPONENTS STM32L4 REQUIRED)
 find_package(HAL COMPONENTS STM32L4 LL_RCC LL_GPIO REQUIRED)

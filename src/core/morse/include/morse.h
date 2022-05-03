@@ -8,16 +8,25 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "cbuff.h"
+
+typedef enum {
+    SIGNAL_VOID,
+    SIGNAL_HIGH,
+    SIGNAL_LOW
+} signal_t;
+
+typedef struct {
+    signal_t value;
+    uint64_t timestamp;
+} morse_signal_t;
+
 typedef enum {
     MORSE_NULL,
     MORSE_DOT,
     MORSE_DASH
-} morse_entry_t;
-
-typedef struct {
-    morse_entry_t signals[5];  // a morse character is at most 5 dot/dash long
-    uint8_t length;
 } morse_input_t;
+
 
 // a dit is the "unit" of time of a morse code signal
 #define MORSE_DIT_MS 500
@@ -28,17 +37,21 @@ typedef struct {
 
 #define MORSE_RESET (7 * MORSE_DIT_MS)
 
+struct morse {
+    cbuff_t signal_buffer;
+    cbuff_t morse_buffer;
+    // called by the morse processor to append a signal to the buffer in the provided
+    // handle, returning TRUE if a signal was appended, FALSE otherwise
+    bool (*parse_callback)(struct morse* handle, char* character);
+};
 
-void morse_init();
+typedef struct morse* morse_t;
 
-// Returns TRUE if the timing period represented by the start and end tick is considered
-// a valid morse signal input, setting the value of the morse_signal_t to the value, FALSE
-// otherwise.
-bool morse_signal_match(uint32_t start, uint32_t end, morse_entry_t* val);
+void morse_init(morse_t morse, bool (*callback)(morse_t morse, char*ch));
 
-// Returns TRUE if the sequence of morse_signal_t in the provided morse_input_t represents a morse
-// code letter and sets the value of result to the character (always uppercase), FALSE otherwise.
-bool morse_letter_match(morse_input_t* input, char* result);
+bool morse_append(morse_t morse, morse_signal_t signal);
+
+bool morse_process_signals(morse_t morse);
 
 
 
