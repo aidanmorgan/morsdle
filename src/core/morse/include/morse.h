@@ -30,12 +30,12 @@ typedef enum {
 
 // a dit is the "unit" of time of a morse code signal
 #define MORSE_DIT_MS 500
-#define MORSE_DOT_START MORSE_DIT_MS
-#define MORSE_DOT_END (3 * MORSE_DIT_MS)
-#define MORSE_DASH_START  (3 * MORSE_DIT_MS)
-#define MORSE_DASH_END  (6 * MORSE_DIT_MS)
 
-#define MORSE_RESET (7 * MORSE_DIT_MS)
+#define MORSE_DOT_START 0
+#define MORSE_DOT_END 3
+#define MORSE_DASH_START  3
+#define MORSE_DASH_END  7
+
 
 struct morse {
     cbuff_t signal_buffer;

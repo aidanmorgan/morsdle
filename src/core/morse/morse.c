@@ -51,24 +51,25 @@ bool morse_process_signals(morse_t morse) {
             // we want to detect a transition from high to low, the timestamp records the
             // time that the transition occurred, so we can subtract
             if(prev.value == SIGNAL_HIGH && current.value == SIGNAL_LOW) {
+                // find the difference in milliseconds from the last transition to the current one
+                // and then convert that to "dits" which are the basic unit of how morse code
+                // is determined...
                 uint64_t duration  = current.timestamp - prev.timestamp;
 
-                uint64_t dits = duration / MORSE_DIT_MS;
+                // TODO : this should probably be changed to be an "adaptive" value rather than
+                // TODO : a fixed 500ms value, but *shrug*
+                double dits = (double)duration / (double)MORSE_DIT_MS;
 
-                morse_input_t input;
+                morse_input_t input = MORSE_NULL;
 
-                if(dits <= 3) {
+                if(dits > MORSE_DOT_START && dits <= MORSE_DOT_END) {
                     input = MORSE_DOT;
-                    cbuff_write(morse->morse_buffer, &input);
                 }
-                else if(dits <= 7) {
+                else if(dits > MORSE_DOT_END && dits <= MORSE_DASH_END) {
                     input = MORSE_DASH;
-                    cbuff_write(morse->morse_buffer, &input);
                 }
-                else {
-                    input = MORSE_NULL;
-                    cbuff_write(morse->morse_buffer, &input);
-                }
+
+                cbuff_write(morse->morse_buffer, &input);
 
                 processed_idx = i;
             }
