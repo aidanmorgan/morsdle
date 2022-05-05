@@ -152,12 +152,12 @@ bool morse_process_input(morse_t morse, char* result) {
 
     morse_input_t inputs[MAX_INPUTS_PER_LETTER];
 
-    for(uint8_t i = 2; i < MAX_INPUTS_PER_LETTER + 1; i++) {
+    for(uint8_t i = 1; i < MAX_INPUTS_PER_LETTER; i++) {
         memset(&inputs, MORSE_NULL, MAX_INPUTS_PER_LETTER * sizeof(morse_input_t));
-        cbuff_peektail(morse->morse_buffer, &inputs, i);
+        cbuff_peektail(morse->morse_buffer, &inputs, i + 1);
 
-        if(inputs[i - 1] == MORSE_DELAY) {
-            inputs[i - 1] = MORSE_NULL;
+        if(inputs[i] == MORSE_DELAY) {
+            inputs[i] = MORSE_NULL;
 
             // so we have a delay which means we need to process everything up to the delay
             // and compare it against the morse table to find the letter
