@@ -145,37 +145,32 @@ bool morse_process_input(morse_t morse, char* result) {
         return false;
     }
 
-    for(uint8_t i = 2; i < MAX_INPUTS_PER_LETTER; i++) {
-        size_t buffer_length = cbuff_size(morse->morse_buffer);
-        if(buffer_length < i) {
-            return false;
-        }
+    size_t buffer_length = cbuff_size(morse->morse_buffer);
+    if(buffer_length < 2) {
+        return false;
+    }
 
-        morse_input_t inputs[i];
+    morse_input_t inputs[MAX_INPUTS_PER_LETTER];
+
+    for(uint8_t i = 2; i < MAX_INPUTS_PER_LETTER + 1; i++) {
+        memset(&inputs, MORSE_NULL, MAX_INPUTS_PER_LETTER * sizeof(morse_input_t));
         cbuff_peektail(morse->morse_buffer, &inputs, i);
 
-        if(inputs[buffer_length - 1] != MORSE_DELAY) {
-            // we haven't found a delay entry yet, so continue the loop around and increase the scope
-            // by one until we run out of entries
-            continue;
-        }
+        if(inputs[i - 1] == MORSE_DELAY) {
+            inputs[i - 1] = MORSE_NULL;
 
-        // so we have a delay which means we need to process everything up to the delay
-        // and compare it against the morse table to find the letter
-        for(uint8_t j = 0; j < MAX_LETTERS; j++) {
-            morse_input_t full[5];
-            morse_input_t* table_entry = morse_table[j];
+            // so we have a delay which means we need to process everything up to the delay
+            // and compare it against the morse table to find the letter
+            for(uint8_t j = 0; j < MAX_LETTERS; j++) {
+                const morse_input_t* table_entry = morse_table[j];
 
-            // fill a full 5-entry array with nulls
-            memset(&full, MORSE_NULL, MAX_INPUTS_PER_LETTER * sizeof(morse_input_t));
-            // copy the inputs we already have into the entries at the start of the array
-            memcpy(&full, &inputs, i);
+                // check if the values match, if they do then we can assign the letter, otherwise we move
+                // on to the next entry
+                if(memcmp(&inputs, table_entry, MAX_INPUTS_PER_LETTER * sizeof(morse_input_t)) == 0) {
+                    *result = (char)(((uint8_t)'A') + j);
+                    return true;
+                }
 
-            // check if the values match, if they do then we can assign the letter, otherwise we move
-            // on to the next entry
-            if(memcmp(&full, table_entry, MAX_INPUTS_PER_LETTER * sizeof(morse_input_t)) == 0) {
-                *result = (char)(((uint8_t)'A') + j);
-                return true;
             }
         }
     }
