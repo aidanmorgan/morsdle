@@ -167,7 +167,7 @@ void test_morse_decode() {
     TEST_ASSERT_TRUE(morse_process_input(morseconfig, &result));
     TEST_ASSERT_EQUAL('E', result);
 
-    // restart the process so we can test a different input sequence
+    // now try a letter that is more than one input value
     morse_init(morseconfig, NULL);
     input = MORSE_DASH;
     cbuff_write(morseconfig->morse_buffer, &input);
@@ -182,7 +182,55 @@ void test_morse_decode() {
 
     TEST_ASSERT_TRUE(morse_process_input(morseconfig, &result));
     TEST_ASSERT_EQUAL('Z', result);
+    TEST_ASSERT_EQUAL(0, cbuff_size(morseconfig->morse_buffer));
 
+    // now try writing a word in one go, then decoding it as a second step
+    morse_init(morseconfig, NULL);
+    input = MORSE_DASH;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DOT;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DOT;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DOT;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DELAY;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DOT;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DOT;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DASH;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DELAY;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DASH;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DELAY;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DASH;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DELAY;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DOT;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DOT;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DOT;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DELAY;
+    cbuff_write(morseconfig->morse_buffer, &input);
+
+    TEST_ASSERT_TRUE(morse_process_input(morseconfig, &result));
+    TEST_ASSERT_EQUAL('B', result);
+    TEST_ASSERT_TRUE(morse_process_input(morseconfig, &result));
+    TEST_ASSERT_EQUAL('U', result);
+    TEST_ASSERT_TRUE(morse_process_input(morseconfig, &result));
+    TEST_ASSERT_EQUAL('T', result);
+    TEST_ASSERT_TRUE(morse_process_input(morseconfig, &result));
+    TEST_ASSERT_EQUAL('T', result);
+    TEST_ASSERT_TRUE(morse_process_input(morseconfig, &result));
+    TEST_ASSERT_EQUAL('S', result);
 }
 
 int main() {

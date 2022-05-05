@@ -1,14 +1,16 @@
 #include "morse.h"
 
-static morse_signal_t signal_backing_buffer[25];
+static morse_signal_t signal_backing_buffer[64];
 static struct cbuff signal_buffer;
 
-static morse_input_t morse_backing_buffer[25];
+// TODO : this can probably be 25 (at most), worst-case per-letter is 5, and we are loading
+// TODO : 5 letter words, but adding a bit more for safety
+static morse_input_t morse_backing_buffer[32];
 static struct cbuff morse_buffer;
 
 void morse_init(morse_t morse,  bool (*callback)(morse_t morse, char*c)) {
-    cbuff_init(&signal_buffer, &signal_backing_buffer, 25, sizeof(morse_signal_t));
-    cbuff_init(&morse_buffer, &morse_backing_buffer, 25, sizeof(morse_input_t));
+    cbuff_init(&signal_buffer, &signal_backing_buffer, 50, sizeof(morse_signal_t));
+    cbuff_init(&morse_buffer, &morse_backing_buffer, 50, sizeof(morse_input_t));
 
     morse->signal_buffer = &signal_buffer;
     morse->morse_buffer = &morse_buffer;
@@ -109,32 +111,32 @@ bool morse_process_signals(morse_t morse, uint64_t timestamp) {
 }
 
 const static morse_input_t morse_table[26][5] = {
-    {MORSE_DOT, MORSE_DASH, MORSE_NULL, MORSE_NULL, MORSE_NULL}, // a
-    {MORSE_DASH, MORSE_DOT, MORSE_DOT, MORSE_DOT, MORSE_NULL}, // b
-    {MORSE_DASH, MORSE_DOT, MORSE_DASH, MORSE_DOT, MORSE_NULL}, // c
-    {MORSE_DASH, MORSE_DOT, MORSE_DOT, MORSE_NULL, MORSE_NULL}, // d
-    {MORSE_DOT, MORSE_NULL, MORSE_NULL, MORSE_NULL, MORSE_NULL}, // e
-    {MORSE_DOT, MORSE_DOT, MORSE_DASH, MORSE_DOT, MORSE_NULL}, // f
-    {MORSE_DASH, MORSE_DASH, MORSE_DOT, MORSE_NULL, MORSE_NULL}, // g
-    {MORSE_DOT, MORSE_DOT, MORSE_DOT, MORSE_DOT, MORSE_NULL}, // h
-    {MORSE_DOT, MORSE_DOT, MORSE_NULL, MORSE_NULL, MORSE_NULL}, // i
-    {MORSE_DOT, MORSE_DASH, MORSE_DASH, MORSE_DASH, MORSE_NULL}, // j
-    {MORSE_DASH, MORSE_DOT, MORSE_DASH, MORSE_NULL, MORSE_NULL}, // k
-    {MORSE_DOT, MORSE_DASH, MORSE_DOT, MORSE_DOT, MORSE_NULL}, // l
-    {MORSE_DASH, MORSE_DASH, MORSE_NULL, MORSE_NULL, MORSE_NULL}, // m
-    {MORSE_DASH, MORSE_DOT, MORSE_NULL, MORSE_NULL, MORSE_NULL}, // n
-    {MORSE_DASH, MORSE_DASH, MORSE_DASH, MORSE_NULL, MORSE_NULL}, // o
-    {MORSE_DOT, MORSE_DASH, MORSE_DASH, MORSE_DOT, MORSE_NULL}, // p
-    {MORSE_DASH, MORSE_DASH, MORSE_DOT, MORSE_DASH, MORSE_NULL}, // q
-    {MORSE_DOT, MORSE_DASH, MORSE_DOT, MORSE_NULL, MORSE_NULL}, // r
-    {MORSE_DOT, MORSE_DOT, MORSE_DOT, MORSE_NULL, MORSE_NULL}, // s
-    {MORSE_DASH, MORSE_NULL, MORSE_NULL, MORSE_NULL, MORSE_NULL}, // t
-    {MORSE_DOT, MORSE_DOT, MORSE_DASH, MORSE_NULL, MORSE_NULL}, // u
-    {MORSE_DOT, MORSE_DOT, MORSE_DOT, MORSE_DASH, MORSE_NULL}, // v
-    {MORSE_DOT, MORSE_DASH, MORSE_DASH, MORSE_NULL, MORSE_NULL}, // w
-    {MORSE_DASH, MORSE_DOT, MORSE_DOT, MORSE_DASH, MORSE_NULL}, // x
-    {MORSE_DASH, MORSE_DOT, MORSE_DASH, MORSE_DASH, MORSE_NULL}, // y
-    {MORSE_DASH, MORSE_DASH, MORSE_DOT, MORSE_DOT, MORSE_NULL}  // z
+    {MORSE_DOT, MORSE_DASH, MORSE_DELAY, MORSE_NULL, MORSE_NULL}, // a
+    {MORSE_DASH, MORSE_DOT, MORSE_DOT, MORSE_DOT, MORSE_DELAY}, // b
+    {MORSE_DASH, MORSE_DOT, MORSE_DASH, MORSE_DOT, MORSE_DELAY}, // c
+    {MORSE_DASH, MORSE_DOT, MORSE_DOT, MORSE_DELAY, MORSE_NULL}, // d
+    {MORSE_DOT, MORSE_DELAY, MORSE_NULL, MORSE_NULL, MORSE_NULL}, // e
+    {MORSE_DOT, MORSE_DOT, MORSE_DASH, MORSE_DOT, MORSE_DELAY}, // f
+    {MORSE_DASH, MORSE_DASH, MORSE_DOT, MORSE_DELAY, MORSE_NULL}, // g
+    {MORSE_DOT, MORSE_DOT, MORSE_DOT, MORSE_DOT, MORSE_DELAY}, // h
+    {MORSE_DOT, MORSE_DOT, MORSE_DELAY, MORSE_NULL, MORSE_NULL}, // i
+    {MORSE_DOT, MORSE_DASH, MORSE_DASH, MORSE_DASH, MORSE_DELAY}, // j
+    {MORSE_DASH, MORSE_DOT, MORSE_DASH, MORSE_DELAY, MORSE_NULL}, // k
+    {MORSE_DOT, MORSE_DASH, MORSE_DOT, MORSE_DOT, MORSE_DELAY}, // l
+    {MORSE_DASH, MORSE_DASH, MORSE_DELAY, MORSE_NULL, MORSE_NULL}, // m
+    {MORSE_DASH, MORSE_DOT, MORSE_DELAY, MORSE_NULL, MORSE_NULL}, // n
+    {MORSE_DASH, MORSE_DASH, MORSE_DASH, MORSE_DELAY, MORSE_NULL}, // o
+    {MORSE_DOT, MORSE_DASH, MORSE_DASH, MORSE_DOT, MORSE_DELAY}, // p
+    {MORSE_DASH, MORSE_DASH, MORSE_DOT, MORSE_DASH, MORSE_DELAY}, // q
+    {MORSE_DOT, MORSE_DASH, MORSE_DOT, MORSE_DELAY, MORSE_NULL}, // r
+    {MORSE_DOT, MORSE_DOT, MORSE_DOT, MORSE_DELAY, MORSE_NULL}, // s
+    {MORSE_DASH, MORSE_DELAY, MORSE_NULL, MORSE_NULL, MORSE_NULL}, // t
+    {MORSE_DOT, MORSE_DOT, MORSE_DASH, MORSE_DELAY, MORSE_NULL}, // u
+    {MORSE_DOT, MORSE_DOT, MORSE_DOT, MORSE_DASH, MORSE_DELAY}, // v
+    {MORSE_DOT, MORSE_DASH, MORSE_DASH, MORSE_DELAY, MORSE_NULL}, // w
+    {MORSE_DASH, MORSE_DOT, MORSE_DOT, MORSE_DASH, MORSE_DELAY}, // x
+    {MORSE_DASH, MORSE_DOT, MORSE_DASH, MORSE_DASH, MORSE_DELAY}, // y
+    {MORSE_DASH, MORSE_DASH, MORSE_DOT, MORSE_DOT, MORSE_DELAY}  // z
 };
 
 #define MAX_INPUTS_PER_LETTER 5
@@ -157,17 +159,17 @@ bool morse_process_input(morse_t morse, char* result) {
         cbuff_peektail(morse->morse_buffer, &inputs, i + 1);
 
         if(inputs[i] == MORSE_DELAY) {
-            inputs[i] = MORSE_NULL;
-
             // so we have a delay which means we need to process everything up to the delay
             // and compare it against the morse table to find the letter
             for(uint8_t j = 0; j < MAX_LETTERS; j++) {
-                const morse_input_t* table_entry = morse_table[j];
-
                 // check if the values match, if they do then we can assign the letter, otherwise we move
                 // on to the next entry
-                if(memcmp(&inputs, table_entry, MAX_INPUTS_PER_LETTER * sizeof(morse_input_t)) == 0) {
+                if(memcmp(&inputs, morse_table[j], MAX_INPUTS_PER_LETTER * sizeof(morse_input_t)) == 0) {
                     *result = (char)(((uint8_t)'A') + j);
+
+                    // we have found a match, so we want to move the read pointer forward through
+                    // the buffer so they aren't ingested in the future.
+                    cbuff_seek(morse->morse_buffer, i + 1);
                     return true;
                 }
 

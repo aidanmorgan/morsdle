@@ -185,6 +185,8 @@ bool cbuff_seek(cbuff_t buff, size_t count) {
     }
 
     buff->read_idx = (buff->read_idx + count) % buff->capacity;
+    buff->size -= count;
+
     return true;
 }
 
