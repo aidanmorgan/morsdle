@@ -231,6 +231,49 @@ void test_morse_decode() {
     TEST_ASSERT_EQUAL('T', result);
     TEST_ASSERT_TRUE(morse_process_input(morseconfig, &result));
     TEST_ASSERT_EQUAL('S', result);
+
+    // now try something that is not in the table and make sure that we discard the info
+    morse_init(morseconfig, NULL);
+    input = MORSE_DOT;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DASH;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DOT;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DASH;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DELAY;
+    cbuff_write(morseconfig->morse_buffer, &input);
+
+    TEST_ASSERT_FALSE(morse_process_input(morseconfig, &result));
+    TEST_ASSERT_EQUAL(0, cbuff_size(morseconfig->morse_buffer));
+
+    // now try something that is beyond the end of the table
+    morse_init(morseconfig, NULL);
+    input = MORSE_DOT;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DASH;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DOT;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DASH;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DOT;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DELAY;
+    cbuff_write(morseconfig->morse_buffer, &input);
+
+    TEST_ASSERT_FALSE(morse_process_input(morseconfig, &result));
+    // the maximum length has been reached, but we can't process anything, so the process
+    // should by default throw away the oldest entry to try and process again
+    TEST_ASSERT_EQUAL(5, cbuff_size(morseconfig->morse_buffer));
+
+    // now the first dot has been removed we actually have a valid letter in the buffer, so this
+    // should work on the next call correctly.
+    TEST_ASSERT_TRUE(morse_process_input(morseconfig, &result));
+    TEST_ASSERT_EQUAL('C', result);
+    TEST_ASSERT_EQUAL(0, cbuff_size(morseconfig->morse_buffer));
+
 }
 
 int main() {

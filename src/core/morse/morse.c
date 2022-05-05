@@ -141,20 +141,21 @@ const static morse_input_t morse_table[26][5] = {
 
 #define MAX_INPUTS_PER_LETTER 5
 #define MAX_LETTERS 26
+#define MINIMUM_INPUTS_TO_PROCESS 2
+
+static inline min(uint8_t a, uint8_t b) {
+    return a < b ? a : b;
+}
 
 bool morse_process_input(morse_t morse, char* result) {
-    if(cbuff_size(morse->morse_buffer) < 2) {
-        return false;
-    }
-
     size_t buffer_length = cbuff_size(morse->morse_buffer);
-    if(buffer_length < 2) {
+    if(buffer_length < MINIMUM_INPUTS_TO_PROCESS) {
         return false;
     }
 
     morse_input_t inputs[MAX_INPUTS_PER_LETTER];
 
-    for(uint8_t i = 1; i < MAX_INPUTS_PER_LETTER; i++) {
+    for(uint8_t i = 1; i < min(buffer_length, MAX_INPUTS_PER_LETTER); i++) {
         memset(&inputs, MORSE_NULL, MAX_INPUTS_PER_LETTER * sizeof(morse_input_t));
         cbuff_peektail(morse->morse_buffer, &inputs, i + 1);
 
@@ -164,17 +165,28 @@ bool morse_process_input(morse_t morse, char* result) {
             for(uint8_t j = 0; j < MAX_LETTERS; j++) {
                 // check if the values match, if they do then we can assign the letter, otherwise we move
                 // on to the next entry
-                if(memcmp(&inputs, morse_table[j], MAX_INPUTS_PER_LETTER * sizeof(morse_input_t)) == 0) {
-                    *result = (char)(((uint8_t)'A') + j);
+                if (memcmp(&inputs, morse_table[j], MAX_INPUTS_PER_LETTER * sizeof(morse_input_t)) == 0) {
+                    *result = (char) (((uint8_t) 'A') + j);
 
                     // we have found a match, so we want to move the read pointer forward through
                     // the buffer so they aren't ingested in the future.
                     cbuff_seek(morse->morse_buffer, i + 1);
                     return true;
                 }
-
             }
+
+            // if we get to this point, we've found a delay which means we want to try and match against
+            // the letters, but it doesnt match anything in the morse table, but we need to reject the
+            // entries and move through the buffer, otherwise we will just spin at this point forever.
+            cbuff_seek(morse->morse_buffer, i + 1);
+            return false;
         }
+    }
+
+    // if we have hit the maximum size and we haven't found a delay, then throw away the head of the
+    // buffer as there is no way we will ever move it otherwise and there's maybe a delay after that
+    if(buffer_length >= MAX_INPUTS_PER_LETTER) {
+        cbuff_seek(morse->morse_buffer, 1);
     }
 
     return false;
