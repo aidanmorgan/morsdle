@@ -17,10 +17,7 @@ void test_morse_append() {
     struct morse* morseconfig = &(struct morse) {};
     morse_init(morseconfig, NULL);
 
-    morse_append(morseconfig, (morse_signal_t) {
-        .timestamp = 500,
-        .value = SIGNAL_HIGH
-    });
+    morse_append_signal(morseconfig, SIGNAL_HIGH, 500);
 
     TEST_ASSERT_EQUAL(1, cbuff_size(morseconfig->signal_buffer));
     morse_signal_t readback;
@@ -29,10 +26,7 @@ void test_morse_append() {
     TEST_ASSERT_EQUAL(500, readback.timestamp);
     TEST_ASSERT_EQUAL(SIGNAL_HIGH, readback.value);
 
-    morse_append(morseconfig, (morse_signal_t) {
-            .timestamp = 1000,
-            .value = SIGNAL_LOW
-    });
+    morse_append_signal(morseconfig, SIGNAL_LOW, 1000);
 
     TEST_ASSERT_EQUAL(2, cbuff_size(morseconfig->signal_buffer));
     morse_signal_t multipeek[2];
@@ -48,21 +42,18 @@ void test_morse_process_dot() {
     struct morse* morseconfig = &(struct morse) {};
     morse_init(morseconfig, NULL);
 
-    morse_append(morseconfig, (morse_signal_t) {
-            .timestamp = 500,
-            .value = SIGNAL_HIGH
-    });
-    morse_append(morseconfig, (morse_signal_t) {
-            .timestamp = 1500,
-            .value = SIGNAL_LOW
-    });
+    morse_append_signal(morseconfig, SIGNAL_HIGH, 500);
+    morse_append_signal(morseconfig, SIGNAL_LOW, 500 + (MORSE_DOT_START + 1 * MORSE_DIT_MS));
 
-    morse_process_signals(morseconfig);
+    morse_process_signals(morseconfig, 1500);
 
-    TEST_ASSERT_EQUAL(1, cbuff_size(morseconfig->morse_buffer));
+    TEST_ASSERT_EQUAL(2, cbuff_size(morseconfig->morse_buffer));
     morse_input_t val;
     TEST_ASSERT_EQUAL(1, cbuff_peektail(morseconfig->morse_buffer, &val, 1));
     TEST_ASSERT_EQUAL(MORSE_DOT, val);
+
+    TEST_ASSERT_EQUAL(1, cbuff_peekhead(morseconfig->morse_buffer, &val, 1));
+    TEST_ASSERT_EQUAL(MORSE_DELAY, val);
 }
 
 
@@ -70,71 +61,48 @@ void test_morse_process_dash() {
     struct morse* morseconfig = &(struct morse) {};
     morse_init(morseconfig, NULL);
 
-    morse_append(morseconfig, (morse_signal_t) {
-            .timestamp = 500,
-            .value = SIGNAL_HIGH
-    });
-    morse_append(morseconfig, (morse_signal_t) {
-            .timestamp = 2500,
-            .value = SIGNAL_LOW
-    });
+    morse_append_signal(morseconfig, SIGNAL_HIGH, 500);
+    morse_append_signal(morseconfig, SIGNAL_LOW, 850);
 
-    morse_process_signals(morseconfig);
+    morse_process_signals(morseconfig, 2500);
 
-    TEST_ASSERT_EQUAL(1, cbuff_size(morseconfig->morse_buffer));
+    TEST_ASSERT_EQUAL(2, cbuff_size(morseconfig->morse_buffer));
     morse_input_t val;
     TEST_ASSERT_EQUAL(1, cbuff_peektail(morseconfig->morse_buffer, &val, 1));
     TEST_ASSERT_EQUAL(MORSE_DASH, val);
+
+    TEST_ASSERT_EQUAL(1, cbuff_peekhead(morseconfig->morse_buffer, &val, 1));
+    TEST_ASSERT_EQUAL(MORSE_DELAY, val);
 }
 
 void test_morse_dotdotdash() {
     struct morse* morseconfig = &(struct morse) {};
     morse_init(morseconfig, NULL);
 
-    morse_append(morseconfig, (morse_signal_t) {
-            .timestamp = 0,
-            .value = SIGNAL_LOW
-    });
-    morse_append(morseconfig, (morse_signal_t) {
-            .timestamp = 500,
-            .value = SIGNAL_HIGH
-    });
-    morse_append(morseconfig, (morse_signal_t) {
-            .timestamp = 1000,
-            .value = SIGNAL_LOW
-    });
-    morse_append(morseconfig, (morse_signal_t) {
-            .timestamp = 1500,
-            .value = SIGNAL_HIGH
-    });
-    morse_append(morseconfig, (morse_signal_t) {
-            .timestamp = 2000,
-            .value = SIGNAL_LOW
-    });
-    morse_append(morseconfig, (morse_signal_t) {
-            .timestamp = 2500,
-            .value = SIGNAL_HIGH
-    });
-    morse_append(morseconfig, (morse_signal_t) {
-            .timestamp = 5000,
-            .value = SIGNAL_LOW
-    });
+    morse_append_signal(morseconfig, SIGNAL_LOW, 0);
+    morse_append_signal(morseconfig, SIGNAL_HIGH, 100);
+    morse_append_signal(morseconfig, SIGNAL_LOW, 250);
+    morse_append_signal(morseconfig, SIGNAL_HIGH, 300);
+    morse_append_signal(morseconfig, SIGNAL_LOW, 450);
+    morse_append_signal(morseconfig, SIGNAL_HIGH, 500);
+    morse_append_signal(morseconfig, SIGNAL_LOW, 800);
 
-    morse_process_signals(morseconfig);
+    morse_process_signals(morseconfig, 5000);
 
-    TEST_ASSERT_EQUAL(3, cbuff_size(morseconfig->morse_buffer));
-    morse_input_t val[3];
-    TEST_ASSERT_EQUAL(3, cbuff_peektail(morseconfig->morse_buffer, &val, 3));
+    TEST_ASSERT_EQUAL(4, cbuff_size(morseconfig->morse_buffer));
+    morse_input_t val[4];
+    TEST_ASSERT_EQUAL(4, cbuff_peektail(morseconfig->morse_buffer, &val, 4));
     TEST_ASSERT_EQUAL(MORSE_DOT, val[0]);
     TEST_ASSERT_EQUAL(MORSE_DOT, val[1]);
     TEST_ASSERT_EQUAL(MORSE_DASH, val[2]);
+    TEST_ASSERT_EQUAL(MORSE_DELAY, val[3]);
 }
 
 void test_morse_process_random() {
     struct morse* morseconfig = &(struct morse) {};
 
     // generate 1000 random sequences of DASH and DOT and use them to
-    for(uint16_t i = 0; i < 1000; i++) {
+    for(uint16_t i = 0; i < 10000; i++) {
         srand(time(NULL));
         // reset the buffer so we can loop again
         morse_init(morseconfig, NULL);
@@ -146,13 +114,9 @@ void test_morse_process_random() {
 
         for(uint8_t j = 0; j < 5; j++) {
             // we start with a low signal
-            morse_append(morseconfig, (morse_signal_t) {
-                    .timestamp = timestamp,
-                    .value = SIGNAL_HIGH
-            });
+            morse_append_signal(morseconfig, SIGNAL_HIGH, timestamp);
 
             double  dits_increment = 0;
-
             // create a random number between 0 and 1 that we can multiply out
             double random = (double)rand() / (double) RAND_MAX;
 
@@ -169,26 +133,39 @@ void test_morse_process_random() {
             // of a signal length, so multiply the number of dits out to get milliseconds
             timestamp += (uint64_t) (dits_increment * (double )MORSE_DIT_MS);
 
-            morse_append(morseconfig, (morse_signal_t) {
-                    .timestamp = timestamp,
-                    .value = SIGNAL_LOW
-            });
+            morse_append_signal(morseconfig, SIGNAL_LOW, timestamp);
 
             // introduce a slight delay before we loop again
             timestamp += (rand() % 7) * MORSE_DIT_MS;
         }
 
-        morse_process_signals(morseconfig);
+        morse_process_signals(morseconfig, timestamp + (MORSE_DIT_MS * (MORSE_DELAY_START + 1)));
 
-        TEST_ASSERT_EQUAL(5, cbuff_size(morseconfig->morse_buffer));
+        TEST_ASSERT_EQUAL(6, cbuff_size(morseconfig->morse_buffer));
 
-        morse_input_t processed[5];
-        cbuff_readmany(morseconfig->morse_buffer, &processed, 5);
+        morse_input_t processed[6];
+        cbuff_readmany(morseconfig->morse_buffer, &processed, 6);
 
         for(uint8_t j = 0; j < 5; j++) {
             TEST_ASSERT_EQUAL(expected[j], processed[j]);
         }
+
+        TEST_ASSERT_EQUAL(MORSE_DELAY, processed[5]);
     }
+}
+
+void test_morse_decode() {
+    struct morse* morseconfig = &(struct morse) {};
+    morse_init(morseconfig, NULL);
+
+    morse_input_t  input = MORSE_DOT;
+    cbuff_write(morseconfig->morse_buffer, &input);
+    input = MORSE_DELAY;
+    cbuff_write(morseconfig->morse_buffer, &input);
+
+    char result;
+    TEST_ASSERT_TRUE(morse_process_input(morseconfig, &result));
+    TEST_ASSERT_EQUAL('E', result);
 }
 
 int main() {
@@ -199,6 +176,7 @@ int main() {
     RUN_TEST(test_morse_process_dash);
     RUN_TEST(test_morse_dotdotdash);
     RUN_TEST(test_morse_process_random);
+    RUN_TEST(test_morse_decode);
 
     return UNITY_END();
 }

@@ -24,17 +24,19 @@ typedef struct {
 typedef enum {
     MORSE_NULL,
     MORSE_DOT,
-    MORSE_DASH
+    MORSE_DASH,
+    MORSE_DELAY
 } morse_input_t;
 
 
 // a dit is the "unit" of time of a morse code signal
-#define MORSE_DIT_MS 500
+#define MORSE_DIT_MS 75
 
 #define MORSE_DOT_START 0
 #define MORSE_DOT_END 3
 #define MORSE_DASH_START  3
 #define MORSE_DASH_END  7
+#define MORSE_DELAY_START 7
 
 
 struct morse {
@@ -49,9 +51,9 @@ typedef struct morse* morse_t;
 
 void morse_init(morse_t morse, bool (*callback)(morse_t morse, char*ch));
 
-bool morse_append(morse_t morse, morse_signal_t signal);
-
-bool morse_process_signals(morse_t morse);
+bool morse_append_signal(morse_t morse, signal_t signal, uint64_t timestamp);
+bool morse_process_signals(morse_t morse, uint64_t timestamp);
+bool morse_process_input(morse_t morse, char* letter);
 
 
 
