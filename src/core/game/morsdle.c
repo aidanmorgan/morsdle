@@ -9,6 +9,14 @@
 static morsdle_game_event_t event_buffer_storage[EVENTS_PER_GAME];
 static cbuff_t event_buffer = (cbuff_t)&(struct cbuff){};
 
+static bool morsdle_append_event(morsdle_game_t* game, morsdle_game_event_t* event) {
+    return cbuff_write(game->events, event);
+}
+
+static bool morsdle_clear_events(morsdle_game_t* game) {
+    return cbuff_clear(game->events);
+}
+
 void morsdle_init_game(morsdle_game_t* game) {
     game->state = GAME_STATE_IN_PROGRESS;
 
@@ -219,9 +227,7 @@ morsdle_err_t morsdle_remove_letter(morsdle_game_t* game) {
     return MORSDLE_OK;
 }
 
-static bool morsdle_append_event(morsdle_game_t* game, morsdle_game_event_t* event) {
-    return cbuff_write(game->events, event);
-}
+
 
 bool morsdle_has_events(morsdle_game_t* game) {
     return cbuff_canread(game->events);
@@ -231,6 +237,3 @@ bool morsdle_read_event(morsdle_game_t* game, morsdle_game_event_t * event) {
     return cbuff_read(game->events, event);
 }
 
-static bool morsdle_clear_events(morsdle_game_t* game) {
-    return cbuff_clear(game->events);
-}

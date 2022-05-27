@@ -35,7 +35,7 @@ void mockdisplay_write_buffer(display_handle_t* handle, char* filename) {
 #define MOCK_DISPLAY_WIDTH 448
 #define MOCK_DISPLAY_HEIGHT 600
 
-void init_drawing_ops(display_operations* ops) {
+void display_init(display* ops) {
     ops->height = MOCK_DISPLAY_HEIGHT;
     ops->width = MOCK_DISPLAY_WIDTH;
 
@@ -46,6 +46,6 @@ void init_drawing_ops(display_operations* ops) {
     ops->draw_line=mockdisplay_draw_line;
 }
 
-void destroy_drawing_ops(display_operations_t ops) {
+void display_destroy(display_t ops) {
     svg_free(ops->handle->buffer);
 }

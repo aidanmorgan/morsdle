@@ -7,28 +7,28 @@ void setUp (void) {} /* Is run before every test, put unit init calls here. */
 void tearDown (void) {} /* Is run after every test, put unit clean-up calls here. */
 
 void test_gamecreatedevent() {
-    display_operations operations = (display_operations){};
-    init_drawing_ops(&operations);
+    display_t operations = &(display){};
+    display_init(operations);
 
-    renderer_options options = (renderer_options) {};
-    init_renderer(&operations, &options);
+    renderer_t options = &(renderer) {};
+    renderer_init(operations, options);
 
     morsdle_game_event_t ev = {
         .type = EVENT_GAME_CREATED
     };
 
-    renderer_handle_event(&operations, &options, &ev);
+    renderer_handle_event(operations, options, &ev);
 
-    mockdisplay_write_buffer(operations.handle, "test-rendergrid.svg");
-    destroy_drawing_ops(&operations);
+    mockdisplay_write_buffer(operations->handle, "test-rendergrid.svg");
+    display_destroy(operations);
 }
 
 void test_wordcompletedevent() {
-    display_operations operations = (display_operations){};
-    init_drawing_ops(&operations);
+    display_t operations = &(display){};
+    display_init(operations);
 
-    renderer_options options = (renderer_options) {};
-    init_renderer(&operations, &options);
+    renderer_t options = &(renderer) {};
+    renderer_init(operations, options);
 
     morsdle_game_event_t ev = (morsdle_game_event_t){
             .type = EVENT_WORD_COMPLETED,
@@ -65,11 +65,11 @@ void test_wordcompletedevent() {
     };
 
     // need to call clear to get the grid to render properly
-    renderer_clear(&operations, &options);
-    renderer_handle_event(&operations, &options, &ev);
+    renderer_clear(operations, options);
+    renderer_handle_event(operations, options, &ev);
 
-    mockdisplay_write_buffer(operations.handle, "test-wordcompleted.svg");
-    destroy_drawing_ops(&operations);
+    mockdisplay_write_buffer(operations->handle, "test-wordcompleted.svg");
+    display_destroy(operations);
 }
 
 int main(void)

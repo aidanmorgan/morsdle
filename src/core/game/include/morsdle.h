@@ -95,8 +95,6 @@ morsdle_err_t morsdle_submit_word(morsdle_game_t* game);
 void morsdle_clear(morsdle_game_t* game);
 
 // event management stuff here
-static bool morsdle_append_event(morsdle_game_t* game, morsdle_game_event_t* event);
 bool morsdle_read_event(morsdle_game_t* game, morsdle_game_event_t * event);
-static bool morsdle_clear_events(morsdle_game_t* game);
-
+bool morsdle_has_events(morsdle_game_t* game);
 #endif //__MORSDLE_H__

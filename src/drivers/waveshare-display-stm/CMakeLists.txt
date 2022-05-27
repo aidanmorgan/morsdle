@@ -1,32 +1,29 @@
 cmake_minimum_required(VERSION 3.20)
 
-add_library(waveshare-display)
+add_library(waveshare-stm)
+
+find_package(HAL COMPONENTS STM32L4 LL_GPIO REQUIRED)
 
 add_dependencies(
-        waveshare-display
         waveshare-stm
-        morsdle-util
-        morsdle-game
         morsdle-gfx
 )
 
 target_include_directories(
-        waveshare-display
+        waveshare-stm
         PUBLIC
         include
 )
 
+
 target_sources(
-        waveshare-display
+        waveshare-stm
         PUBLIC
-        waveshare_display.c
+        waveshare_stm.c
 )
 
 target_link_libraries(
-        waveshare-display
         waveshare-stm
-        morsdle-util
-        morsdle-game
         morsdle-gfx
+        HAL::STM32::L4::LL_GPIO
 )
-

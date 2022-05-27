@@ -8,14 +8,14 @@ void tearDown (void) {} /* Is run after every test, put unit clean-up calls here
 
 void test_morse_init() {
     struct morse val = (struct morse) {};
-    morse_init(&val, NULL);
+    morse_init(&val);
 
     TEST_ASSERT_NOT_NULL(val.signal_buffer);
 }
 
 void test_morse_append() {
     struct morse* morseconfig = &(struct morse) {};
-    morse_init(morseconfig, NULL);
+    morse_init(morseconfig);
 
     morse_append_signal(morseconfig, SIGNAL_HIGH, 500);
 
@@ -40,18 +40,20 @@ void test_morse_append() {
 
 void test_morse_process_dot() {
     struct morse* morseconfig = &(struct morse) {};
-    morse_init(morseconfig, NULL);
+    morse_init(morseconfig);
 
     morse_append_signal(morseconfig, SIGNAL_HIGH, 500);
     morse_append_signal(morseconfig, SIGNAL_LOW, 500 + (MORSE_DOT_START + 1 * MORSE_DIT_MS));
 
-    morse_process_signals(morseconfig, 1500);
+    morse_convert(morseconfig, 1500);
 
     TEST_ASSERT_EQUAL(2, cbuff_size(morseconfig->morse_buffer));
     morse_input_t val;
     TEST_ASSERT_EQUAL(1, cbuff_peektail(morseconfig->morse_buffer, &val, 1));
     TEST_ASSERT_EQUAL(MORSE_DOT, val);
 
+    // a delay should be automatically added through the processor if we run the process_signals and the timestamp
+    // for the process is 7 * MORSE_DIT_MS after the last SIGNAL_LOW value
     TEST_ASSERT_EQUAL(1, cbuff_peekhead(morseconfig->morse_buffer, &val, 1));
     TEST_ASSERT_EQUAL(MORSE_DELAY, val);
 }
@@ -59,12 +61,12 @@ void test_morse_process_dot() {
 
 void test_morse_process_dash() {
     struct morse* morseconfig = &(struct morse) {};
-    morse_init(morseconfig, NULL);
+    morse_init(morseconfig);
 
     morse_append_signal(morseconfig, SIGNAL_HIGH, 500);
     morse_append_signal(morseconfig, SIGNAL_LOW, 850);
 
-    morse_process_signals(morseconfig, 2500);
+    morse_convert(morseconfig, 2500);
 
     TEST_ASSERT_EQUAL(2, cbuff_size(morseconfig->morse_buffer));
     morse_input_t val;
@@ -77,7 +79,7 @@ void test_morse_process_dash() {
 
 void test_morse_dotdotdash() {
     struct morse* morseconfig = &(struct morse) {};
-    morse_init(morseconfig, NULL);
+    morse_init(morseconfig);
 
     morse_append_signal(morseconfig, SIGNAL_LOW, 0);
     morse_append_signal(morseconfig, SIGNAL_HIGH, 100);
@@ -87,7 +89,8 @@ void test_morse_dotdotdash() {
     morse_append_signal(morseconfig, SIGNAL_HIGH, 500);
     morse_append_signal(morseconfig, SIGNAL_LOW, 800);
 
-    morse_process_signals(morseconfig, 5000);
+    morse_convert(morseconfig, 5000);
+
 
     TEST_ASSERT_EQUAL(4, cbuff_size(morseconfig->morse_buffer));
     morse_input_t val[4];
@@ -105,7 +108,7 @@ void test_morse_process_random() {
     for(uint16_t i = 0; i < 10000; i++) {
         srand(time(NULL));
         // reset the buffer so we can loop again
-        morse_init(morseconfig, NULL);
+        morse_init(morseconfig);
 
         // keep track of what we think we are creating so we can confirm the decoding later on
         morse_input_t expected[5];
@@ -139,7 +142,7 @@ void test_morse_process_random() {
             timestamp += (rand() % 7) * MORSE_DIT_MS;
         }
 
-        morse_process_signals(morseconfig, timestamp + (MORSE_DIT_MS * (MORSE_DELAY_START + 1)));
+        morse_convert(morseconfig, timestamp + (MORSE_DIT_MS * (MORSE_DELAY_START + 1)));
 
         TEST_ASSERT_EQUAL(6, cbuff_size(morseconfig->morse_buffer));
 
@@ -154,9 +157,9 @@ void test_morse_process_random() {
     }
 }
 
-void test_morse_decode() {
+void test_morse_decode_shortsequence() {
     struct morse* morseconfig = &(struct morse) {};
-    morse_init(morseconfig, NULL);
+    morse_init(morseconfig);
 
     morse_input_t  input = MORSE_DOT;
     cbuff_write(morseconfig->morse_buffer, &input);
@@ -164,12 +167,15 @@ void test_morse_decode() {
     cbuff_write(morseconfig->morse_buffer, &input);
 
     char result;
-    TEST_ASSERT_TRUE(morse_process_input(morseconfig, &result));
+    TEST_ASSERT_TRUE(morse_decode(morseconfig, &result));
     TEST_ASSERT_EQUAL('E', result);
+}
 
-    // now try a letter that is more than one input value
-    morse_init(morseconfig, NULL);
-    input = MORSE_DASH;
+void test_morse_decode_longsequence() {
+    struct morse* morseconfig = &(struct morse) {};
+    morse_init(morseconfig);
+
+    morse_input_t input = MORSE_DASH;
     cbuff_write(morseconfig->morse_buffer, &input);
     input = MORSE_DASH;
     cbuff_write(morseconfig->morse_buffer, &input);
@@ -180,13 +186,17 @@ void test_morse_decode() {
     input = MORSE_DELAY;
     cbuff_write(morseconfig->morse_buffer, &input);
 
-    TEST_ASSERT_TRUE(morse_process_input(morseconfig, &result));
+    char result;
+    TEST_ASSERT_TRUE(morse_decode(morseconfig, &result));
     TEST_ASSERT_EQUAL('Z', result);
     TEST_ASSERT_EQUAL(0, cbuff_size(morseconfig->morse_buffer));
+}
 
-    // now try writing a word in one go, then decoding it as a second step
-    morse_init(morseconfig, NULL);
-    input = MORSE_DASH;
+void test_morse_decode_wholeword() {
+    struct morse* morseconfig = &(struct morse) {};
+
+    morse_init(morseconfig);
+    morse_input_t input = MORSE_DASH;
     cbuff_write(morseconfig->morse_buffer, &input);
     input = MORSE_DOT;
     cbuff_write(morseconfig->morse_buffer, &input);
@@ -221,20 +231,24 @@ void test_morse_decode() {
     input = MORSE_DELAY;
     cbuff_write(morseconfig->morse_buffer, &input);
 
-    TEST_ASSERT_TRUE(morse_process_input(morseconfig, &result));
+    char result;
+    TEST_ASSERT_TRUE(morse_decode(morseconfig, &result));
     TEST_ASSERT_EQUAL('B', result);
-    TEST_ASSERT_TRUE(morse_process_input(morseconfig, &result));
+    TEST_ASSERT_TRUE(morse_decode(morseconfig, &result));
     TEST_ASSERT_EQUAL('U', result);
-    TEST_ASSERT_TRUE(morse_process_input(morseconfig, &result));
+    TEST_ASSERT_TRUE(morse_decode(morseconfig, &result));
     TEST_ASSERT_EQUAL('T', result);
-    TEST_ASSERT_TRUE(morse_process_input(morseconfig, &result));
+    TEST_ASSERT_TRUE(morse_decode(morseconfig, &result));
     TEST_ASSERT_EQUAL('T', result);
-    TEST_ASSERT_TRUE(morse_process_input(morseconfig, &result));
+    TEST_ASSERT_TRUE(morse_decode(morseconfig, &result));
     TEST_ASSERT_EQUAL('S', result);
+}
 
-    // now try something that is not in the table and make sure that we discard the info
-    morse_init(morseconfig, NULL);
-    input = MORSE_DOT;
+void test_morse_decode_invalidentry() {
+    struct morse* morseconfig = &(struct morse) {};
+
+    morse_init(morseconfig);
+    morse_input_t input = MORSE_DOT;
     cbuff_write(morseconfig->morse_buffer, &input);
     input = MORSE_DASH;
     cbuff_write(morseconfig->morse_buffer, &input);
@@ -245,12 +259,15 @@ void test_morse_decode() {
     input = MORSE_DELAY;
     cbuff_write(morseconfig->morse_buffer, &input);
 
-    TEST_ASSERT_FALSE(morse_process_input(morseconfig, &result));
+    char result;
+    TEST_ASSERT_FALSE(morse_decode(morseconfig, &result));
     TEST_ASSERT_EQUAL(0, cbuff_size(morseconfig->morse_buffer));
+}
 
-    // now try something that is beyond the end of the table
-    morse_init(morseconfig, NULL);
-    input = MORSE_DOT;
+void test_morse_decode_overfullbuffer() {
+    struct morse* morseconfig = &(struct morse) {};
+    morse_init(morseconfig);
+    morse_input_t input = MORSE_DOT;
     cbuff_write(morseconfig->morse_buffer, &input);
     input = MORSE_DASH;
     cbuff_write(morseconfig->morse_buffer, &input);
@@ -263,17 +280,17 @@ void test_morse_decode() {
     input = MORSE_DELAY;
     cbuff_write(morseconfig->morse_buffer, &input);
 
-    TEST_ASSERT_FALSE(morse_process_input(morseconfig, &result));
+    char result;
+    TEST_ASSERT_FALSE(morse_decode(morseconfig, &result));
     // the maximum length has been reached, but we can't process anything, so the process
     // should by default throw away the oldest entry to try and process again
     TEST_ASSERT_EQUAL(5, cbuff_size(morseconfig->morse_buffer));
 
     // now the first dot has been removed we actually have a valid letter in the buffer, so this
     // should work on the next call correctly.
-    TEST_ASSERT_TRUE(morse_process_input(morseconfig, &result));
+    TEST_ASSERT_TRUE(morse_decode(morseconfig, &result));
     TEST_ASSERT_EQUAL('C', result);
     TEST_ASSERT_EQUAL(0, cbuff_size(morseconfig->morse_buffer));
-
 }
 
 int main() {
@@ -284,7 +301,11 @@ int main() {
     RUN_TEST(test_morse_process_dash);
     RUN_TEST(test_morse_dotdotdash);
     RUN_TEST(test_morse_process_random);
-    RUN_TEST(test_morse_decode);
+    RUN_TEST(test_morse_decode_shortsequence);
+    RUN_TEST(test_morse_decode_longsequence);
+    RUN_TEST(test_morse_decode_wholeword);
+    RUN_TEST(test_morse_decode_invalidentry);
+    RUN_TEST(test_morse_decode_overfullbuffer);
 
     return UNITY_END();
 }

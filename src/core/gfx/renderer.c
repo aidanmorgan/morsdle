@@ -8,7 +8,7 @@ static uint16_t min(uint16_t a, uint16_t b) {
 }
 
 
-void init_renderer(display_operations_t drawops, renderer_options_t renderopts) {
+void renderer_init(display_t drawops, renderer_t renderopts) {
     renderopts->width = drawops->width;
     renderopts->height = drawops->height;
 
@@ -48,10 +48,10 @@ void init_renderer(display_operations_t drawops, renderer_options_t renderopts) 
     renderopts->cell_background_colours[LETTER_STATE_VALID] = COLOUR_GREEN;
 }
 
-static void render_grid(renderer_options_t renderopts, display_operations_t drawops) {
+static void render_grid(renderer_t renderopts, display_t drawops, render_pass_t pass) {
     // draw the vertical lines
     for(uint8_t i = 0; i < LETTERS_PER_WORD + 1; i++) {
-        drawops->draw_line(drawops->handle,
+        drawops->draw_line(pass,
                            (point_t) {
                                .x =renderopts->grid_left_border + (i * renderopts->grid_line_width) + (i * renderopts->letter_cell_width),
                                .y = renderopts->grid_top_border
@@ -67,7 +67,7 @@ static void render_grid(renderer_options_t renderopts, display_operations_t draw
 
     // draw the horizontal lines
     for(uint8_t i = 0; i < WORDS_PER_GAME + 1; i++) {
-        drawops->draw_line(drawops->handle,
+        drawops->draw_line(pass,
                            (point_t) {
                                 .x = renderopts->grid_left_border,
                                 .y = renderopts->grid_top_border + (i*(renderopts->grid_line_width) + (i*renderopts->letter_cell_height))
@@ -81,7 +81,7 @@ static void render_grid(renderer_options_t renderopts, display_operations_t draw
     }
 }
 
-static void render_letter_cell(display_operations_t drawops, renderer_options_t renderopts, uint8_t letter_idx, uint8_t word_idx, char c, colour_t foreground_colour, colour_t background_colour) {
+static void render_letter_cell(display_t drawops, renderer_t renderopts, render_pass_t pass, uint8_t letter_idx, uint8_t word_idx, char c, colour_t foreground_colour, colour_t background_colour) {
     uint16_t start_x = renderopts->grid_left_border + (letter_idx * renderopts->grid_line_width) + (letter_idx * renderopts->letter_cell_width);
     uint16_t start_y = renderopts->grid_top_border + (word_idx * renderopts->grid_line_width) + (word_idx * renderopts->letter_cell_height);
 
@@ -122,7 +122,7 @@ static void render_letter_cell(display_operations_t drawops, renderer_options_t 
 
      */
     // draw a rect that is grid_line_width smaller in all directons in the actual colour we want the background to be
-    drawops->fill_rect(drawops->handle,
+    drawops->fill_rect(pass,
                        (point_t){start_x + renderopts->grid_line_width, start_y + renderopts->grid_line_width},
                        (point_t){start_x + renderopts->letter_cell_width, start_y + renderopts->letter_cell_height},
                        background_colour
@@ -132,36 +132,43 @@ static void render_letter_cell(display_operations_t drawops, renderer_options_t 
          start_x = renderopts->grid_left_border + (letter_idx * renderopts->grid_line_width) + (letter_idx * renderopts->letter_cell_width) + (letter_idx * renderopts->cell_padding * 2);
          start_y = renderopts->grid_top_border + (word_idx * renderopts->grid_line_width) + (word_idx * renderopts->letter_cell_width) + (word_idx * renderopts->cell_padding * 2);
 
-         drawops->draw_char(drawops->handle,
+         drawops->draw_char(pass,
                             c,
-                            (point_t){start_x, start_y},
+                            (point_t) {start_x, start_y},
                             renderopts->font_size,
                             foreground_colour
                             );
     }
 }
 
-void renderer_handle_event(display_operations_t drawops, renderer_options_t renderopts, morsdle_game_event_t *event) {
+void renderer_handle_event(display_t drawops, renderer_t renderopts, render_pass_t pass, morsdle_game_event_t *event) {
     switch (event->type) {
         case EVENT_GAME_CREATED: {
-            renderer_clear(drawops, renderopts);
+            renderer_clear(drawops, renderopts, pass);
             break;
         }
 
         case EVENT_LETTER_ADDED: {
-            render_letter_cell(drawops, renderopts,
+            render_letter_cell(drawops, renderopts, pass,
                                event->letter->x,
                                event->letter->y,
                                event->letter->letter,
                                renderopts->cell_foreground_colours[LETTER_STATE_SET],
                                renderopts->cell_background_colours[LETTER_STATE_SET]);
+
             break;
         }
 
         case EVENT_LETTER_REMOVED: {
             // we need to go through and blank out the contents that was there and replace it with something else
-            render_letter_cell(drawops, renderopts, event->letter->x, event->letter->y, NULL_CHAR,
-                               renderopts->background_colour, renderopts->background_colour);
+            render_letter_cell(drawops, renderopts, pass,
+                               event->letter->x,
+                               event->letter->y,
+                               NULL_CHAR,
+                               renderopts->background_colour,
+                               renderopts->background_colour);
+
+
             break;
         }
 
@@ -174,7 +181,7 @@ void renderer_handle_event(display_operations_t drawops, renderer_options_t rend
             for(uint8_t l = 0; l < LETTERS_PER_WORD; l++) {
                 morsdle_letter_t letter = event->word->letters[l];
 
-                render_letter_cell(drawops, renderopts,
+                render_letter_cell(drawops, renderopts, pass,
                                    letter.x,
                                    letter.y,
                                    letter.letter,
@@ -197,9 +204,12 @@ void renderer_handle_event(display_operations_t drawops, renderer_options_t rend
     }
 }
 
-void renderer_clear(display_operations_t drawops, renderer_options_t renderopts) {
+void renderer_clear(display_t drawops, renderer_t renderopts, render_pass_t pass) {
     // fill the background with the default background colour
-    drawops->fill_rect(drawops->handle, (point_t){0,0}, (point_t){drawops->width, drawops->height}, renderopts->background_colour);
+    drawops->fill_rect(pass,
+                       (point_t){0,0},
+                       (point_t){drawops->width, drawops->height},
+                       renderopts->background_colour);
     // now render the grid only
     render_grid(renderopts, drawops);
 }

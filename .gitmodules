@@ -4,3 +4,6 @@
 [submodule "lib/stm32l4xx"]
 	path = lib/stm32l4xx
 	url = https://github.com/STMicroelectronics/STM32CubeL4
+[submodule "lib/libb64"]
+	path = lib/libb64
+	url = https://github.com/BuLogics/libb64.git

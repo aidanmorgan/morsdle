@@ -35,12 +35,12 @@ typedef struct {
     colour_t cell_background_colours[5];
     colour_t cell_foreground_colours[5];
 
-} renderer_options;
-typedef renderer_options* renderer_options_t;
+} renderer;
+typedef renderer* renderer_t;
 
-void init_renderer(display_operations_t drawops, renderer_options_t renderopts);
+void renderer_init(display_t drawops, renderer_t renderopts);
 
-void renderer_handle_event(display_operations_t drawops, renderer_options_t renderopts, morsdle_game_event_t *event);
-void renderer_clear(display_operations_t drawops, renderer_options_t renderopts);
+void renderer_handle_event(display_t drawops, renderer_t renderopts, render_pass_t pass, morsdle_game_event_t *event);
+void renderer_clear(display_t drawops, renderer_t renderopts, render_pass_t pass);
 
 #endif //RENDERER_H
