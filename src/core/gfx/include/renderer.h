@@ -18,9 +18,6 @@ enum morsdle_game_mode {
 typedef enum morsdle_game_mode morsdle_game_mode_t;
 
 typedef struct {
-    uint16_t height;
-    uint16_t width;
-
     uint8_t grid_line_width;    // the width of the line to draw (in pixels)
 
     uint8_t grid_left_border;   // the offset of the start of the grid from the left edge of the screen
@@ -47,9 +44,9 @@ typedef struct {
 } renderer;
 typedef renderer* renderer_t;
 
-void renderer_init(display_t drawops, renderer_t renderopts);
+void renderer_init(canvas_t canvas, renderer_t renderopts);
 
-void renderer_handle_event(display_t drawops, renderer_t renderopts, render_pass_t pass, morsdle_game_event_t *event);
-void renderer_clear(display_t drawops, renderer_t renderopts, render_pass_t pass);
+void renderer_handle_event(canvas_t drawops, renderer_t renderopts, render_pass_t pass, morsdle_game_event_t *event);
+void renderer_clear(canvas_t drawops, renderer_t renderopts, render_pass_t pass);
 
 #endif //RENDERER_H

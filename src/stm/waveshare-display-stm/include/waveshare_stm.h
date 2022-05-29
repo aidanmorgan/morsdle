@@ -20,8 +20,8 @@ enum wavesharestm_pin {
 typedef enum wavesharestm_pin wavesharestm_pin_t;
 
 struct wavesharestm_pin_conf {
-    uint8_t port;
-    uint8_t pin;
+    GPIO_TypeDef* port;
+    uint16_t pin;
 };
 
 struct wavesharestm_conf {
@@ -29,9 +29,6 @@ struct wavesharestm_conf {
     struct wavesharestm_pin_conf dc;
     struct wavesharestm_pin_conf cs;
     struct wavesharestm_pin_conf busy;
-
-    uint16_t width;
-    uint16_t height;
 };
 
 typedef struct wavesharestm_conf * wavesharestm_conf_t;
@@ -49,8 +46,9 @@ void wavesharestm_init(wavesharestm_conf_t conf);
 void wavesharestm_destroy(wavesharestm_conf_t conf);
 void wavesharestm_send_data(wavesharestm_conf_t conf, uint8_t data);
 void wavesharestm_send_command(wavesharestm_conf_t conf, uint8_t data);
-void wavesharestm_clear(wavesharestm_conf_t conf, uint8_t colour);
 void wavesharestm_reset(wavesharestm_conf_t conf);
+
+void wavesharestm_clear(wavesharestm_conf_t conf, uint16_t width, uint16_t height, uint8_t colour);
 
 void wavesharestm_render_impl(void * data, uint8_t* buffer, uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end);
 

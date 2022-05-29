@@ -10,15 +10,12 @@ static uint8_t imagebuffer[600 * 448];
 
 static morse_t h_morse = &(struct morse) {};
 static morsdle_game_t* h_game = &(morsdle_game_t) {.word = "ratio" };
+
 static renderer_t h_renderer = &(renderer) {
-    .height = 600,
-    .width = 448,
     .game_mode = MORSDLE_GAME_SINGLE_LETTER
 };
 
-static wavesharestm_conf_t h_waveshare_conf = &(struct wavesharestm_conf){
-    .height = 600,
-    .width = 448,
+static wavesharestm_conf_t h_waveshare_stm = &(struct wavesharestm_conf){
     .busy = (struct wavesharestm_pin_conf) {
         .port = 0,
         .pin = 0
@@ -38,16 +35,16 @@ static wavesharestm_conf_t h_waveshare_conf = &(struct wavesharestm_conf){
 };
 
 // this is the waveshare implementation of the handle
-static display_handle_t _display_handle = (display_handle_t) {
-        .height = 600,
-        .width = 448,
+static display_impl_t display_handle = (display_impl_t) {
         .buffer = imagebuffer,
-        .render_region_impl_cfg = (void*)&h_waveshare_conf,
-        .render_region_impl = wavesharestm_render_impl
+        .waveshare_conf = (void*)&h_waveshare_stm,
+        .waveshare_render_region = wavesharestm_render_impl
 };
 
-static display_t h_display = &(struct display) {
-    .handle = &_display_handle
+static canvas_t h_display = &(struct canvas) {
+    .display_impl = &display_handle,
+    .height = 600,
+    .width = 448
 };
 
 int main(void) {
@@ -57,7 +54,7 @@ int main(void) {
     morsdle_init_game(h_game);
 
     // plug the waveshare handle into the display container and then initialise
-    display_init(h_display);
+    canvas_init(h_display);
     // initialise the renderer that connects the morsdle game with the display
     renderer_init(h_display, h_renderer);
 
@@ -84,7 +81,7 @@ int main(void) {
             // we aren't going to bother drawing unless there's an event, and even then they may not dirty the display
             // so collect any dirty regions into a render_pass and then see if we actually need to redraw.
             struct render_pass render_pass;
-            render_pass_init(h_display->handle, &render_pass);
+            render_pass_init(h_display->display_impl, &render_pass);
 
             while (morsdle_has_events(h_game)) {
                 if (morsdle_read_event(h_game, &ev)) {

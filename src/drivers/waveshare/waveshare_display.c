@@ -58,21 +58,21 @@ static colour_t colour_lookup[7] = {
 };
 
 
-static void waveshare_set_pixel(display_handle_t *surface, point_t point, colour_t colour) {
-    if (point.x > surface->width || point.y > surface->height) {
+static void waveshare_set_pixel(canvas_t canvas, point_t point, colour_t colour) {
+    if (point.x > canvas->width || point.y > canvas->height) {
         return;
     }
 
-    uint16_t widthbyte = (surface->width % 2 == 0) ? (surface->width / 2) : (surface->width / 2 + 1);
+    uint16_t widthbyte = (canvas->width % 2 == 0) ? (canvas->width / 2) : (canvas->width / 2 + 1);
     uint16_t pixel_idx = point.x / 8 + point.y * widthbyte;
 
-    uint8_t pixel_data = surface->buffer[pixel_idx];
+    uint8_t pixel_data = canvas->display_impl->buffer[pixel_idx];
 
     if (colour == COLOUR_BLACK) {
-        surface->buffer[pixel_idx] = pixel_data & ~(0x80 >> (point.x % 8));
+        canvas->display_impl->buffer[pixel_idx] = pixel_data & ~(0x80 >> (point.x % 8));
     } else {
         pixel_data = pixel_data & (~(0xF0 >> ((point.x % 2) * 4)));
-        surface->buffer[pixel_idx] = pixel_data | ((colour_lookup[colour] << 4) >> ((point.x % 2) * 4));
+        canvas->display_impl->buffer[pixel_idx] = pixel_data | ((colour_lookup[colour] << 4) >> ((point.x % 2) * 4));
     }
 }
 
@@ -90,7 +90,7 @@ void waveshare_draw_line(render_pass_t pass, point_t start, point_t end, uint8_t
     int cumulativeerror = dx + dy;
 
     for (;;) {
-        waveshare_set_pixel(pass->handle, (point_t) {.x = current_x, .y = current_y}, colour);
+        waveshare_set_pixel(pass->canvas, (point_t) {.x = current_x, .y = current_y}, colour);
 
         if (2 * cumulativeerror >= dy) {
             if (current_x == end.x) {
@@ -142,7 +142,7 @@ void waveshare_draw_char(render_pass_t pass, char c, point_t topleft, uint8_t si
             bool value = (font.hex[pixel / 8] >> (pixel % 8)) & 1;
 
             if (value) {
-                waveshare_set_pixel(pass->handle, (point_t) {.x = topleft.x + column, .y = topleft.y + row}, colour);
+                waveshare_set_pixel(pass->canvas, (point_t) {.x = topleft.x + column, .y = topleft.y + row}, colour);
             }
         }
     }
@@ -162,13 +162,13 @@ void waveshare_draw_char(render_pass_t pass, char c, point_t topleft, uint8_t si
 
 // start a rendering pass, indicating to the underlyign display that we are going to soon be
 // sending updated dirty regions
-void render_pass_init(display_handle_t *handle, render_pass_t render) {
+void render_pass_init(canvas_t canvas, render_pass_t render) {
     if (dirty_regions->size != 0) {
         // TODO: return an error here
         return;
     }
 
-    render->handle = handle;
+    render->canvas = canvas;
     render->dirty_regions = dirty_regions;
 }
 
@@ -185,8 +185,8 @@ extern void render_pass_end(render_pass_t render) {
         // these are the coordinates of the "dirty rectangle" of the display that needs to be redrawn
         // this is basically a bounding box around every dirtied region - it's relatively fast to compute
         // but will cause a lot of pixels that don't need to be redrawn to be redrawn
-        uint16_t top_left_x = render->handle->width;
-        uint16_t top_left_y = render->handle->height;
+        uint16_t top_left_x = render->canvas->width;
+        uint16_t top_left_y = render->canvas->height;
         uint16_t bottom_right_x = 0;
         uint16_t bottom_right_y = 0;
 
@@ -200,12 +200,12 @@ extern void render_pass_end(render_pass_t render) {
             bottom_right_y = max(regions->bottom_right.y, bottom_right_y);
         }
 
-        render->handle->render_region_impl(render->handle->render_region_impl_cfg, render->handle->buffer, top_left_x,
-                                           top_left_y, bottom_right_x, bottom_right_y);
+        render->canvas->display_impl->waveshare_render_region(render->canvas->display_impl->waveshare_conf, render->canvas->display_impl->buffer, top_left_x,
+                                                              top_left_y, bottom_right_x, bottom_right_y);
     }
 }
 
-void display_init(display_t ops) {
+void canvas_init(canvas_t ops) {
     cbuff_init(dirty_regions, (void **) &_dirty_region, MAX_DIRTY_REGIONS, sizeof(region_t));
 
     ops->height = 600;
@@ -216,6 +216,6 @@ void display_init(display_t ops) {
     ops->draw_line = waveshare_draw_line;
 }
 
-void display_destroy(display_t ops) {
+void canvas_destroy(canvas_t ops) {
 
 }

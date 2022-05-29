@@ -19,15 +19,12 @@
 #define WAVESHARE_ORANGE  0x6	///	110
 
 
-struct display_handle_t  {
+struct display_impl_t  {
     uint8_t* buffer;
 
-    void* render_region_impl_cfg;
+    void* waveshare_conf;
     // this is the callback to perform the actual render, required to be set by the implementation
-    void (*render_region_impl)(void* config, uint8_t*, uint16_t,uint16_t,uint16_t,uint16_t);
-
-    uint16_t height;
-    uint16_t width;
+    void (*waveshare_render_region)(void* config, uint8_t*, uint16_t, uint16_t, uint16_t, uint16_t);
 };
 
 void waveshare_draw_line(render_pass_t pass, point_t start, point_t end, uint8_t thickness, colour_t colour);

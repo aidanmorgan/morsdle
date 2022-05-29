@@ -8,10 +8,7 @@ static uint16_t min(uint16_t a, uint16_t b) {
 }
 
 
-void renderer_init(display_t drawops, renderer_t renderopts) {
-    renderopts->width = drawops->width;
-    renderopts->height = drawops->height;
-
+void renderer_init(canvas_t canvas, renderer_t renderopts) {
     renderopts->grid_line_width = 1;
     renderopts->cell_padding = 5;
     renderopts->grid_left_border = 5;
@@ -19,13 +16,13 @@ void renderer_init(display_t drawops, renderer_t renderopts) {
     renderopts->grid_top_border = 5;
     renderopts->grid_bottom_border = 5;
 
-    uint16_t constrained = min(renderopts->width, renderopts->height);
+    uint16_t constrained = min(canvas->width, canvas->height);
 
     // try and calculate the cell height/width based on the smaller dimension, as we have a 5x6 grid we need to be conscious of it
-    if(constrained == renderopts->width || renderopts->width == renderopts->height) {
+    if(constrained == canvas->width || canvas->width == canvas->height) {
         // there are 2 paddings (left, right) and 6 lines and 12 insets
 
-        renderopts->letter_cell_width = (renderopts->width - ((6 * renderopts->grid_line_width) + renderopts->grid_left_border + renderopts->grid_right_border)) / LETTERS_PER_WORD;
+        renderopts->letter_cell_width = (canvas->width - ((6 * renderopts->grid_line_width) + renderopts->grid_left_border + renderopts->grid_right_border)) / LETTERS_PER_WORD;
         renderopts->letter_cell_height = renderopts->letter_cell_width;
     }
     else {
@@ -48,7 +45,7 @@ void renderer_init(display_t drawops, renderer_t renderopts) {
     renderopts->cell_background_colours[LETTER_STATE_VALID] = COLOUR_GREEN;
 }
 
-static void render_grid(renderer_t renderopts, display_t drawops, render_pass_t pass) {
+static void render_grid(renderer_t renderopts, canvas_t drawops, render_pass_t pass) {
     // draw the vertical lines
     for(uint8_t i = 0; i < LETTERS_PER_WORD + 1; i++) {
         drawops->draw_line(pass,
@@ -81,7 +78,7 @@ static void render_grid(renderer_t renderopts, display_t drawops, render_pass_t 
     }
 }
 
-static void render_letter_cell(display_t drawops, renderer_t renderopts, render_pass_t pass, uint8_t letter_idx, uint8_t word_idx, char c, colour_t foreground_colour, colour_t background_colour) {
+static void render_letter_cell(canvas_t drawops, renderer_t renderopts, render_pass_t pass, uint8_t letter_idx, uint8_t word_idx, char c, colour_t foreground_colour, colour_t background_colour) {
     uint16_t start_x = renderopts->grid_left_border + (letter_idx * renderopts->grid_line_width) + (letter_idx * renderopts->letter_cell_width);
     uint16_t start_y = renderopts->grid_top_border + (word_idx * renderopts->grid_line_width) + (word_idx * renderopts->letter_cell_height);
 
@@ -141,7 +138,7 @@ static void render_letter_cell(display_t drawops, renderer_t renderopts, render_
     }
 }
 
-void renderer_handle_event(display_t drawops, renderer_t renderopts, render_pass_t pass, morsdle_game_event_t *event) {
+void renderer_handle_event(canvas_t drawops, renderer_t renderopts, render_pass_t pass, morsdle_game_event_t *event) {
     switch (event->type) {
         case EVENT_GAME_CREATED: {
             renderer_clear(drawops, renderopts, pass);
@@ -206,7 +203,7 @@ void renderer_handle_event(display_t drawops, renderer_t renderopts, render_pass
     }
 }
 
-void renderer_clear(display_t drawops, renderer_t renderopts, render_pass_t pass) {
+void renderer_clear(canvas_t drawops, renderer_t renderopts, render_pass_t pass) {
     // fill the background with the default background colour
     drawops->fill_rect(pass,
                        (point_t){0,0},

@@ -7,8 +7,8 @@ void setUp (void) {} /* Is run before every test, put unit init calls here. */
 void tearDown (void) {} /* Is run after every test, put unit clean-up calls here. */
 
 void test_gamecreatedevent() {
-    display_t operations = &(display){};
-    display_init(operations);
+    canvas_t operations = &(struct canvas){};
+    canvas_init(operations);
 
     renderer_t options = &(renderer) {};
     renderer_init(operations, options);
@@ -18,17 +18,17 @@ void test_gamecreatedevent() {
     };
 
     render_pass_t render_pass = (render_pass_t)&(struct render_pass){};
-    render_pass_init(operations->handle, render_pass);
+    render_pass_init(operations, render_pass);
     renderer_handle_event(operations, options, render_pass, &ev);
     render_pass_end(render_pass);
 
-    mockdisplay_write_buffer(operations->handle, "test-rendergrid.svg");
-    display_destroy(operations);
+    mockdisplay_write_buffer(operations->display_impl, "test-rendergrid.svg");
+    canvas_destroy(operations);
 }
 
 void test_wordcompletedevent() {
-    display_t operations = &(display){};
-    display_init(operations);
+    canvas_t operations = &(struct canvas){};
+    canvas_init(operations);
 
     renderer_t options = &(renderer) {};
     renderer_init(operations, options);
@@ -68,12 +68,12 @@ void test_wordcompletedevent() {
     };
 
     render_pass_t render_pass = (render_pass_t)&(struct render_pass){};
-    render_pass_init(operations->handle, render_pass);
+    render_pass_init(operations, render_pass);
     renderer_handle_event(operations, options, render_pass, &ev);
     render_pass_end(render_pass);
 
-    mockdisplay_write_buffer(operations->handle, "test-wordcompleted.svg");
-    display_destroy(operations);
+    mockdisplay_write_buffer(operations->display_impl, "test-wordcompleted.svg");
+    canvas_destroy(operations);
 }
 
 int main(void)
