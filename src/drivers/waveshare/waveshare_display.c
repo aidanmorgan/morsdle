@@ -6,7 +6,8 @@
 
 #define MAX_DIRTY_REGIONS 32
 
-static region_t _dirty_region[MAX_DIRTY_REGIONS];
+// allocating the memory that backs the dirty_regions circular buffer
+static region_t dirty_regions_raw[MAX_DIRTY_REGIONS];
 static cbuff_t dirty_regions = (cbuff_t) &(struct cbuff) {};
 
 static inline uint16_t max(uint16_t a, uint16_t b) {
@@ -17,7 +18,6 @@ static inline uint16_t min(uint16_t a, uint16_t b) {
     return a < b ? a : b;
 }
 
-// struct that provides a base64 pixel by pixel encoding of each individual character
 struct font_t {
     char c;
 
@@ -39,10 +39,8 @@ const font_t font_buffer[1] = {
         (font_t) {
                 .c = 'A',
                 .length = 32,
-                .height=16,
-                .width=16,
-//                .hex = {0xFD, 0xFF, 0xFA, 0xFF, 0xF7, 0x7F, 0xEF, 0xBF, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF,
-//                        0xDF, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF, 0xDF},
+                .height=64,
+                .width=64,
                 }
 };
 
@@ -178,6 +176,8 @@ extern void render_pass_end(render_pass_t render) {
     size_t dirty_region_count = dirty_regions->size;
 
     if (dirty_region_count > 0) {
+        canvas_t canvas = render->canvas;
+
         region_t regions[dirty_region_count];
         // read many should empty the buffer, leaving it empty
         cbuff_readmany(dirty_regions, &regions, dirty_region_count);
@@ -200,13 +200,18 @@ extern void render_pass_end(render_pass_t render) {
             bottom_right_y = max(regions->bottom_right.y, bottom_right_y);
         }
 
-        render->canvas->display_impl->waveshare_render_region(render->canvas->display_impl->waveshare_conf, render->canvas->display_impl->buffer, top_left_x,
-                                                              top_left_y, bottom_right_x, bottom_right_y);
+        canvas->display_impl->render_dirty_region(render->canvas->display_impl->buffer,
+                                                  render->canvas->width,
+                                                  render->canvas->height,
+                                                  top_left_x,
+                                                  top_left_y,
+                                                  bottom_right_x,
+                                                  bottom_right_y);
     }
 }
 
 void canvas_init(canvas_t ops) {
-    cbuff_init(dirty_regions, (void **) &_dirty_region, MAX_DIRTY_REGIONS, sizeof(region_t));
+    cbuff_init(dirty_regions, &dirty_regions_raw, MAX_DIRTY_REGIONS, sizeof(region_t));
 
     ops->height = 600;
     ops->width = 448;

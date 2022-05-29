@@ -57,7 +57,6 @@ struct canvas {
 
     uint16_t height;
     uint16_t width;
-    cbuff_t dirty_regions;
 };
 
 

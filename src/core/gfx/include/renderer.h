@@ -46,7 +46,7 @@ typedef renderer* renderer_t;
 
 void renderer_init(canvas_t canvas, renderer_t renderopts);
 
-void renderer_handle_event(canvas_t drawops, renderer_t renderopts, render_pass_t pass, morsdle_game_event_t *event);
-void renderer_clear(canvas_t drawops, renderer_t renderopts, render_pass_t pass);
+void renderer_handle_event(canvas_t canvas, renderer_t renderopts, render_pass_t pass, morsdle_game_event_t *event);
+void renderer_clear(canvas_t canvas, renderer_t renderopts, render_pass_t pass);
 
 #endif //RENDERER_H

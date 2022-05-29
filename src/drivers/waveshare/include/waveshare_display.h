@@ -21,10 +21,8 @@
 
 struct display_impl_t  {
     uint8_t* buffer;
-
-    void* waveshare_conf;
     // this is the callback to perform the actual render, required to be set by the implementation
-    void (*waveshare_render_region)(void* config, uint8_t*, uint16_t, uint16_t, uint16_t, uint16_t);
+    void (*render_dirty_region)(uint8_t*, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t);
 };
 
 void waveshare_draw_line(render_pass_t pass, point_t start, point_t end, uint8_t thickness, colour_t colour);
