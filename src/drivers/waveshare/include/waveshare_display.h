@@ -9,7 +9,6 @@
 #include "morsdle.h"
 #include "display.h"
 #include "renderer.h"
-#include "waveshare_stm.h"
 
 #define WAVESHARE_BLACK   0x0	/// 000
 #define WAVESHARE_WHITE   0x1	///	001

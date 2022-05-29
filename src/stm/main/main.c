@@ -10,19 +10,35 @@ static uint8_t imagebuffer[600 * 448];
 
 static morse_t h_morse = &(struct morse) {};
 static morsdle_game_t* h_game = &(morsdle_game_t) {.word = "ratio" };
-static display_handle_t* h_waveshare = &(display_handle_t) {};
 static renderer_t h_renderer = &(renderer) {
     .height = 600,
-    .width = 448
+    .width = 448,
+    .game_mode = MORSDLE_GAME_SINGLE_LETTER
 };
 
-static wavesharestm_conf_t h_waveshare_conf = (struct wavesharestm_conf){
+static wavesharestm_conf_t h_waveshare_conf = &(struct wavesharestm_conf){
     .height = 600,
     .width = 448,
-
+    .busy = (struct wavesharestm_pin_conf) {
+        .port = 0,
+        .pin = 0
+    },
+    .cs = (struct wavesharestm_pin_conf) {
+            .port = 0,
+            .pin = 0
+    },
+    .dc = (struct wavesharestm_pin_conf) {
+            .port = 0,
+            .pin = 0
+    },
+    .rst = (struct wavesharestm_pin_conf) {
+            .port = 0,
+            .pin = 0
+    }
 };
 
-static display_t h_display = &(display_handle_t) {
+// this is the waveshare implementation of the handle
+static display_handle_t _display_handle = (display_handle_t) {
         .height = 600,
         .width = 448,
         .buffer = imagebuffer,
@@ -30,6 +46,9 @@ static display_t h_display = &(display_handle_t) {
         .render_region_impl = wavesharestm_render_impl
 };
 
+static display_t h_display = &(struct display) {
+    .handle = &_display_handle
+};
 
 int main(void) {
     // initialise the morse processor
@@ -38,15 +57,9 @@ int main(void) {
     morsdle_init_game(h_game);
 
     // plug the waveshare handle into the display container and then initialise
-    h_display->handle = h_waveshare;
     display_init(h_display);
     // initialise the renderer that connects the morsdle game with the display
     renderer_init(h_display, h_renderer);
-
-    // this is gross, but in an attempt to not mash the dependencies together I may have made a mistake
-    // with the layering that means that the renderer has no way to actually tell the underlying hardware
-    // to render a buffer...
-    h_display->render = hackaround_render;
 
     while(1) {
         // this needs to happen every MORSE_DIT_MS / 2 ms.
@@ -64,18 +77,23 @@ int main(void) {
             }
         }
 
-        // this probably only needs to happen once a second, but it will be slow to perform
-        morsdle_game_event_t ev;
-        render_pass_t render_pass;
-        start_render_pass(h_waveshare, &render_pass);
-        // process the game events and update the h_renderer h_display
-        while (morsdle_has_events(h_game)) {
-            if (morsdle_read_event(h_game, &ev)) {
-                renderer_handle_event(h_display, h_renderer, &ev);
-            }
-        }
+        // are there any game events that may require processing
+        if(morsdle_has_events(h_game)) {
+            morsdle_game_event_t ev;
 
-        end_render_pass(h_waveshare, &render_pass);
+            // we aren't going to bother drawing unless there's an event, and even then they may not dirty the display
+            // so collect any dirty regions into a render_pass and then see if we actually need to redraw.
+            struct render_pass render_pass;
+            render_pass_init(h_display->handle, &render_pass);
+
+            while (morsdle_has_events(h_game)) {
+                if (morsdle_read_event(h_game, &ev)) {
+                    renderer_handle_event(h_display, h_renderer, &render_pass, &ev);
+                }
+            }
+
+            render_pass_end(&render_pass);
+        }
 
     }
 

@@ -36,12 +36,13 @@ typedef struct region region_t;
 
 // collects up all regions that need to be redrawn for the provided handle
 struct render_pass {
-    cbuff_t regions;
+    // a circular buffer of region_t
+    cbuff_t dirty_regions;
     display_handle_t* handle;
 };
 typedef struct render_pass* render_pass_t;
 
-typedef struct {
+struct display {
     void (*draw_line)(render_pass_t pass, point_t start, point_t end, uint8_t thickness, colour_t colour);
     void (*fill_rect)(render_pass_t pass, point_t topleft, point_t bottomright, colour_t fill_colour);
     void (*draw_char)(render_pass_t pass, char c, point_t topleft, uint8_t size, colour_t colour);
@@ -51,18 +52,19 @@ typedef struct {
     uint16_t height;
     uint16_t width;
     cbuff_t dirty_regions;
-} display;
-typedef display* display_t;
+};
+
+typedef struct display* display_t;
 
 extern void display_init(display_t ops);
 extern void display_destroy(display_t ops);
 
 // start a rendering pass, indicating to the underlyign display that we are going to soon be
 // sending updated dirty regions
-extern void start_render_pass(display_handle_t* handle, render_pass_t render);
+extern void render_pass_init(display_handle_t* handle, render_pass_t render);
 
 // end the render pass, update the display with the buffer in the handle, updating the regions
 // that are marked
-extern void end_render_pass(render_pass_t render);
+extern void render_pass_end(render_pass_t render);
 
 #endif //DISPLAY_H

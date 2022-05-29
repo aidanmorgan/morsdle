@@ -149,26 +149,28 @@ void renderer_handle_event(display_t drawops, renderer_t renderopts, render_pass
         }
 
         case EVENT_LETTER_ADDED: {
-            render_letter_cell(drawops, renderopts, pass,
-                               event->letter->x,
-                               event->letter->y,
-                               event->letter->letter,
-                               renderopts->cell_foreground_colours[LETTER_STATE_SET],
-                               renderopts->cell_background_colours[LETTER_STATE_SET]);
-
+            if(renderopts->game_mode == MORSDLE_GAME_SINGLE_LETTER) {
+                render_letter_cell(drawops, renderopts, pass,
+                                   event->letter->x,
+                                   event->letter->y,
+                                   event->letter->letter,
+                                   renderopts->cell_foreground_colours[LETTER_STATE_SET],
+                                   renderopts->cell_background_colours[LETTER_STATE_SET]);
+            }
             break;
         }
 
         case EVENT_LETTER_REMOVED: {
-            // we need to go through and blank out the contents that was there and replace it with something else
-            render_letter_cell(drawops, renderopts, pass,
-                               event->letter->x,
-                               event->letter->y,
-                               NULL_CHAR,
-                               renderopts->background_colour,
-                               renderopts->background_colour);
+            if(renderopts->game_mode == MORSDLE_GAME_SINGLE_LETTER) {
+                // we need to go through and blank out the contents that was there and replace it with something else
+                render_letter_cell(drawops, renderopts, pass,
+                                   event->letter->x,
+                                   event->letter->y,
+                                   NULL_CHAR,
+                                   renderopts->background_colour,
+                                   renderopts->background_colour);
 
-
+            }
             break;
         }
 
@@ -211,6 +213,6 @@ void renderer_clear(display_t drawops, renderer_t renderopts, render_pass_t pass
                        (point_t){drawops->width, drawops->height},
                        renderopts->background_colour);
     // now render the grid only
-    render_grid(renderopts, drawops);
+    render_grid(renderopts, drawops, pass);
 }
 

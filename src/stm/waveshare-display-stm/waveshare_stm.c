@@ -4,33 +4,28 @@
 
 #include "waveshare_stm.h"
 
-void wavesharestm_render_impl(void * data, uint8_t* buffer, uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end) {
-    wavesharestm_conf_t conf = (wavesharestm_conf_t)data;
-
-}
-
-static bool _get_pin_details(wavesharestm_pin_t pin, uint8_t* port, uint8_t pin) {
-    if(pin == RST) {
-        *port = conf->rst->port;
-        *pin = conf->rst->pin;
+static bool _get_pin_details(wavesharestm_conf_t conf, wavesharestm_pin_t pintype, uint8_t* port, uint8_t* pin) {
+    if(pintype == RST) {
+        *port = conf->rst.port;
+        *pin = conf->rst.pin;
 
         return true;
     }
-    else if(pin == CS) {
-        *port = conf->cs->port;
-        *pin = conf->cs->pin;
+    else if(pintype == CS) {
+        *port = conf->cs.port;
+        *pin = conf->cs.pin;
 
         return true;
     }
-    else if(pin == DC) {
-        *port = conf->dc->port;
-        *pin = conf->dc->pin;
+    else if(pintype == DC) {
+        *port = conf->dc.port;
+        *pin = conf->dc.pin;
 
         return true;
     }
-    else if(pin == BUSY) {
-        *port = conf->busy->port;
-        *pin = conf->busy->pin;
+    else if(pintype == BUSY) {
+        *port = conf->busy.port;
+        *pin = conf->busy.pin;
 
         return true;
     }
@@ -42,18 +37,18 @@ static void inline wavesharestm_digital_write(wavesharestm_conf_t conf, waveshar
     uint8_t port = 0;
     uint8_t pin = 0;
 
-    if(!_get_pin_details(request, &port, &pin)) {
+    if(!_get_pin_details(conf, request, &port, &pin)) {
         return;
     }
 
     HAL_GPIO_WritePin(port, pin, val == 0 ? GPIO_PIN_RESET:GPIO_PIN_SET);
 }
 
-static void inline wavesharestm_digital_read(wavesharestm_conf_t conf, wavesharestm_pin_t pin, uint8_t* result) {
+static void inline wavesharestm_digital_read(wavesharestm_conf_t conf, wavesharestm_pin_t request, uint8_t* result) {
     uint8_t port;
     uint8_t pin;
 
-    if(!_get_pin_details(request, &port, &pin)) {
+    if(!_get_pin_details(conf, request, &port, &pin)) {
         return;
     }
 
@@ -174,9 +169,11 @@ void wavesharestm_destroy(wavesharestm_conf_t conf) {
 
 }
 
-void wavesharestm_render(wavesharestm_conf_t conf, const uint8_t *image)
+void wavesharestm_render_impl(void * data, uint8_t* buffer, uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end)
 {
-    uint64_t long i,j;
+    wavesharestm_conf_t conf = (wavesharestm_conf_t)data;
+
+    uint64_t i,j;
 
     wavesharestm_send_command(conf, 0x61);
     wavesharestm_send_data(conf, 0x02);
@@ -187,7 +184,7 @@ void wavesharestm_render(wavesharestm_conf_t conf, const uint8_t *image)
 
     for(i=0; i<conf->height; i++) {
         for(j=0; j<conf->width/2; j++) {
-            wavesharestm_send_data(conf, image[j + ((conf->width / 2) * i)]);
+            wavesharestm_send_data(conf, buffer[j + ((conf->width / 2) * i)]);
         }
     }
     wavesharestm_send_command(conf, 0x04);//0x04

@@ -6,6 +6,7 @@
 #define MORSDLE_WAVESHARE_STM_H
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "stm32l4xx_hal.h"
 #include "stm32l4xx_hal_gpio.h"
 
@@ -48,7 +49,7 @@ void wavesharestm_init(wavesharestm_conf_t conf);
 void wavesharestm_destroy(wavesharestm_conf_t conf);
 void wavesharestm_send_data(wavesharestm_conf_t conf, uint8_t data);
 void wavesharestm_send_command(wavesharestm_conf_t conf, uint8_t data);
-void wavesharestm_clear(wavesharestm_conf_t conf);
+void wavesharestm_clear(wavesharestm_conf_t conf, uint8_t colour);
 void wavesharestm_reset(wavesharestm_conf_t conf);
 
 void wavesharestm_render_impl(void * data, uint8_t* buffer, uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end);

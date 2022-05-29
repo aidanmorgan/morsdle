@@ -12,7 +12,7 @@ add_dependencies(
         morsdle-util
         morsdle-gfx
         morsdle-game
-        waveshare-stm
+        waveshare-display-stm
         waveshare-display
 
         morse
@@ -38,7 +38,7 @@ target_link_libraries(
         morsdle-game
         waveshare-stm
         waveshare-display
-        waveshare-stm
+        waveshare-display-stm
         morse
 
         HAL::STM32::L4::LL_RCC

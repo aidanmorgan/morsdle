@@ -17,7 +17,10 @@ void test_gamecreatedevent() {
         .type = EVENT_GAME_CREATED
     };
 
-    renderer_handle_event(operations, options, &ev);
+    render_pass_t render_pass = (render_pass_t)&(struct render_pass){};
+    render_pass_init(operations->handle, render_pass);
+    renderer_handle_event(operations, options, render_pass, &ev);
+    render_pass_end(render_pass);
 
     mockdisplay_write_buffer(operations->handle, "test-rendergrid.svg");
     display_destroy(operations);
@@ -64,9 +67,10 @@ void test_wordcompletedevent() {
             }
     };
 
-    // need to call clear to get the grid to render properly
-    renderer_clear(operations, options);
-    renderer_handle_event(operations, options, &ev);
+    render_pass_t render_pass = (render_pass_t)&(struct render_pass){};
+    render_pass_init(operations->handle, render_pass);
+    renderer_handle_event(operations, options, render_pass, &ev);
+    render_pass_end(render_pass);
 
     mockdisplay_write_buffer(operations->handle, "test-wordcompleted.svg");
     display_destroy(operations);

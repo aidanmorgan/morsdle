@@ -8,6 +8,14 @@
 #include "display.h"
 #include "morsdle.h"
 
+enum morsdle_game_mode {
+    // whether the game should accept each letter from the user and then render it on the display (easy mode)
+    MORSDLE_GAME_SINGLE_LETTER,
+    // the game waits until the user has inputted a complete word before rendering on the display (hard mode)
+    MORSDLE_GAME_WHOLE_WORD
+};
+
+typedef enum morsdle_game_mode morsdle_game_mode_t;
 
 typedef struct {
     uint16_t height;
@@ -35,6 +43,7 @@ typedef struct {
     colour_t cell_background_colours[5];
     colour_t cell_foreground_colours[5];
 
+    morsdle_game_mode_t game_mode;
 } renderer;
 typedef renderer* renderer_t;
 

@@ -15,15 +15,15 @@ static const char* colour_lookup[7] = {
 };
 
 
-void mockdisplay_draw_line(display_handle_t* handle, point_t start, point_t end, uint8_t thickness, colour_t line_colour) {
-    svg_line(handle->buffer, colour_lookup[line_colour], thickness, start.x, start.y, end.x, end.y);
+void mockdisplay_draw_line(render_pass_t render, point_t start, point_t end, uint8_t thickness, colour_t line_colour) {
+    svg_line(render->handle->buffer, colour_lookup[line_colour], thickness, start.x, start.y, end.x, end.y);
 }
 
-void mockdisplay_fill_rect(display_handle_t* handle, point_t topleft, point_t bottomright, colour_t fill_colour) {
-    svg_rectangle(handle->buffer, bottomright.x - topleft.x, bottomright.y - topleft.y, topleft.x, topleft.y, colour_lookup[fill_colour], NULL, 1, 0, 0);
+void mockdisplay_fill_rect(render_pass_t render, point_t topleft, point_t bottomright, colour_t fill_colour) {
+    svg_rectangle(render->handle->buffer, bottomright.x - topleft.x, bottomright.y - topleft.y, topleft.x, topleft.y, colour_lookup[fill_colour], NULL, 1, 0, 0);
 }
 
-void mockdisplay_draw_text(display_handle_t* surface, char c, point_t topleft, uint8_t size, colour_t colour) {
+void mockdisplay_draw_text(render_pass_t render, char c, point_t topleft, uint8_t size, colour_t colour) {
 
 }
 
@@ -48,4 +48,18 @@ void display_init(display* ops) {
 
 void display_destroy(display_t ops) {
     svg_free(ops->handle->buffer);
+}
+
+#define MAX_DIRTY_REGIONS 32
+
+static region_t _dirty_region[MAX_DIRTY_REGIONS];
+static cbuff_t dirty_regions = (cbuff_t) &(struct cbuff) {};
+
+void render_pass_init(display_handle_t *handle, render_pass_t render) {
+    render->handle = handle;
+    render->dirty_regions = dirty_regions;
+}
+
+void render_pass_end(render_pass_t render) {
+    cbuff_clear(dirty_regions);
 }
