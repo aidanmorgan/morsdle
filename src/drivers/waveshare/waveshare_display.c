@@ -176,6 +176,11 @@ extern void render_pass_end(render_pass_t render) {
     size_t dirty_region_count = dirty_regions->size;
 
     if (dirty_region_count > 0) {
+        if(render->canvas->display_impl->state == WAVESHARE_DISPLAY_ALSEEP) {
+            render->canvas->display_impl->wake();
+            render->canvas->display_impl->state = WAVESHARE_DISPLAY_AWAKE;
+        }
+
         canvas_t canvas = render->canvas;
 
         region_t regions[dirty_region_count];
@@ -207,6 +212,10 @@ extern void render_pass_end(render_pass_t render) {
                                                   top_left_y,
                                                   bottom_right_x,
                                                   bottom_right_y);
+
+        render->canvas->display_impl->sleep();
+        render->canvas->display_impl->state = WAVESHARE_DISPLAY_ALSEEP;
+
     }
 }
 

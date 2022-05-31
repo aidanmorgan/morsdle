@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 
+find_package(HAL COMPONENTS STM32L4 LL_GPIO REQUIRED)
+
+
 project(waveshare-display-stm C ASM)
 
 add_library(waveshare-display-stm)

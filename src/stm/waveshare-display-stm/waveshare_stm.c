@@ -13,12 +13,25 @@ static void inline wavesharestm_digital_read(wavesharestm_pin_t request, uint8_t
     *result = HAL_GPIO_ReadPin(request.port, request.pin);
 }
 
-static void inline wavesharestm_spi_write(uint8_t data) {
-
+void wavesharestm_wake(void)
+{
+    wavesharestm_digital_write(WAVESHARESTM_DC_PIN, 0);
+    wavesharestm_digital_write(WAVESHARESTM_CS_PIN, 0);
+    wavesharestm_digital_write(WAVESHARESTM_RST_PIN, 1);
 }
 
-static void inline wavesharestm_spi_read(uint8_t *data) {
-    // no op
+void wavesharestm_sleep(void)
+{
+    wavesharestm_digital_write(WAVESHARESTM_DC_PIN, 0);
+    wavesharestm_digital_write(WAVESHARESTM_CS_PIN, 0);
+
+    //close 5V
+    wavesharestm_digital_write(WAVESHARESTM_RST_PIN, 0);
+}
+
+
+static void inline wavesharestm_spi_write(uint8_t data) {
+    HAL_SPI_Transmit(WAVESHARE_SPI_HANDLE, &data, 1, 1000);
 }
 
 static void inline wavesharestm_waitbusy_high() {
@@ -74,6 +87,7 @@ void wavesharestm_clear(uint16_t width, uint16_t height, uint8_t color) {
         for (int j = 0; j < height; j++)
             wavesharestm_send_data( (color << 4) | color);
     }
+
     wavesharestm_send_command( 0x04);//0x04
     wavesharestm_waitbusy_high();
     wavesharestm_send_command( 0x12);//0x12
@@ -128,18 +142,26 @@ void wavesharestm_destroy() {
 }
 
 void wavesharestm_render_impl(uint8_t* buffer, uint16_t width, uint16_t height, uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end) {
-    uint64_t i, j;
+    uint64_t i,j;
 
-    wavesharestm_send_command( 0x61);
-    wavesharestm_send_data( 0x02);
-    wavesharestm_send_data( 0x58);
-    wavesharestm_send_data( 0x01);
-    wavesharestm_send_data( 0xC0);
-    wavesharestm_send_command( 0x10);
+    uint16_t region_width = x_end - x_start;
+    uint16_t region_height = y_end - y_start;
 
-    for (i = 0; i < height; i++) {
-        for (j = 0; j < width / 2; j++) {
-            wavesharestm_send_data(buffer[j + ((width / 2) * i)]);
+    wavesharestm_send_command(0x61);//Set Resolution setting
+    wavesharestm_send_data(0x02);
+    wavesharestm_send_data(0x58);
+    wavesharestm_send_data(0x01);
+    wavesharestm_send_data(0xC0);
+    wavesharestm_send_command(0x10);
+
+    for(i=0; i<height; i++) {
+        for(j=0; j< width/2; j++) {
+            if(i<region_height+y_start && i>=y_start && j<(region_width+x_start)/2 && j>=x_start/2) {
+                wavesharestm_send_data(buffer[(j-x_start/2) + (region_width/2*(i-y_start))]);
+            }
+            else {
+                wavesharestm_send_data(0x11);
+            }
         }
     }
     wavesharestm_send_command(0x04);//0x04
