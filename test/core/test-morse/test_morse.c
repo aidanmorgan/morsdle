@@ -422,6 +422,25 @@ void test_morse_buffer_starts_with_delay() {
     TEST_ASSERT_EQUAL('R', result.ch);
 }
 
+void test_morse_longest_letter() {
+    struct morse* morseconfig = &(struct morse) {};
+    morse_init(morseconfig);
+
+    morse_input_t input = MORSE_DOT;
+    cbuff_write(morseconfig->morse_input_buffer, &input);
+    input = MORSE_DASH;
+    cbuff_write(morseconfig->morse_input_buffer, &input);
+    input = MORSE_DASH;
+    cbuff_write(morseconfig->morse_input_buffer, &input);
+    input = MORSE_DASH;
+    cbuff_write(morseconfig->morse_input_buffer, &input);
+    input = MORSE_DELAY;
+    cbuff_write(morseconfig->morse_input_buffer, &input);
+
+    morse_action_event_t result = (morse_action_event_t){};
+    TEST_ASSERT_TRUE(morse_decode(morseconfig, &result));
+    TEST_ASSERT_EQUAL('J', result.ch);
+}
 
 int main() {
     UNITY_BEGIN();
@@ -442,6 +461,7 @@ int main() {
     RUN_TEST(test_morse_letter_then_hold);
     RUN_TEST(test_morse_letter_and_hold);
     RUN_TEST(test_morse_buffer_starts_with_delay);
+    RUN_TEST(test_morse_longest_letter);
 
     return UNITY_END();
 }

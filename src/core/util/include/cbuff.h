@@ -52,8 +52,8 @@ bool cbuff_clear(cbuff_t buff);
 size_t cbuff_peekhead(cbuff_t buff, void* data, size_t count);
 // copies count items from the current read pointer to the provided pointer
 size_t cbuff_peektail(cbuff_t buff, void* data, size_t count);
-
-bool cbuff_peektail_after(cbuff_t buff, void* result, size_t idx, size_t num);
+// skips idx items into the buffer from the current read pointer, then reads off num items
+size_t cbuff_peektail_after(cbuff_t buff, void* result, size_t idx, size_t num);
 
 // moves the read index in the circular buffer forward count items
 bool cbuff_seek(cbuff_t buff, size_t count);

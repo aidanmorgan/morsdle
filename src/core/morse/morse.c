@@ -211,6 +211,10 @@ bool morse_decode(morse_t morse, morse_action_event_t* letter) {
         cbuff_peektail_after(morse->morse_input_buffer, &temp, offset, 1);
     }
 
+    if((int8_t)(buffer_length - offset) <= 0) {
+        return false;
+    }
+
     // now we have something actionable at the front of the queue, so we can start processing the entries
     morse_input_t inputs[MAX_INPUTS_PER_LETTER];
 
@@ -218,6 +222,10 @@ bool morse_decode(morse_t morse, morse_action_event_t* letter) {
         memset(&inputs, MORSE_NULL, MAX_INPUTS_PER_LETTER * sizeof(morse_input_t));
         cbuff_peektail_after(morse->morse_input_buffer, &inputs, offset, i + 1);
 
+        // we check for the HOLD before the DELAY as we want the input of the HOLD to take priority over
+        // processing any characters, that is, if the user has partially keyed a letter and then realises
+        // they have made a mistake and want to backspace we will clear their input up to the hold and
+        // take that action - effectively throwing away the partially completed letter
         if(inputs[i] == MORSE_SHORT_HOLD) {
             letter->type = MORSE_ACTION_BACKSPACE;
             cbuff_seek(morse->morse_input_buffer, i + 1);

@@ -113,21 +113,18 @@ size_t cbuff_readmany(cbuff_t buff, void* result, size_t count) {
     return count;
 }
 
-bool cbuff_peektail_after(cbuff_t buff, void* result, size_t idx, size_t num) {
-    if(idx > buff->capacity) {
-        return false;
-    }
+size_t cbuff_peektail_after(cbuff_t buff, void* result, size_t idx, size_t num) {
+    // cheat this by moving the read index forward, this is most definitely not thead safe
+    // but neither is anything else in this API, so who cares.
+    size_t read_idx_before = buff->read_idx;
 
-    // cheat this by moving the read index forward
-    size_t current_read_index = buff->read_idx;
-
-    buff->read_idx = (current_read_index + idx) % buff->capacity;
+    buff->read_idx = (read_idx_before + idx) % buff->capacity;
     size_t count = cbuff_peektail(buff, result, num);
 
     // reset the read index
-    buff->read_idx = current_read_index;
+    buff->read_idx = read_idx_before;
 
-    return count == num;
+    return count;
 }
 
 size_t cbuff_peektail(cbuff_t buff, void* result, size_t count) {
