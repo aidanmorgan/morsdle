@@ -33,7 +33,6 @@ extern wavesharestm_pin_t WAVESHARESTM_DC_PIN;
 // Slave chip select, when CS is low, the chip is enabled
 extern wavesharestm_pin_t WAVESHARESTM_CS_PIN;
 extern wavesharestm_pin_t WAVESHARESTM_BUSY_PIN;
-
 extern SPI_HandleTypeDef* WAVESHARE_SPI_HANDLE;
 extern UART_HandleTypeDef* WAVESHARE_UART_HANDLE;
 

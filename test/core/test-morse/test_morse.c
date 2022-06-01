@@ -377,10 +377,14 @@ void test_morse_letter_and_hold() {
 
     TEST_ASSERT_TRUE(morse_convert(morseconfig, 4000));
 
+    // so in this scenario, even though we have a matching letter (dot, dot) the hold
+    // is intended to "override" the letter, so we should throw the buffer away
     morse_action_event_t result = (morse_action_event_t){};
 
     TEST_ASSERT_TRUE(morse_decode(morseconfig, &result));
     TEST_ASSERT_EQUAL(MORSE_ACTION_BACKSPACE, result.type);
+
+    TEST_ASSERT_FALSE(morse_decode(morseconfig, &result));
 }
 
 void test_morse_buffer_starts_with_delay() {
@@ -402,6 +406,7 @@ void test_morse_buffer_starts_with_delay() {
     TEST_ASSERT_TRUE(morse_decode(morseconfig, &result));
     TEST_ASSERT_EQUAL('I', result.ch);
 
+    // now lets try adding a heap of delays for fun
     cbuff_clear(morseconfig->morse_input_buffer);
     input = MORSE_DELAY;
     cbuff_write(morseconfig->morse_input_buffer, &input);

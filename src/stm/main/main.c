@@ -49,7 +49,6 @@ void SystemClock_Config(void) {
     */
     RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
     RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-    RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
     RCC_OscInitStruct.HSIState = RCC_HSI_ON;
     RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
     RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
@@ -104,8 +103,6 @@ static void MX_GPIO_Init(void) {
 
     WAVESHARESTM_RST_PIN.port = PORTA;
     WAVESHARESTM_RST_PIN.pin = PIN1;
-
-
 }
 
 /* SPI1 init function */
@@ -138,7 +135,6 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     __HAL_RCC_SPI1_CLK_ENABLE();
     __HAL_RCC_GPIOA_CLK_ENABLE();
-
     // PORT A5, A7 correspond to SPI_SCK and SPI1_MOSI
     GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_7;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -175,6 +171,11 @@ int main(void) {
     h_canvas->display_impl->init();
     h_canvas->display_impl->state = WAVESHARE_DISPLAY_INITIALISED;
 
+    // now all my stuff is initialised, lets get the STM32 intiialised
+    HAL_Init();
+    SystemClock_Config();
+    MX_GPIO_Init();
+    MX_SPI1_Init();
 
     while (1) {
         // this probably only needs to happen every 2 * MORSE_DIT ms (dit to high, dit to low)
