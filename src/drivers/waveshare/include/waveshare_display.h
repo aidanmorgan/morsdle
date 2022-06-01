@@ -30,8 +30,10 @@ struct display_impl_t  {
     uint8_t* buffer;
     // this is the callback to perform the actual render, required to be set by the implementation
     void (*render_dirty_region)(uint8_t*, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t);
-    // callback to wake the display up if it's been put to sleep
+
     void (*init)();
+
+    // callback to wake the display up if it's been put to sleep
     void (*wake)();
 
     // callback to put the display to sleep if it's been sleeping

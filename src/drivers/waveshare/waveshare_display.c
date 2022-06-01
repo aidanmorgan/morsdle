@@ -184,7 +184,7 @@ extern void render_pass_end(render_pass_t render) {
         canvas_t canvas = render->canvas;
 
         region_t regions[dirty_region_count];
-        // read many should empty the buffer, leaving it empty
+        // read many should empty the buffer
         cbuff_readmany(dirty_regions, &regions, dirty_region_count);
 
         // these are the coordinates of the "dirty rectangle" of the display that needs to be redrawn
@@ -213,9 +213,12 @@ extern void render_pass_end(render_pass_t render) {
                                                   bottom_right_x,
                                                   bottom_right_y);
 
+
         render->canvas->display_impl->sleep();
         render->canvas->display_impl->state = WAVESHARE_DISPLAY_ALSEEP;
 
+        // the read many should have done this, but just in case it didn't then clear it anyway
+        cbuff_clear(dirty_regions);
     }
 }
 

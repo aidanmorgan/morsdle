@@ -113,6 +113,23 @@ size_t cbuff_readmany(cbuff_t buff, void* result, size_t count) {
     return count;
 }
 
+bool cbuff_peektail_after(cbuff_t buff, void* result, size_t idx, size_t num) {
+    if(idx > buff->capacity) {
+        return false;
+    }
+
+    // cheat this by moving the read index forward
+    size_t current_read_index = buff->read_idx;
+
+    buff->read_idx = (current_read_index + idx) % buff->capacity;
+    size_t count = cbuff_peektail(buff, result, num);
+
+    // reset the read index
+    buff->read_idx = current_read_index;
+
+    return count == num;
+}
+
 size_t cbuff_peektail(cbuff_t buff, void* result, size_t count) {
     if(count > buff->capacity) {
         count = buff->capacity;

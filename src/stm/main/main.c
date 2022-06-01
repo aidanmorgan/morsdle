@@ -181,11 +181,22 @@ int main(void) {
         bool converted = morse_convert(h_morse, 0);
 
         if (converted) {
-            char result;
+            morse_action_event_t result = (morse_action_event_t){};
             // process the signal buffer and see if there are any letters completed, if there are then we need to
             // send them to the game engine for processing
             if (morse_decode(h_morse, &result)) {
-                morsdle_add_letter(h_game, result);
+                if(result.type == MORSE_ACTION_ADD_LETTER) {
+                    morsdle_add_letter(h_game, result.ch);
+                }
+                else if(result.type == MORSE_ACTION_BACKSPACE) {
+                    morsdle_remove_letter(h_game);
+                }
+                else if(result.type == MORSE_ACTION_RESET) {
+                    // TODO : implement me
+                }
+                else {
+                    // no-op!
+                }
             }
         }
 
