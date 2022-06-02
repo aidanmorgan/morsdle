@@ -52,15 +52,17 @@ typedef struct {
 #define MORSE_DOT_START 0
 // the minimum time in dits of the end of a "dot"
 #define MORSE_DOT_END 3
+
 // the maximum time in dits of the start of a "dash"
 #define MORSE_DASH_START  3
 // the maximum time in dits of the start of a "dash"
 #define MORSE_DASH_END  7
+
 // the minimum time in dits of when a "delay" starts
 #define MORSE_DELAY_START 7
 
 // start at 3 seconds
-#define MORSE_SHORT_HOLD_START 26
+#define MORSE_SHORT_HOLD_START 40
 // end at 5 seconds
 #define MORSE_SHORT_HOLD_END 66
 

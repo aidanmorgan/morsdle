@@ -219,6 +219,7 @@ bool morse_decode(morse_t morse, morse_action_event_t* letter) {
     morse_input_t inputs[MAX_INPUTS_PER_LETTER];
 
     for(uint8_t i = 0; i < min((buffer_length - offset), MAX_INPUTS_PER_LETTER); i++) {
+        // make sure we initialise the temporary array to all MORSE_NULL so the memory compare works properly later on
         memset(&inputs, MORSE_NULL, MAX_INPUTS_PER_LETTER * sizeof(morse_input_t));
         cbuff_peektail_after(morse->morse_input_buffer, &inputs, offset, i + 1);
 
@@ -263,7 +264,6 @@ bool morse_decode(morse_t morse, morse_action_event_t* letter) {
             cbuff_seek(morse->morse_input_buffer, i + 1);
             return false;
         }
-
     }
 
     // if we have hit the maximum size and we haven't found a delay, then throw away the head of the

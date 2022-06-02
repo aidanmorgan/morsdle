@@ -15,30 +15,13 @@ static renderer_t h_renderer = &(renderer) {
         .game_mode = MORSDLE_GAME_SINGLE_LETTER
 };
 
-wavesharestm_pin_t WAVESHARESTM_BUSY_PIN = (wavesharestm_pin_t) {
-        .port = NULL,
-        .pin = 0
-};
+wavesharestm_pin_t WAVESHARESTM_BUSY_PIN = (wavesharestm_pin_t) {};
+wavesharestm_pin_t WAVESHARESTM_CS_PIN = (wavesharestm_pin_t) {};
+wavesharestm_pin_t WAVESHARESTM_DC_PIN = (wavesharestm_pin_t) {};
+wavesharestm_pin_t WAVESHARESTM_RST_PIN = (wavesharestm_pin_t) {};
 
-wavesharestm_pin_t WAVESHARESTM_CS_PIN = (wavesharestm_pin_t) {
-        .port = NULL,
-        .pin = 0
-
-};
-
-wavesharestm_pin_t WAVESHARESTM_DC_PIN = (wavesharestm_pin_t) {
-        .port = NULL,
-        .pin = 0
-};
-
-
-wavesharestm_pin_t WAVESHARESTM_RST_PIN = (wavesharestm_pin_t) {
-        .port = NULL,
-        .pin = 0
-};
-
-SPI_HandleTypeDef WAVESHARE_SPI_HANDLE = (SPI_HandleTypeDef)NULL;
-UART_HandleTypeDef WAVESHARE_UART_HANDLE = (UART_HandleTypeDef)NULL;
+SPI_HandleTypeDef* WAVESHARE_SPI_HANDLE = (SPI_HandleTypeDef)NULL;
+UART_HandleTypeDef* WAVESHARE_UART_HANDLE = (UART_HandleTypeDef)NULL;
 
 
 // this is the waveshare implementation of the handle
@@ -71,8 +54,12 @@ void SystemClock_Config(void) {
     RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
     RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
     RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
-    HAL_RCC_OscConfig(&RCC_OscInitStruct) ;
-
+    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    /** Initializes the CPU, AHB and APB buses clocks
+    */
     RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                                   |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
     RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
@@ -80,7 +67,10 @@ void SystemClock_Config(void) {
     RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
     RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-    HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK;
+    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+    {
+        Error_Handler();
+    }
 }
 
 static void MX_GPIO_Init(void) {
@@ -90,70 +80,86 @@ static void MX_GPIO_Init(void) {
     __HAL_RCC_GPIOA_CLK_ENABLE();
 
     /*Configure GPIO pin Output Level */
-    HAL_GPIO_WritePin(GPIOA, WAVESHARESTM_RST_PIN.pin|WAVESHARESTM_DC_PIN.pin|WAVESHARESTM_CS_PIN.pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOA, PIN0|PIN1, GPIO_PIN_RESET);
 
-    /*Configure GPIO pins : PAPin PAPin PAPin */
-    GPIO_InitStruct.Pin = WAVESHARESTM_RST_PIN.pin|WAVESHARESTM_DC_PIN.pin|WAVESHARESTM_CS_PIN.pin;
+    // configure the DC and RST pins, connected to PORTA:0 and PORTA:1
+    GPIO_InitStruct.Pin = PIN0|PIN1;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    /*Configure GPIO pin : PtPin */
-    GPIO_InitStruct.Pin = WAVESHARESTM_BUSY_PIN.pin;
+
+    // configure the BUSY pin, which is an digital read for our software, currently connected to GPIOB:0
+    GPIO_InitStruct.Pin = PIN0;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(WAVESHARESTM_BUSY_PIN.port, &GPIO_InitStruct);
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    WAVESHARESTM_BUSY_PIN.port = PORTB;
+    WAVESHARESTM_BUSY_PIN.pin = PIN0;
+
+    WAVESHARESTM_DC_PIN.port = PORTA;
+    WAVESHARESTM_DC_PIN.pin = PIN0;
+
+    WAVESHARESTM_RST_PIN.port = PORTA;
+    WAVESHARESTM_RST_PIN.pin = PIN1;
+
+
 }
 
 /* SPI1 init function */
 void MX_SPI1_Init(void)
 {
-    WAVESHARE_SPI_HANDLE.Instance = SPI1;
-    WAVESHARE_SPI_HANDLE.Init.Mode = SPI_MODE_MASTER;
-    WAVESHARE_SPI_HANDLE.Init.Direction = SPI_DIRECTION_2LINES;
-    WAVESHARE_SPI_HANDLE.Init.DataSize = SPI_DATASIZE_8BIT;
-    WAVESHARE_SPI_HANDLE.Init.CLKPolarity = SPI_POLARITY_LOW;
-    WAVESHARE_SPI_HANDLE.Init.CLKPhase = SPI_PHASE_1EDGE;
-    WAVESHARE_SPI_HANDLE.Init.NSS = SPI_NSS_SOFT;
-    WAVESHARE_SPI_HANDLE.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
-    WAVESHARE_SPI_HANDLE.Init.FirstBit = SPI_FIRSTBIT_MSB;
-    WAVESHARE_SPI_HANDLE.Init.TIMode = SPI_TIMODE_DISABLE;
-    WAVESHARE_SPI_HANDLE.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-    WAVESHARE_SPI_HANDLE.Init.CRCPolynomial = 10;
-    HAL_SPI_Init(&WAVESHARE_SPI_HANDLE);
+    hspi1.Instance = SPI1;
+    hspi1.Init.Mode = SPI_MODE_MASTER;
+    hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+    hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+    hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+    hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+    hspi1.Init.NSS = SPI_NSS_SOFT;
+    hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
+    hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+    hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+    hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+    hspi1.Init.CRCPolynomial = 10;
+
+    if (HAL_SPI_Init(&hspi1) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    WAVESHARE_SPI_HANDLE = SPI1;
 }
 
+// called by the HAL during initialisation
 void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
 {
-
     GPIO_InitTypeDef GPIO_InitStruct = {0};
-    if(spiHandle->Instance==SPI1)
-    {
-        /* USER CODE BEGIN SPI1_MspInit 0 */
+    __HAL_RCC_SPI1_CLK_ENABLE();
+    __HAL_RCC_GPIOA_CLK_ENABLE();
 
-        /* USER CODE END SPI1_MspInit 0 */
-        /* SPI1 clock enable */
-        __HAL_RCC_SPI1_CLK_ENABLE();
-
-        __HAL_RCC_GPIOA_CLK_ENABLE();
-        /**SPI1 GPIO Configuration
-        PA5     ------> SPI1_SCK
-        PA7     ------> SPI1_MOSI
-        */
-        GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_7;
-        GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-        HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-        /* USER CODE BEGIN SPI1_MspInit 1 */
-
-        /* USER CODE END SPI1_MspInit 1 */
-    }
+    // PORT A5, A7 correspond to SPI_SCK and SPI1_MOSI
+    GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_7;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 
 
 int main(void) {
+    // Initialise the hardware
+    HAL_Init();
+
+    // initialise the clock
+    SystemClock_Config();
+
+    // initialise the GPIO pins we are using
+    MX_GPIO_Init();
+
+    // initialise SPI1 interface
+    MX_SPI1_Init();
+
     // initialise the morse processor
     morse_init(h_morse);
 
@@ -169,12 +175,6 @@ int main(void) {
     h_canvas->display_impl->init();
     h_canvas->display_impl->state = WAVESHARE_DISPLAY_INITIALISED;
 
-    // now all my stuff is initialised, lets get the STM32 intiialised
-    HAL_Init();
-    SystemClock_Config();
-    MX_GPIO_Init();
-    MX_USART1_UART_Init();
-    MX_SPI1_Init();
 
     while (1) {
         // this probably only needs to happen every 2 * MORSE_DIT ms (dit to high, dit to low)
@@ -220,6 +220,17 @@ int main(void) {
     }
 
     return 0;
+}
+
+void Error_Handler(void)
+{
+    while(1) {
+        printf("_Error_Handler\r\n");
+    }
+}
+
+void assert_failed(uint8_t *file, uint32_t line) {
+}
 }
 
 

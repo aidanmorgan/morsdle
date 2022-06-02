@@ -17,16 +17,25 @@ struct wavesharestm_pin {
 };
 typedef struct wavesharestm_pin wavesharestm_pin_t;
 
-extern wavesharestm_pin_t WAVESHARESTM_RST_PIN;
+// Pins on board:
+//  VCC: 3.3v
+//  GND: Ground
+//  DIN: SPI MOSI Pin (micro to slave in)
+//  CLK: SPI SCK Pin
+//  CS : SPI Chip Select, Low Active
+//  DC : Data or Command Select (high data, low command) - PORTA, PIN0
+//  RST: External Reset - low active - PORTA - PIN1
+//  BUSY: Busy status (display to micro) - PORTB - PIN0
 
+extern wavesharestm_pin_t WAVESHARESTM_RST_PIN;
 // data/command control pin, write command when DC=0; write data when DC=1
 extern wavesharestm_pin_t WAVESHARESTM_DC_PIN;
-
 // Slave chip select, when CS is low, the chip is enabled
 extern wavesharestm_pin_t WAVESHARESTM_CS_PIN;
 extern wavesharestm_pin_t WAVESHARESTM_BUSY_PIN;
-extern SPI_HandleTypeDef WAVESHARE_SPI_HANDLE;
-extern UART_HandleTypeDef WAVESHARE_UART_HANDLE;
+
+extern SPI_HandleTypeDef* WAVESHARE_SPI_HANDLE;
+extern UART_HandleTypeDef* WAVESHARE_UART_HANDLE;
 
 
 // public interface methods that are used by the waveshare driver, but are specialised for writing to a STM32 device

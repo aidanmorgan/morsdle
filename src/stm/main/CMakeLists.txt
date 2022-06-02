@@ -1,20 +1,20 @@
 cmake_minimum_required(VERSION 3.20)
 
 find_package(CMSIS COMPONENTS STM32L4 REQUIRED)
-find_package(HAL COMPONENTS STM32L4 LL_RCC LL_GPIO REQUIRED)
-
+find_package(HAL COMPONENTS STM32L4 REQUIRED)
 
 project(morsdle-stm C ASM)
 add_executable(morsdle-stm)
 
 add_dependencies(
         morsdle-stm
+
+        morsdle-stm-shared
         morsdle-util
         morsdle-gfx
         morsdle-game
         waveshare-display-stm
         waveshare-display
-
         morse
 )
 
@@ -22,6 +22,7 @@ target_include_directories(
         morsdle-stm
         PUBLIC
         include
+        morsdle-stm-shared
 )
 
 
@@ -41,6 +42,7 @@ target_link_libraries(
         waveshare-display-stm
         morse
 
+        morsdle-stm-shared
         HAL::STM32::L4::LL_RCC
         HAL::STM32::L4::LL_GPIO
         CMSIS::STM32::L476RG
