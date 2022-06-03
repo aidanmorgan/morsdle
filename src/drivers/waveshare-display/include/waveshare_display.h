@@ -18,13 +18,6 @@
 #define WAVESHARE_YELLOW  0x5	///	101
 #define WAVESHARE_ORANGE  0x6	///	110
 
-enum waveshare_display_state {
-    WAVESHARE_DISPLAY_UNKNOWN,
-    WAVESHARE_DISPLAY_INITIALISED,
-    WAVESHARE_DISPLAY_AWAKE,
-    WAVESHARE_DISPLAY_ALSEEP
-};
-typedef enum waveshare_display_state waveshare_display_state_t;
 
 struct display_impl_t  {
     uint8_t* buffer;
@@ -34,12 +27,10 @@ struct display_impl_t  {
     void (*init)();
 
     // callback to wake the display up if it's been put to sleep
-    void (*wake)();
+    void (*pre_render)();
 
     // callback to put the display to sleep if it's been sleeping
-    void (*sleep)();
-
-    waveshare_display_state_t state;
+    void (*post_render)();
 };
 
 void waveshare_draw_line(render_pass_t pass, point_t start, point_t end, uint8_t thickness, colour_t colour);

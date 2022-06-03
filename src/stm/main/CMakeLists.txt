@@ -9,11 +9,11 @@ add_executable(morsdle-stm)
 add_dependencies(
         morsdle-stm
 
-        morsdle-stm-shared
+        morsdle-stm32l4
         morsdle-util
         morsdle-gfx
         morsdle-game
-        waveshare-display-stm
+        waveshare-api
         waveshare-display
         morse
 )
@@ -22,30 +22,30 @@ target_include_directories(
         morsdle-stm
         PUBLIC
         include
-        morsdle-stm-shared
 )
-
 
 target_sources(
         morsdle-stm
         PUBLIC
-        main.c
+        morsdle_main.c
 )
 
 target_link_libraries(
         morsdle-stm
+
+        morsdle-stm32l4
         morsdle-util
         morsdle-gfx
         morsdle-game
-        waveshare-stm
+        waveshare-api
         waveshare-display
-        waveshare-display-stm
         morse
 
-        morsdle-stm-shared
-        HAL::STM32::L4::LL_RCC
-        HAL::STM32::L4::LL_GPIO
-        CMSIS::STM32::L476RG
+        HAL::STM32::L4::RCC
+        HAL::STM32::L4::GPIO
+        HAL::STM32::L4::SPI
+        HAL::STM32::L4::CORTEX
+        #CMSIS::STM32::L476RG
         STM32::NoSys
 )
 
