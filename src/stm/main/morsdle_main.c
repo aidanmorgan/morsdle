@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "main.h"
 #include "morse.h"
 #include "cbuff.h"
@@ -9,8 +10,8 @@
 
 static uint8_t imagebuffer[448 * 600];
 
-static morse_t h_morse = &(struct morse) {};
-static morsdle_game_t *h_game = &(morsdle_game_t) {.word = "ratio"};
+static morse_t h_morse = &(struct morse) { };
+static morsdle_game_t *h_game = &(morsdle_game_t) { .word = "ratio" };
 
 static renderer_t h_renderer = &(renderer) {
         .game_mode = MORSDLE_GAME_SINGLE_LETTER
@@ -34,6 +35,8 @@ static canvas_t h_canvas = &(struct canvas) {
 
 
 int main(void) {
+    InitStm32L4xx();    // implemented by hand in the generated code to perform initialisation
+
     // initialise the morse processor
     morse_init(h_morse);
 
@@ -94,6 +97,17 @@ int main(void) {
     return 0;
 }
 
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    // TODO : add some form of debouncing here
+    if(GPIO_Pin == B1_Pin) {
+        if (HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)) {
+            morse_append_signal(h_morse, SIGNAL_HIGH, HAL_GetTick());
+        } else {
+            morse_append_signal(h_morse, SIGNAL_LOW, HAL_GetTick());
+        }
+    }
+}
 
 extern void wavesharespi_write_dc(uint8_t val) {
     HAL_GPIO_WritePin(Waveshare_Dc_GPIO_Port, Waveshare_Dc_Pin, val == 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
@@ -110,7 +124,7 @@ extern void wavesharespi_write_rst(uint8_t val) {
 }
 
 extern void wavesharespi_write_spi(uint8_t val) {
-    HAL_SPI_Transmit(hspi2, );
+    HAL_SPI_Transmit(&hspi2, &val, 1, 1000);
 }
 
 extern void wavesharespi_read_busy(uint8_t* val) {

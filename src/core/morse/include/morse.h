@@ -71,6 +71,9 @@ typedef struct {
 // end at 10 seconds
 #define MORSE_LONG_HOLD_END 133
 
+// if a signal change comes in within this time of the most recent value, then ignore it
+// this is intentionally set to 1/5th of the MORSE_DIT_MS time
+#define DEBOUNCE_THRESHOLD 15
 
 struct morse {
     cbuff_t signal_buffer;

@@ -13,10 +13,10 @@ add_subdirectory(src/drivers/waveshare-api)
 
 
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL arm)
-    set(STM32_LOCAL_CMSIS_LIB_PATH ${CMAKE_SOURCE_DIR}/lib/stm32l4xx/Drivers/CMSIS)
-    set(STM32_LOCAL_HAL_LIB_PATH ${CMAKE_SOURCE_DIR}/lib/stm32l4xx/Drivers/STM32L4xx_HAL_Driver)
+    set(STM32_LOCAL_CMSIS_LIB_PATH ${CMAKE_SOURCE_DIR}/ioc/morsdle/Drivers/CMSIS)
+    set(STM32_LOCAL_HAL_LIB_PATH ${CMAKE_SOURCE_DIR}/ioc/morsdle/Drivers/STM32L4xx_HAL_Driver)
 
-    add_subdirectory(ioc)       # include the STMCube generated source code
+#    add_subdirectory(ioc)       # include the STMCube generated source code
     add_subdirectory(src/stm/main)
 else()
     add_subdirectory(lib/unity)

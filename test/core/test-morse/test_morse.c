@@ -298,7 +298,7 @@ void test_morse_short_hold() {
     morse_init(morseconfig);
 
     morse_append_signal(morseconfig, SIGNAL_LOW, 0);
-    morse_append_signal(morseconfig, SIGNAL_HIGH, 1);
+    morse_append_signal(morseconfig, SIGNAL_HIGH, 20);
     morse_append_signal(morseconfig, SIGNAL_LOW, 4000);
 
     morse_input_t input;
@@ -318,7 +318,7 @@ void test_morse_long_hold() {
     morse_init(morseconfig);
 
     morse_append_signal(morseconfig, SIGNAL_LOW, 0);
-    morse_append_signal(morseconfig, SIGNAL_HIGH, 1);
+    morse_append_signal(morseconfig, SIGNAL_HIGH, 20);
     morse_append_signal(morseconfig, SIGNAL_LOW, 9000);
 
     morse_input_t input;
@@ -338,8 +338,8 @@ void test_morse_letter_then_hold() {
     morse_init(morseconfig);
 
     morse_append_signal(morseconfig, SIGNAL_LOW, 0);
-    morse_append_signal(morseconfig, SIGNAL_HIGH, 1);
-    morse_append_signal(morseconfig, SIGNAL_LOW, 151);   // add a dot
+    morse_append_signal(morseconfig, SIGNAL_HIGH, 15);
+    morse_append_signal(morseconfig, SIGNAL_LOW, 170);   // add a dot
 
     morse_append_signal(morseconfig, SIGNAL_HIGH, 200);
     morse_append_signal(morseconfig, SIGNAL_LOW, 350);  // add a dot

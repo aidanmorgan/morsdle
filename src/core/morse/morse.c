@@ -59,6 +59,11 @@ bool morse_append_signal(morse_t morse, signal_t signal, uint64_t timestamp) {
         }
     }
 
+    uint64_t difference = timestamp - head.timestamp;
+    if(difference < DEBOUNCE_THRESHOLD) {
+        return false;
+    }
+
     if(!cbuff_canwrite(morse->signal_buffer)) {
         return false;
     }
@@ -90,6 +95,7 @@ bool morse_convert(morse_t morse, uint64_t timestamp) {
             // and then convert that to "dits" which are the basic unit of how morse code
             // is determined...
             uint64_t duration  = current.timestamp - prev.timestamp;
+
             double dits = (double)duration / (double)MORSE_DIT_MS;
 
             morse_input_t input = MORSE_NULL;

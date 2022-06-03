@@ -20,6 +20,6 @@ target_sources(
 
 target_link_libraries(
         morsdle-stm32l4
-
-        HAL::STM32::L4      # include the headers from the lib version of the STM libraries, not the ones that Cube generates
+        HAL::STM32::L4
+        CMSIS::STM32::L4
 )
