@@ -12,25 +12,25 @@ struct stm32l4_conf {
     TIM_HandleTypeDef* timer_handle;
     UART_HandleTypeDef* uart_handle;
 
-    GPIO_Port dc_port;
-    GPIO_Pin dc_pin;
+    GPIO_TypeDef * dc_port;
+    uint16_t dc_pin;
 
-    GPIO_Port rst_port;
-    GPIO_Pin rst_pin;
+    GPIO_TypeDef * rst_port;
+    uint16_t rst_pin;
 
-    GPIO_Port busy_port;
-    GPIO_Pin busy_pin;
+    GPIO_TypeDef * busy_port;
+    uint16_t busy_pin;
 
-    GPIO_Port cs_port;
-    GPIO_Pin cs_pin;
+    GPIO_TypeDef * cs_port;
+    uint16_t cs_pin;
 
-    GPIO_Port button_port;
-    GPIO_Pin button_pin;
+    GPIO_TypeDef * button_port;
+    uint16_t button_pin;
 
-    GPIO_Port led_port;
-    GPIO_Pin led_pin;
+    GPIO_TypeDef * led_port;
+    uint16_t led_pin;
 };
 
-typedef struct stm32l4_conf stm32l4_conf_t;
+typedef struct stm32l4_conf stm32_config_t;
 
 #endif //MORSDLE_STM32L4_CONF_H

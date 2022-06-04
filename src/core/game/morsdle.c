@@ -62,6 +62,12 @@ void morsdle_clear(morsdle_game_t* game) {
             letter->state = LETTER_STATE_UNSET;
         }
     }
+
+    // given we've cleared the board, make sure we add the event to say a new game has been created so we redraw as required.
+    morsdle_game_event_t ev = (morsdle_game_event_t) {
+        .type = EVENT_GAME_CREATED
+    };
+    morsdle_append_event(game, &ev);
 }
 
 static morsdle_word_t* get_next_word(morsdle_game_t* game, word_state_t state) {

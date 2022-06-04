@@ -324,3 +324,6 @@ find_package_handle_standard_args(CMSIS
     VERSION_VAR CMSIS_VERSION
     HANDLE_COMPONENTS
 )
+
+message("Using CMSIS_INCLUDE_DIRS: ${CMSIS_INCLUDE_DIRS}")
+message("Using CMSIS_SOURCES: ${CMSIS_SOURCES}")

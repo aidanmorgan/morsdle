@@ -39,7 +39,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-SPI_HandleTypeDef hspi2;
+ SPI_HandleTypeDef hspi2;
 
 TIM_HandleTypeDef htim1;
 
@@ -294,7 +294,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void InitStm32L4xx(stm32l4_conf_t* config)
+void init_stm_board(stm32_config_t* config)
 {
     // this does what the typically generated STM32CubeMX main line does, but does it as a function
     // that exposes all of the static fields described above (with some renmaing to isolate code generation

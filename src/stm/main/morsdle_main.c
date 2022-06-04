@@ -1,5 +1,7 @@
 #include <stdint.h>
+#include <time.h>
 #include "main.h"
+#include "words.h"
 #include "morse.h"
 #include "cbuff.h"
 #include "morsdle.h"
@@ -35,14 +37,23 @@ static canvas_t h_canvas = &(struct canvas) {
 // passed into the init board function to get access to the static fields for use elsewhere in this
 // main loop because the STM32CubeMX tool generates the handles to specific hardware as static instances
 // to annoy me even when the "generate main" option is disabled.
-static stm32l4_conf_t hw_config;
+static stm32_config_t hw_config;
+
+static char* morsdle_random_word() {
+    time_t t;
+    srand(time(&t));
+
+    uint32_t index = rand() % WORDS_LENGTH;
+    return words[index];
+}
 
 int main(void) {
-    InitStm32L4xx(&hw_config);    // implemented by hand in the generated code to perform initialisation
+    init_stm_board(&hw_config);    // implemented by hand in the generated code to perform initialisation
 
     // initialise the morse processor
     morse_init(h_morse);
 
+    h_game->word = morsdle_random_word();
     // initialise the  morsdle game engine
     morsdle_init_game(h_game);
 
@@ -70,7 +81,8 @@ int main(void) {
                     morsdle_remove_letter(h_game);
                 }
                 else if(result.type == MORSE_ACTION_RESET) {
-                    // TODO : implement me
+                    h_game->word = morsdle_random_word();
+                    morsdle_clear(h_game);
                 }
                 else {
                     // no-op!
@@ -131,7 +143,7 @@ extern void wavesharespi_write_rst(uint8_t val) {
 
 // currently configured to SPI2
 extern void wavesharespi_write_spi(uint8_t val) {
-    HAL_SPI_Transmit(&hw_config.spi_handle, &val, 1, 1000);
+    HAL_SPI_Transmit(hw_config.spi_handle, &val, 1, 1000);
 }
 
 // currently configured to PC6

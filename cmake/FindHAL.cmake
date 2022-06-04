@@ -476,3 +476,6 @@ find_package_handle_standard_args(HAL
     FOUND_VAR HAL_FOUND
     HANDLE_COMPONENTS
 )
+
+message("Using HAL_INCLUDE_DIRS: ${HAL_INCLUDE_DIRS}")
+message("Using HAL_SOURCES: ${HAL_SOURCES}")

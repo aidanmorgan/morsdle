@@ -28,7 +28,7 @@ target_include_directories(
         ${CMAKE_SOURCE_DIR}/ioc/morsdle/core/Inc
 )
 
-file(GLOB_RECURSE STM32CUBEMX_GENERATED_SRC RELATIVE ${CMAKE_SOURCE_DIR} "ioc/morsdle/Core/*.c")
+file(GLOB_RECURSE STM32CUBEMX_GENERATED_SRC RELATIVE ${CMAKE_SOURCE_DIR} "/ioc/morsdle/Core/*.c")
 
 
 target_sources(
@@ -48,10 +48,7 @@ target_link_libraries(
         waveshare-display
         morse
 
-        HAL::STM32::L4::RCC
-        HAL::STM32::L4::GPIO
-        HAL::STM32::L4::SPI
-        HAL::STM32::L4::CORTEX
+        HAL::STM32::L4
         CMSIS::STM32::L4
         STM32::NoSys
 )
