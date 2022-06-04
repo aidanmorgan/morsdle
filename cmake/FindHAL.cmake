@@ -1,5 +1,8 @@
 # For information about why and how of this file: https://cmake.org/cmake/help/latest/command/find_package.html
 
+message("STM32_LOCAL_HAL_LIB_PATH: ${STM32_LOCAL_HAL_LIB_PATH}")
+
+
 set(HAL_DRIVERS_F0
     adc can cec comp cortex crc dac dma exti flash gpio i2c i2s irda iwdg pcd 
     pwr rcc rtc smartcard smbus spi tim tsc uart usart wwdg

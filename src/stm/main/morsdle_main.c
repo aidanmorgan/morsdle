@@ -32,10 +32,13 @@ static canvas_t h_canvas = &(struct canvas) {
         .width = 448
 };
 
-
+// passed into the init board function to get access to the static fields for use elsewhere in this
+// main loop because the STM32CubeMX tool generates the handles to specific hardware as static instances
+// to annoy me even when the "generate main" option is disabled.
+static stm32l4_conf board_conf;
 
 int main(void) {
-    InitStm32L4xx();    // implemented by hand in the generated code to perform initialisation
+    InitStm32L4xx(&board_conf);    // implemented by hand in the generated code to perform initialisation
 
     // initialise the morse processor
     morse_init(h_morse);
@@ -100,8 +103,8 @@ int main(void) {
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     // TODO : add some form of debouncing here
-    if(GPIO_Pin == B1_Pin) {
-        if (HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)) {
+    if(GPIO_Pin == board_conf.button_pin) {
+        if (HAL_GPIO_ReadPin(board_conf.button_port, board_conf.button_pin)) {
             morse_append_signal(h_morse, SIGNAL_HIGH, HAL_GetTick());
         } else {
             morse_append_signal(h_morse, SIGNAL_LOW, HAL_GetTick());
@@ -110,25 +113,25 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 }
 
 extern void wavesharespi_write_dc(uint8_t val) {
-    HAL_GPIO_WritePin(Waveshare_Dc_GPIO_Port, Waveshare_Dc_Pin, val == 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(board_conf.dc_port, board_conf.dc_pin, val == 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
 
 extern void wavesharespi_write_cs(uint8_t val) {
-    HAL_GPIO_WritePin(Waveshare_Cs_GPIO_Port, Waveshare_Cs_Pin, val == 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(board_conf.cs_port, board_conf.cs_pin, val == 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
 
 }
 
 extern void wavesharespi_write_rst(uint8_t val) {
-    HAL_GPIO_WritePin(Waveshare_Rst_GPIO_Port, Waveshare_Rst_Pin, val == 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(board_conf.rst_port, board_conf.rst_pin, val == 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
 
 }
 
 extern void wavesharespi_write_spi(uint8_t val) {
-    HAL_SPI_Transmit(&hspi2, &val, 1, 1000);
+    HAL_SPI_Transmit(&board_conf.spi_handle, &val, 1, 1000);
 }
 
 extern void wavesharespi_read_busy(uint8_t* val) {
-    uint8_t result = HAL_GPIO_ReadPin(Waveshare_Busy_GPIO_Port, Waveshare_Busy_Pin);
+    uint8_t result = HAL_GPIO_ReadPin(board_conf.busy_port, board_conf.busy_pin);
     *val = result;
 }
 

@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stm32l4_conf.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -39,7 +39,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
- SPI_HandleTypeDef hspi2;
+SPI_HandleTypeDef hspi2;
 
 TIM_HandleTypeDef htim1;
 
@@ -294,13 +294,33 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void InitStm32L4xx()
+void InitStm32L4xx(stm32l4_conf* config)
 {
     HAL_Init();
     SystemClock_Config();
+    MX_TIM1_Init();
     MX_GPIO_Init();
     MX_SPI2_Init();
     MX_USART2_UART_Init();
+
+    config->spi_handle = &hspi2;
+    config->timer_handle = &htim1;
+    config->uart_handle = &huart2;
+
+    config->busy_port = Waveshare_Busy_GPIO_Port;
+    config->busy_pin = Waveshare_Busy_Pin;
+
+    config->cs_port = Waveshare_Cs_GPIO_Port;
+    config->cs_pin = Waveshare_Cs_Pin;
+
+    config->dc_port = Waveshare_Dc_GPIO_Port;
+    config->dc_pin = Waveshare_Dc_Pin;
+
+    config->rst_port = Waveshare_Rst_GPIO_Port;
+    config->rst_pin = Waveshare_Rst_Pin;
+
+    config->button_port = B1_GPIO_Port;
+    config->button_pin = B1_Pin;
 }
 
 /* USER CODE END 4 */

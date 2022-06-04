@@ -1,6 +1,8 @@
 # For information about why and how of this file: https://cmake.org/cmake/help/latest/command/find_package.html
 set(CMSIS_RTOS RTOS RTOS_V2)
 
+message("STM32_LOCAL_CMSIS_LIB_PATH: ${STM32_LOCAL_CMSIS_LIB_PATH}")
+
 if(NOT CMSIS_FIND_COMPONENTS)
     set(CMSIS_FIND_COMPONENTS ${STM32_SUPPORTED_FAMILIES_LONG_NAME})
 endif()
