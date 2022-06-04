@@ -26,8 +26,11 @@ struct stm32l4_conf {
 
     GPIO_Port button_port;
     GPIO_Pin button_pin;
+
+    GPIO_Port led_port;
+    GPIO_Pin led_pin;
 };
 
-typedef struct stm32l4_conf stm32l4_conf;
+typedef struct stm32l4_conf stm32l4_conf_t;
 
 #endif //MORSDLE_STM32L4_CONF_H

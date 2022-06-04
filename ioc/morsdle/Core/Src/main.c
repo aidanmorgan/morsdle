@@ -294,8 +294,11 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void InitStm32L4xx(stm32l4_conf* config)
+void InitStm32L4xx(stm32l4_conf_t* config)
 {
+    // this does what the typically generated STM32CubeMX main line does, but does it as a function
+    // that exposes all of the static fields described above (with some renmaing to isolate code generation
+    // changes to this method only).
     HAL_Init();
     SystemClock_Config();
     MX_TIM1_Init();
@@ -321,6 +324,10 @@ void InitStm32L4xx(stm32l4_conf* config)
 
     config->button_port = B1_GPIO_Port;
     config->button_pin = B1_Pin;
+
+    // currently not used, but included for completeness sake
+    config->led_port = LD2_GPIO_Port;
+    config->led_pin = LD2_Pin;
 }
 
 /* USER CODE END 4 */

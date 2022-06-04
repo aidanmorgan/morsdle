@@ -81,7 +81,7 @@ void Error_Handler(void);
 #define SWO_Pin GPIO_PIN_3
 #define SWO_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
-void InitStm32L4xx(stm32l4_conf* config);
+void InitStm32L4xx(stm32l4_conf_t* config);
 
 /* USER CODE END Private defines */
 
