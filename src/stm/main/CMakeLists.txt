@@ -16,9 +16,9 @@ add_dependencies(
         morsdle-util
         morsdle-gfx
         morsdle-game
+        morse
         waveshare-api
         waveshare-display
-        morse
 )
 
 target_include_directories(
@@ -28,8 +28,9 @@ target_include_directories(
         ${CMAKE_SOURCE_DIR}/ioc/morsdle/core/Inc
 )
 
-file(GLOB_RECURSE STM32CUBEMX_GENERATED_SRC RELATIVE ${CMAKE_SOURCE_DIR} "/ioc/morsdle/Core/*.c")
-
+# the glob rule here is weird, but it seems CMake drops the last term when doing this
+file(GLOB STM32CUBEMX_GENERATED_SRC  ${CMAKE_SOURCE_DIR}/ioc/morsdle/Core/*/*.c)
+message("STM32CUBEMX_GENERATED_SRC: ${STM32CUBEMX_GENERATED_SRC}")
 
 target_sources(
         morsdle-stm
@@ -44,9 +45,9 @@ target_link_libraries(
         morsdle-util
         morsdle-gfx
         morsdle-game
+        morse
         waveshare-api
         waveshare-display
-        morse
 
         HAL::STM32::L4
         CMSIS::STM32::L4
