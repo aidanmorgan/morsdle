@@ -6,7 +6,7 @@
 
 
 // TODO : consider if these should actually be added to the game struct rather than being global
-static morsdle_game_event_t event_buffer_storage[EVENTS_PER_GAME];
+static morsdle_game_event_t event_buffer_storage[EVENT_BUFFER_SIZE];
 static cbuff_t event_buffer = (cbuff_t)&(struct cbuff){};
 
 static bool morsdle_append_event(morsdle_game_t* game, morsdle_game_event_t* event) {
@@ -35,7 +35,7 @@ void morsdle_init_game(morsdle_game_t* game) {
         }
     }
 
-    cbuff_init(event_buffer, (void**)&event_buffer_storage, EVENTS_PER_GAME, sizeof(morsdle_game_event_t));
+    cbuff_init(event_buffer, (void**)&event_buffer_storage, EVENT_BUFFER_SIZE, sizeof(morsdle_game_event_t));
     game->events = event_buffer;
 
     morsdle_append_event(game, &(morsdle_game_event_t) {

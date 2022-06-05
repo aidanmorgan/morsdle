@@ -12,7 +12,7 @@
 
 #define LETTERS_PER_WORD 5
 #define WORDS_PER_GAME 6
-#define EVENTS_PER_GAME 25
+#define EVENT_BUFFER_SIZE 5
 
 #define NULL_CHAR (char)0
 

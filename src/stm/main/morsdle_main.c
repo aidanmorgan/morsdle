@@ -10,7 +10,7 @@
 #include "waveshare_api.h"
 #include "waveshare_spi.h"
 
-static uint8_t imagebuffer[448 * 600];
+const uint8_t imagebuffer[448 * 600];
 
 static morse_t h_morse = &(struct morse) { };
 static morsdle_game_t *h_game = &(morsdle_game_t) { .word = "ratio" };
@@ -39,11 +39,9 @@ static canvas_t h_canvas = &(struct canvas) {
 // to annoy me even when the "generate main" option is disabled.
 static stm32_config_t hw_config;
 
-static char* morsdle_random_word() {
-    time_t t;
-    srand(time(&t));
-
-    uint32_t index = rand() % WORDS_LENGTH;
+static const char* morsdle_random_word() {
+    uint32_t base = HAL_GetTick();
+    uint32_t index = base % WORDS_LENGTH;
     return words[index];
 }
 
