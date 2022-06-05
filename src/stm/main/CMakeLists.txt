@@ -9,13 +9,14 @@ set(PRJ morsdle-stm)
 
 target_compile_definitions(morsdle-stm PUBLIC STM32L476xx)
 
-find_package(CMSIS COMPONENTS STM32L4 REQUIRED)
-find_package(HAL COMPONENTS STM32L4 REQUIRED)
+find_package(CMSIS COMPONENTS STM32L476 REQUIRED)
+find_package(HAL COMPONENTS STM32L476 REQUIRED)
 
-file(GLOB STM32CUBEMX_GENERATED_SRC  ${CMAKE_SOURCE_DIR}/ioc/morsdle/Core/*/*.c)
+file(GLOB STM32CUBEMX_GENERATED_SRC  ${CMAKE_SOURCE_DIR}/ioc/morsdle/Core/*/main.c)
 message("STM32CUBEMX_GENERATED_SRC: ${STM32CUBEMX_GENERATED_SRC}")
 
-set(CMAKE_C_COMPILER "arm-none-eabi-gcc")
+target_compile_options(morsdle-stm PRIVATE -g)
+
 
 add_dependencies(
         morsdle-stm
@@ -65,29 +66,46 @@ target_link_libraries(
         HAL::STM32::L4::TIM
         HAL::STM32::L4::TIMEx
         HAL::STM32::L4::UART
-        CMSIS::STM32::L4
+        CMSIS::STM32::L476RG
         STM32::NoSys
 )
 
 stm32_print_size_of_target(morsdle-stm)
+stm32_generate_binary_file(morsdle-stm)
 
 add_custom_command(
         TARGET morsdle-stm
         COMMAND "arm-none-eabi-objdump"
         ARGS "-S" "${PRJ}.elf" ">>" "${PRJ}.lst")
 
+add_custom_command(
+        TARGET morsdle-stm
+        COMMAND arm-none-eabi-objcopy -Oihex ${PRJ}.elf ${PRJ}.hex
+        COMMAND arm-none-eabi-objcopy -Obinary ${PRJ}.elf  ${PRJ}.bin
+)
+
 # Flash firmware to target.
 add_custom_target(flash
-        openocd -f interface/stlink.cfg -c "transport select hla_swd"
-        -f board/st_nucleo_l4.cfg -c "init" -c "reset halt"
-        -c "flash write_image erase ${PRJ}.elf 0x08000000"  -c "flash verify_image ${PRJ}.elf 0x08000000" -c "reset run" -c "shutdown"
+        openocd
+        -f interface/stlink.cfg
+        -f board/stm32l4discovery.cfg
+        -c "init"
+        -c "reset halt"
+        -c "flash write_image erase ${PRJ}.elf 0x08000000 elf"
+        -c "flash verify_image ${PRJ}.elf 0x08000000 elf"
+        -c "reset run"
+        -c "shutdown"
         DEPENDS ${PRJ}.elf
         COMMENT "Flashing target hardware")
 
+
 # Run OpenOCD as a GDB host.
 add_custom_target(gdbhost
-        openocd -f interface/stlink.cfg -c "transport select hla_swd"
-        -f board/st_nucleo_l4.cfg -c "init" -c "reset halt"
+        openocd
+        -f interface/stlink.cfg
+        -f board/stm32l4discovery.cfg
+        -c "init"
+        -c "reset halt"
         DEPENDS ${PRJ}.elf
         COMMENT "Running OpenOCD as a GDB host.")
 

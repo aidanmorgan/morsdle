@@ -18,6 +18,11 @@
 #define WAVESHARE_YELLOW  0x5	///	101
 #define WAVESHARE_ORANGE  0x6	///	110
 
+// given the STM32L476 has limited ram, we need to bit-pack the pixel data to fit it all into ram
+// given Wordle only uses 4 colours (clear, black, green, orange) we can actually pack 4 pixels into
+// one uint8_t value.
+//
+// this means that one uint8_t actually encodes a 2x2 matrix of pixels to save on space
 
 struct display_impl_t  {
     uint8_t* buffer;

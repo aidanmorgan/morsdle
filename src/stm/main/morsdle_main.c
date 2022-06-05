@@ -8,7 +8,7 @@
 #include "waveshare_api.h"
 #include "waveshare_spi.h"
 
-const uint8_t imagebuffer[448 * 600];
+uint8_t imagebuffer[600*448];
 
 static morse_t h_morse = &(struct morse) { };
 static morsdle_game_t *h_game = &(morsdle_game_t) { .word = "ratio" };
