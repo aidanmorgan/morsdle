@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 3.20)
 
 
 project(morsdle-stm C ASM)
+
 add_executable(morsdle-stm)
+
+set(PRJ morsdle-stm)
 
 target_compile_definitions(morsdle-stm PUBLIC STM32L476xx)
 
@@ -32,14 +35,12 @@ target_include_directories(
         ${CMAKE_SOURCE_DIR}/ioc/morsdle/core/Inc
 )
 
-
 target_sources(
         morsdle-stm
         PUBLIC
         morsdle_main.c
         ${STM32CUBEMX_GENERATED_SRC}
 )
-
 
 target_link_libraries(
         morsdle-stm
@@ -66,7 +67,6 @@ target_link_libraries(
         HAL::STM32::L4::UART
         CMSIS::STM32::L4
         STM32::NoSys
-
 )
 
 stm32_print_size_of_target(morsdle-stm)
@@ -74,21 +74,21 @@ stm32_print_size_of_target(morsdle-stm)
 add_custom_command(
         TARGET morsdle-stm
         COMMAND "arm-none-eabi-objdump"
-        ARGS "-S" "morsdle-stm.elf" ">>" "morsdle-stm.lst")
+        ARGS "-S" "${PRJ}.elf" ">>" "${PRJ}.lst")
 
 # Flash firmware to target.
 add_custom_target(flash
-        openocd -f interface/stlink-v2-1.cfg -c "transport select hla_swd"
-        -f target/stm32l4x.cfg -c "init" -c "reset halt"
-        -c "flash write_image erase morsdle-stm.elf" -c "reset run" -c "shutdown"
-        DEPENDS morsdle-stm.elf
+        openocd -f interface/stlink.cfg -c "transport select hla_swd"
+        -f board/st_nucleo_l4.cfg -c "init" -c "reset halt"
+        -c "flash write_image erase ${PRJ}.elf 0x08000000"  -c "flash verify_image ${PRJ}.elf 0x08000000" -c "reset run" -c "shutdown"
+        DEPENDS ${PRJ}.elf
         COMMENT "Flashing target hardware")
 
 # Run OpenOCD as a GDB host.
 add_custom_target(gdbhost
-        openocd -f interface/stlink-v2-1.cfg -c "transport select hla_swd"
-        -f target/stm32l4x.cfg -c "init" -c "reset halt"
-        DEPENDS morsdle-stm}.elf
+        openocd -f interface/stlink.cfg -c "transport select hla_swd"
+        -f board/st_nucleo_l4.cfg -c "init" -c "reset halt"
+        DEPENDS ${PRJ}.elf
         COMMENT "Running OpenOCD as a GDB host.")
 
 

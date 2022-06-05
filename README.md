@@ -11,3 +11,17 @@ Dependencies:
 ARM Development toolchain from: 
 https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/downloads-1
 
+Flashing:
+make flash
+
+Debugging:
+
+* make gdbhost (to start the host)
+* arm-none-eabi-gdb (in a new terminal window)
+* target extended-remote localhost:3333 (to connect to the gdb host running in openocd)
+* monitor reset halt (monitor prefix to issue openocd commands)
+* file ~/dev/personal/morsdle/cmake-build-debug-arm/src/stm/main/morsdle-stm.elf
+* load to load the binary into the processor
+* monitor program /Users/aidan/dev/personal/morsdle/cmake-build-debug-arm/src/stm/main/morsdle-stm.elf 0x08000000 verify reset
+
+

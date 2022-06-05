@@ -1,9 +1,7 @@
 #include <stdint.h>
-#include <time.h>
 #include "main.h"
 #include "words.h"
 #include "morse.h"
-#include "cbuff.h"
 #include "morsdle.h"
 #include "renderer.h"
 #include "waveshare_display.h"

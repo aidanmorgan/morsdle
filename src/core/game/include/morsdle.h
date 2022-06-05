@@ -81,7 +81,7 @@ typedef struct {
 } morsdle_game_event_t;
 
 typedef struct {
-    char * word;
+    const char * word;
     morsdle_word_t answers[WORDS_PER_GAME];
     game_state_t state;
 
