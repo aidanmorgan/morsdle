@@ -23,6 +23,13 @@
 // one uint8_t value.
 //
 // this means that one uint8_t actually encodes a 2x2 matrix of pixels to save on space
+#define WAVESHARE_PIXEL_WIDTH 448
+#define WAVESHARE_PIXEL_HEIGHT 600
+
+#define WAVESHARE_PIXELS_PER_BYTE 4
+#define WAVESHARE_BYTE_WIDTH (WAVESHARE_PIXEL_WIDTH / WAVESHARE_PIXELS_PER_BYTE)
+#define WAVESHARE_BYTE_HEIGHT (WAVESHARE_PIXEL_HEIGHT / WAVESHARE_PIXELS_PER_BYTE)
+
 
 struct display_impl_t  {
     uint8_t* buffer;

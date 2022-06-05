@@ -72,17 +72,7 @@ target_link_libraries(
 
 stm32_print_size_of_target(morsdle-stm)
 stm32_generate_binary_file(morsdle-stm)
-
-add_custom_command(
-        TARGET morsdle-stm
-        COMMAND "arm-none-eabi-objdump"
-        ARGS "-S" "${PRJ}.elf" ">>" "${PRJ}.lst")
-
-add_custom_command(
-        TARGET morsdle-stm
-        COMMAND arm-none-eabi-objcopy -Oihex ${PRJ}.elf ${PRJ}.hex
-        COMMAND arm-none-eabi-objcopy -Obinary ${PRJ}.elf  ${PRJ}.bin
-)
+stm32_generate_hex_file(morsdle-stm)
 
 # Flash firmware to target.
 add_custom_target(flash

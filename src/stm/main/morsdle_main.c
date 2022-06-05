@@ -8,7 +8,8 @@
 #include "waveshare_api.h"
 #include "waveshare_spi.h"
 
-uint8_t imagebuffer[600*448];
+uint8_t imagebuffer[WAVESHARE_BYTE_WIDTH * WAVESHARE_BYTE_HEIGHT];
+//uint8_t imagebuffer[(600)*(448)];
 
 static morse_t h_morse = &(struct morse) { };
 static morsdle_game_t *h_game = &(morsdle_game_t) { .word = "ratio" };
@@ -28,8 +29,8 @@ static display_impl_t display_impl = (display_impl_t) {
 
 static canvas_t h_canvas = &(struct canvas) {
         .display_impl = &display_impl,
-        .height = 600,
-        .width = 448
+        .height = WAVESHARE_PIXEL_HEIGHT,
+        .width = WAVESHARE_PIXEL_WIDTH
 };
 
 // passed into the init board function to get access to the static fields for use elsewhere in this
