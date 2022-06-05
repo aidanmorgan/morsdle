@@ -8,7 +8,7 @@
 #include "waveshare_api.h"
 #include "waveshare_spi.h"
 
-uint8_t imagebuffer[WAVESHARE_BYTE_WIDTH * WAVESHARE_BYTE_HEIGHT];
+uint8_t imagebuffer[WAVESHARE_BYTE_SIZE];
 //uint8_t imagebuffer[(600)*(448)];
 
 static morse_t h_morse = &(struct morse) { };

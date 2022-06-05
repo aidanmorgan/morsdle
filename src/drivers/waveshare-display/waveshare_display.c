@@ -2,6 +2,7 @@
 // Created by aidan on 21/04/2022.
 //
 
+#include <assert.h>
 #include "waveshare_display.h"
 
 #define MAX_DIRTY_REGIONS 32
