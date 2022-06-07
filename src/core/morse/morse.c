@@ -30,14 +30,14 @@ const static morse_input_t morse_table[26][5] = {
 };
 
 static morse_signal_t signal_backing_buffer[64];
-static struct cbuff signal_buffer;
+static cbuff_t signal_buffer = (cbuff_t){};
 
 // TODO : this can probably be 25 (at most), worst-case per-letter is 5, and we are loading
 // TODO : 5 letter words, but adding a bit more for safety and to make it a power of 2
 static morse_input_t action_backing_buffer[32];
-static struct cbuff action_buffer;
+static cbuff_t action_buffer = (cbuff_t){};
 
-void morse_init(morse_t morse) {
+void morse_init(morse_t* morse) {
     cbuff_init(&signal_buffer, &signal_backing_buffer, 64, sizeof(morse_signal_t));
     cbuff_init(&action_buffer, &action_backing_buffer, 32, sizeof(morse_input_t));
 
@@ -45,7 +45,7 @@ void morse_init(morse_t morse) {
     morse->morse_input_buffer = &action_buffer;
 }
 
-bool morse_append_signal(morse_t morse, signal_t signal, uint64_t timestamp) {
+bool morse_append_signal(morse_t* morse, signal_t signal, uint64_t timestamp) {
     if(signal == SIGNAL_VOID) {
         return false;
     }
@@ -77,7 +77,7 @@ bool morse_append_signal(morse_t morse, signal_t signal, uint64_t timestamp) {
     return true;
 }
 
-bool morse_convert(morse_t morse, uint64_t timestamp) {
+bool morse_convert(morse_t* morse, uint64_t timestamp) {
     bool processing_performed = false;
     size_t signal_buffer_size = cbuff_size(morse->signal_buffer);
 
@@ -197,7 +197,7 @@ static inline uint8_t min(uint8_t a, uint8_t b) {
     return a < b ? a : b;
 }
 
-bool morse_decode(morse_t morse, morse_action_event_t* letter) {
+bool morse_decode(morse_t* morse, morse_action_event_t* letter) {
     // default this to a NO-OP unless it's set to something else
     letter->type = MORSE_ACTION_NOOP;
 

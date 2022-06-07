@@ -8,26 +8,26 @@
 #include "waveshare_api.h"
 #include "waveshare_spi.h"
 
-uint8_t imagebuffer[WAVESHARE_BYTE_SIZE];
-//uint8_t imagebuffer[(600)*(448)];
 
-static morse_t h_morse = &(struct morse) { };
-static morsdle_game_t *h_game = &(morsdle_game_t) { .word = "ratio" };
+static morse_t h_morse = (morse_t) { };
+static morsdle_game_t h_game = (morsdle_game_t) { .word = "ratio" };
 
-static renderer_t h_renderer = &(renderer) {
+static renderer_t h_renderer = (renderer_t) {
         .game_mode = MORSDLE_GAME_SINGLE_LETTER
 };
 
 // this is the waveshare implementation of the handle
 static display_impl_t display_impl = (display_impl_t) {
-        .buffer = imagebuffer,
+        .buffersize = WAVESHARE_BUFFER_SIZE,
         .render_dirty_region = waveshareapi_render_region,
-        .pre_render = waveshareapi_wake,
-        .post_render = waveshareapi_sleep,
+//        .pre_render = waveshareapi_wake,
+//        .post_render = waveshareapi_sleep,
+        .pre_render = NULL,
+        .post_render = NULL,
         .init = waveshareapi_init
 };
 
-static canvas_t h_canvas = &(struct canvas) {
+static canvas_t h_canvas = (canvas_t) {
         .display_impl = &display_impl,
         .height = WAVESHARE_PIXEL_HEIGHT,
         .width = WAVESHARE_PIXEL_WIDTH
@@ -38,48 +38,53 @@ static canvas_t h_canvas = &(struct canvas) {
 // to annoy me even when the "generate main" option is disabled.
 static stm32_config_t hw_config;
 
+
 static const char* morsdle_random_word() {
-    uint32_t base = HAL_GetTick();
+    uint32_t base = HAL_RNG_GetRandomNumber(hw_config.rng);
     uint32_t index = base % WORDS_LENGTH;
-    return words[index];
+    const char* word = wordle_dictionary[index];
+    return word;
 }
 
 int main(void) {
     init_stm_board(&hw_config);    // implemented by hand in the generated code to perform initialisation
 
-    // initialise the morse processor
-    morse_init(h_morse);
+    // i know i really should statically allocate this, but im trying to debug
+    display_impl.buffer = (uint8_t*)malloc(sizeof(uint8_t)*WAVESHARE_BUFFER_SIZE);
 
-    h_game->word = morsdle_random_word();
+    // initialise the morse processor
+    morse_init(&h_morse);
+
+    h_game.word = morsdle_random_word();
     // initialise the  morsdle game engine
-    morsdle_init_game(h_game);
+    morsdle_init_game(&h_game);
 
     // plug the waveshare handle into the display container and then initialise
-    canvas_init(h_canvas);
+    canvas_init(&h_canvas);
     // initialise the renderer that connects the morsdle game with the display
-    renderer_init(h_canvas, h_renderer);
+    renderer_init(&h_canvas, &h_renderer);
 
     // initialise the waveshare display for a STM
-    h_canvas->display_impl->init();
+    h_canvas.display_impl->init();
 
     while (1) {
         // this probably only needs to happen every 2 * MORSE_DIT ms (dit to high, dit to low)
-        bool converted = morse_convert(h_morse, 0);
+        bool converted = morse_convert(&h_morse, 0);
 
         if (converted) {
             morse_action_event_t result = (morse_action_event_t){};
             // process the signal buffer and see if there are any letters completed, if there are then we need to
             // send them to the game engine for processing
-            if (morse_decode(h_morse, &result)) {
+            if (morse_decode(&h_morse, &result)) {
                 if(result.type == MORSE_ACTION_ADD_LETTER) {
-                    morsdle_add_letter(h_game, result.ch);
+                    morsdle_add_letter(&h_game, result.ch);
                 }
                 else if(result.type == MORSE_ACTION_BACKSPACE) {
-                    morsdle_remove_letter(h_game);
+                    morsdle_remove_letter(&h_game);
                 }
                 else if(result.type == MORSE_ACTION_RESET) {
-                    h_game->word = morsdle_random_word();
-                    morsdle_clear(h_game);
+                    h_game.word = morsdle_random_word();
+                    morsdle_clear(&h_game);
                 }
                 else {
                     // no-op!
@@ -88,19 +93,20 @@ int main(void) {
         }
 
         // are there any game events that may require processing
-        if (morsdle_has_events(h_game)) {
+        if (morsdle_has_events(&h_game)) {
             morsdle_game_event_t ev;
 
             // we aren't going to bother drawing unless there's an event, and even then they may not dirty the display
             // so collect any dirty regions into a render_pass and then see if we actually need to redraw.
-            struct render_pass render_pass;
-            render_pass_init(h_canvas, &render_pass);
+            render_pass_t render_pass = (render_pass_t){};
+            render_pass_init(&h_canvas, &render_pass);
 
-            while (morsdle_has_events(h_game)) {
-                if (morsdle_read_event(h_game, &ev)) {
-                    renderer_handle_event(h_canvas, h_renderer, &render_pass, &ev);
-                }
-            }
+//            while (morsdle_has_events(&h_game)) {
+//                if (morsdle_read_event(&h_game, &ev)) {
+//                    renderer_handle_event(&h_canvas, &h_renderer, &render_pass, &ev);
+//                }
+//            }
+            waveshare_clear(&render_pass, COLOUR_RED);
 
             render_pass_end(&render_pass);
         }
@@ -114,9 +120,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     // TODO : add some form of debouncing here
     if(GPIO_Pin == hw_config.button_pin) {
         if (HAL_GPIO_ReadPin(hw_config.button_port, hw_config.button_pin)) {
-            morse_append_signal(h_morse, SIGNAL_HIGH, HAL_GetTick());
+            morse_append_signal(&h_morse, SIGNAL_HIGH, HAL_GetTick());
         } else {
-            morse_append_signal(h_morse, SIGNAL_LOW, HAL_GetTick());
+            morse_append_signal(&h_morse, SIGNAL_LOW, HAL_GetTick());
         }
     }
 }

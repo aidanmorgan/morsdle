@@ -57,29 +57,6 @@ void waveshareapi_reset() {
     wavesharespi_delay(200);
 }
 
-void waveshareapi_clear(uint16_t width, uint16_t height, uint8_t color) {
-    waveshareapi_send_command( 0x61);//Set Resolution setting
-    waveshareapi_send_data( 0x02);
-    waveshareapi_send_data( 0x58);
-    waveshareapi_send_data( 0x01);
-    waveshareapi_send_data( 0xC0);
-    waveshareapi_send_command( 0x10);
-
-    for (int i = 0; i < width / 2; i++) {
-        for (int j = 0; j < height; j++)
-            waveshareapi_send_data( (color << 4) | color);
-    }
-
-    waveshareapi_send_command( 0x04);//0x04
-    waveshareapi_waitbusy_high();
-    waveshareapi_send_command( 0x12);//0x12
-    waveshareapi_waitbusy_high();
-    waveshareapi_send_command( 0x02);  //0x02
-    waveshareapi_waitbusy_low();
-    wavesharespi_delay(500);
-}
-
-
 void waveshareapi_init() {
     waveshareapi_reset();
 
@@ -123,27 +100,21 @@ void waveshareapi_destroy() {
 
 }
 
-void waveshareapi_render_region(uint8_t* buffer, uint16_t width, uint16_t height, uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end) {
+#define EPD_5IN65F_HEIGHT 448
+#define EPD_5IN65F_WIDTH 600
+
+void waveshareapi_render_region(uint8_t* buffer, uint16_t width, uint16_t height, uint16_t xstart, uint16_t ystart, uint16_t xend, uint16_t yend) {
     uint64_t i,j;
-
-    uint16_t region_width = x_end - x_start;
-    uint16_t region_height = y_end - y_start;
-
     waveshareapi_send_command(0x61);//Set Resolution setting
     waveshareapi_send_data(0x02);
     waveshareapi_send_data(0x58);
     waveshareapi_send_data(0x01);
     waveshareapi_send_data(0xC0);
     waveshareapi_send_command(0x10);
-
-    for(i=0; i<height; i++) {
-        for(j=0; j< width/2; j++) {
-            if(i<region_height+y_start && i>=y_start && j<(region_width+x_start)/2 && j>=x_start/2) {
-                waveshareapi_send_data(buffer[(j-x_start/2) + (region_width/2*(i-y_start))]);
-            }
-            else {
-                waveshareapi_send_data(0x11);
-            }
+    for(i=0; i<EPD_5IN65F_HEIGHT; i++) {
+        for(j=0; j<EPD_5IN65F_WIDTH/2; j++) {
+            uint64_t idx = j + ((EPD_5IN65F_WIDTH / 2) * i);
+            waveshareapi_send_data(buffer[idx]);
         }
     }
     waveshareapi_send_command(0x04);//0x04
@@ -154,3 +125,5 @@ void waveshareapi_render_region(uint8_t* buffer, uint16_t width, uint16_t height
     waveshareapi_waitbusy_low();
     wavesharespi_delay(200);
 }
+
+

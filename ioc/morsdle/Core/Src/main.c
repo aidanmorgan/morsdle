@@ -39,7 +39,9 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
- SPI_HandleTypeDef hspi2;
+ RNG_HandleTypeDef hrng;
+
+SPI_HandleTypeDef hspi2;
 
 TIM_HandleTypeDef htim1;
 
@@ -55,6 +57,7 @@ static void MX_GPIO_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM1_Init(void);
+static void MX_RNG_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -116,6 +119,32 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief RNG Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_RNG_Init(void)
+{
+
+  /* USER CODE BEGIN RNG_Init 0 */
+
+  /* USER CODE END RNG_Init 0 */
+
+  /* USER CODE BEGIN RNG_Init 1 */
+
+  /* USER CODE END RNG_Init 1 */
+  hrng.Instance = RNG;
+  if (HAL_RNG_Init(&hrng) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN RNG_Init 2 */
+
+  /* USER CODE END RNG_Init 2 */
+
 }
 
 /**
@@ -306,9 +335,12 @@ void init_stm_board(stm32_config_t* config)
     MX_SPI2_Init();
     MX_USART2_UART_Init();
 
+    MX_RNG_Init();
+
     config->spi_handle = &hspi2;
     config->timer_handle = &htim1;
     config->uart_handle = &huart2;
+    config->rng = &hrng;
 
     config->busy_port = Waveshare_Busy_GPIO_Port;
     config->busy_pin = Waveshare_Busy_Pin;

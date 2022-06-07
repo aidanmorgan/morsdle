@@ -12,7 +12,7 @@
 
 #define LETTERS_PER_WORD 5
 #define WORDS_PER_GAME 6
-#define EVENT_BUFFER_SIZE 5
+#define EVENT_BUFFER_SIZE 16
 
 #define NULL_CHAR (char)0
 
@@ -68,10 +68,9 @@ typedef struct {
 } morsdle_letter_t;
 
 typedef struct {
-    morsdle_letter_t letters[LETTERS_PER_WORD];
     word_state_t state;
-
     uint8_t y;
+    morsdle_letter_t* letters[LETTERS_PER_WORD];
 } morsdle_word_t;
 
 typedef struct {
@@ -82,10 +81,10 @@ typedef struct {
 
 typedef struct {
     const char * word;
-    morsdle_word_t answers[WORDS_PER_GAME];
     game_state_t state;
+    cbuff_t* events;
 
-    cbuff_t events;
+    morsdle_word_t* answers[WORDS_PER_GAME];
 } morsdle_game_t;
 
 void morsdle_init_game(morsdle_game_t* game);

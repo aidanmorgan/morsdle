@@ -8,14 +8,12 @@
 #include "display.h"
 #include "morsdle.h"
 
-enum morsdle_game_mode {
+typedef enum {
     // whether the game should accept each letter from the user and then render it on the display (easy mode)
     MORSDLE_GAME_SINGLE_LETTER,
     // the game waits until the user has inputted a complete word before rendering on the display (hard mode)
     MORSDLE_GAME_WHOLE_WORD
-};
-
-typedef enum morsdle_game_mode morsdle_game_mode_t;
+} morsdle_game_mode_t;
 
 typedef struct {
     uint8_t grid_line_width;    // the width of the line to draw (in pixels)
@@ -41,12 +39,11 @@ typedef struct {
     colour_t cell_foreground_colours[5];
 
     morsdle_game_mode_t game_mode;
-} renderer;
-typedef renderer* renderer_t;
+} renderer_t;
 
-void renderer_init(canvas_t canvas, renderer_t renderopts);
+void renderer_init(canvas_t* canvas, renderer_t* renderopts);
 
-void renderer_handle_event(canvas_t canvas, renderer_t renderopts, render_pass_t pass, morsdle_game_event_t *event);
-void renderer_clear(canvas_t canvas, renderer_t renderopts, render_pass_t pass);
+void renderer_handle_event(canvas_t* canvas, renderer_t* renderopts, render_pass_t* pass, morsdle_game_event_t *event);
+void renderer_clear(canvas_t* canvas, renderer_t * renderopts, render_pass_t* pass);
 
 #endif //RENDERER_H

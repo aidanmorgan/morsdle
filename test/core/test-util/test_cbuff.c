@@ -9,7 +9,7 @@ void setUp (void) {} /* Is run before every test, put unit init calls here. */
 void tearDown (void) {} /* Is run after every test, put unit clean-up calls here. */
 
 void test_cbuff_init() {
-    cbuff_t buff = &(struct cbuff){};
+    cbuff_t* buff = &(cbuff_t){};
     uint8_t backing[16];
 
     cbuff_init(buff, (void**)&backing, 16, sizeof(uint8_t));
@@ -18,7 +18,7 @@ void test_cbuff_init() {
 }
 
 void test_cbuff_insertempty() {
-    cbuff_t buff = &(struct cbuff){ };
+    cbuff_t* buff = &(cbuff_t){ };
     uint8_t backing[16];
 
     cbuff_init(buff, (void**)&backing, 16, sizeof(uint8_t));
@@ -36,7 +36,7 @@ void test_cbuff_insertempty() {
 }
 
 void test_cbuff_readempty() {
-    cbuff_t buff = &(struct cbuff){ };
+    cbuff_t* buff = &(cbuff_t){ };
     uint8_t backing[16];
 
     cbuff_init(buff, (void**)&backing, 16, sizeof(uint8_t));
@@ -47,7 +47,7 @@ void test_cbuff_readempty() {
 }
 
 void test_cbuff_writefull() {
-    cbuff_t buff = &(struct cbuff){ };
+    cbuff_t* buff = &(cbuff_t){ };
     uint32_t backing[8];
 
     cbuff_init(buff, (void**)&backing, 8, sizeof(uint32_t));
@@ -74,7 +74,7 @@ void test_cbuff_writefull() {
 }
 
 void test_cbuff_fillandempty() {
-    cbuff_t buff = &(struct cbuff){ };
+    cbuff_t* buff = &(cbuff_t){ };
     uint32_t backing[8];
 
     cbuff_init(buff, (void**)&backing, 8, sizeof(uint32_t));
@@ -95,7 +95,7 @@ void test_cbuff_fillandempty() {
 }
 
 void test_cbuff_alternatewriteandread() {
-    cbuff_t buff = &(struct cbuff){ };
+    cbuff_t* buff = &(cbuff_t){ };
     uint32_t backing[8];
 
     cbuff_init(buff, (void**)&backing, 8, sizeof(uint32_t));
@@ -120,7 +120,7 @@ void test_cbuff_complexobject() {
         double area;
     } rectangle_t;
 
-    cbuff_t buff = &(struct cbuff){ };
+    cbuff_t* buff = &(cbuff_t){ };
     rectangle_t backing[8];
 
     cbuff_init(buff, (void**)&backing, 4, sizeof(rectangle_t));
@@ -145,7 +145,7 @@ void test_cbuff_complexobject() {
 }
 
 void test_cbuff_readmany() {
-    cbuff_t buff = &(struct cbuff){ };
+    cbuff_t* buff = &(cbuff_t){ };
     uint32_t backing[8];
 
     cbuff_init(buff, (void**)&backing, 8, sizeof(uint32_t));
@@ -171,7 +171,7 @@ void test_cbuff_readmany() {
 }
 
 void test_cbuff_readmany_lessentries() {
-    cbuff_t buff = &(struct cbuff){ };
+    cbuff_t* buff = &(cbuff_t){ };
     uint32_t backing[8];
 
     cbuff_init(buff, (void**)&backing, 8, sizeof(uint32_t));
@@ -191,7 +191,7 @@ void test_cbuff_readmany_lessentries() {
 }
 
 void test_cbuff_peektail() {
-    cbuff_t buff = &(struct cbuff){ };
+    cbuff_t* buff = &(cbuff_t){ };
     uint32_t backing[8];
 
     cbuff_init(buff, (void**)&backing, 8, sizeof(uint32_t));
@@ -242,7 +242,7 @@ void test_cbuff_peektail() {
 }
 
 void test_cbuff_peekhead() {
-    cbuff_t buff = &(struct cbuff){ };
+    cbuff_t* buff = &(cbuff_t){ };
     uint32_t backing[8];
 
     cbuff_init(buff, (void**)&backing, 8, sizeof(uint32_t));
@@ -294,7 +294,7 @@ void test_cbuff_peekhead() {
 }
 
 void test_cbuff_seek() {
-    cbuff_t buff = &(struct cbuff){ };
+    cbuff_t* buff = &(cbuff_t){ };
     uint32_t backing[8];
 
     cbuff_init(buff, (void**)&backing, 8, sizeof(uint32_t));

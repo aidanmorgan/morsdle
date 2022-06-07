@@ -8,7 +8,7 @@ static uint16_t min(uint16_t a, uint16_t b) {
 }
 
 
-void renderer_init(canvas_t canvas, renderer_t renderopts) {
+void renderer_init(canvas_t* canvas, renderer_t* renderopts) {
     renderopts->grid_line_width = 1;
     renderopts->cell_padding = 5;
     renderopts->grid_left_border = 5;
@@ -45,18 +45,22 @@ void renderer_init(canvas_t canvas, renderer_t renderopts) {
     renderopts->cell_background_colours[LETTER_STATE_VALID] = COLOUR_GREEN;
 }
 
-static void render_grid(renderer_t renderopts, canvas_t drawops, render_pass_t pass) {
+static void render_grid(const renderer_t* const renderopts, canvas_t* drawops, render_pass_t* pass) {
     // draw the vertical lines
     for(uint8_t i = 0; i < LETTERS_PER_WORD + 1; i++) {
+        point_t start =  (point_t) {
+                .x = renderopts->grid_left_border + (i * renderopts->grid_line_width) + (i * renderopts->letter_cell_width),
+                .y = renderopts->grid_top_border
+        };
+
+        point_t end = (point_t) {
+                .x = renderopts->grid_left_border + (i * renderopts->grid_line_width) + (i * renderopts->letter_cell_width),
+                .y = renderopts->grid_top_border + (WORDS_PER_GAME * renderopts->grid_line_width) + (WORDS_PER_GAME * renderopts->letter_cell_height)
+        };
+
         drawops->draw_line(pass,
-                           (point_t) {
-                               .x =renderopts->grid_left_border + (i * renderopts->grid_line_width) + (i * renderopts->letter_cell_width),
-                               .y = renderopts->grid_top_border
-                           },
-                           (point_t) {
-                                   .x = renderopts->grid_left_border + (i * renderopts->grid_line_width) + (i * renderopts->letter_cell_width),
-                                   .y = renderopts->grid_top_border + (WORDS_PER_GAME * renderopts->grid_line_width) + (WORDS_PER_GAME * renderopts->letter_cell_height)
-                            },
+                          start,
+                           end,
                            renderopts->grid_line_width,
                            renderopts->grid_line_colour
                            );
@@ -64,21 +68,25 @@ static void render_grid(renderer_t renderopts, canvas_t drawops, render_pass_t p
 
     // draw the horizontal lines
     for(uint8_t i = 0; i < WORDS_PER_GAME + 1; i++) {
+        point_t start =  (point_t) {
+                .x = renderopts->grid_left_border,
+                .y = renderopts->grid_top_border + (i*(renderopts->grid_line_width) + (i*renderopts->letter_cell_height))
+        };
+
+        point_t end = (point_t) {
+                .x = renderopts->grid_left_border + (LETTERS_PER_WORD * renderopts->grid_line_width) + (LETTERS_PER_WORD * renderopts->letter_cell_width),
+                .y = renderopts->grid_top_border + (i*renderopts->grid_line_width) + (i*renderopts->letter_cell_height)
+        };
+
         drawops->draw_line(pass,
-                           (point_t) {
-                                .x = renderopts->grid_left_border,
-                                .y = renderopts->grid_top_border + (i*(renderopts->grid_line_width) + (i*renderopts->letter_cell_height))
-                            },
-                           (point_t) {
-                                .x = renderopts->grid_left_border + (LETTERS_PER_WORD * renderopts->grid_line_width) + (LETTERS_PER_WORD * renderopts->letter_cell_width),
-                                .y = renderopts->grid_top_border + (i*renderopts->grid_line_width) + (i*renderopts->letter_cell_height)
-                            },
+                          start,
+                           end,
                             renderopts->grid_line_width,
                             renderopts->grid_line_colour);
     }
 }
 
-static void render_letter_cell(canvas_t drawops, renderer_t renderopts, render_pass_t pass, uint8_t letter_idx, uint8_t word_idx, char c, colour_t foreground_colour, colour_t background_colour) {
+static void render_letter_cell(canvas_t* drawops, renderer_t* renderopts, render_pass_t* pass, uint8_t letter_idx, uint8_t word_idx, char c, colour_t foreground_colour, colour_t background_colour) {
     uint16_t start_x = renderopts->grid_left_border + (letter_idx * renderopts->grid_line_width) + (letter_idx * renderopts->letter_cell_width);
     uint16_t start_y = renderopts->grid_top_border + (word_idx * renderopts->grid_line_width) + (word_idx * renderopts->letter_cell_height);
 
@@ -138,7 +146,7 @@ static void render_letter_cell(canvas_t drawops, renderer_t renderopts, render_p
     }
 }
 
-void renderer_handle_event(canvas_t drawops, renderer_t renderopts, render_pass_t pass, morsdle_game_event_t *event) {
+void renderer_handle_event(canvas_t* drawops, renderer_t* renderopts, render_pass_t* pass, morsdle_game_event_t *event) {
     switch (event->type) {
         case EVENT_GAME_CREATED: {
             renderer_clear(drawops, renderopts, pass);
@@ -178,14 +186,14 @@ void renderer_handle_event(canvas_t drawops, renderer_t renderopts, render_pass_
         case EVENT_WORD_COMPLETED: {
             // go through and change the entire row of colours now
             for(uint8_t l = 0; l < LETTERS_PER_WORD; l++) {
-                morsdle_letter_t letter = event->word->letters[l];
+                morsdle_letter_t* letter = event->word->letters[l];
 
                 render_letter_cell(drawops, renderopts, pass,
-                                   letter.x,
-                                   letter.y,
-                                   letter.letter,
-                                   renderopts->cell_foreground_colours[letter.state],
-                                   renderopts->cell_background_colours[letter.state]);
+                                   letter->x,
+                                   letter->y,
+                                   letter->letter,
+                                   renderopts->cell_foreground_colours[letter->state],
+                                   renderopts->cell_background_colours[letter->state]);
             }
 
             break;
@@ -203,12 +211,10 @@ void renderer_handle_event(canvas_t drawops, renderer_t renderopts, render_pass_
     }
 }
 
-void renderer_clear(canvas_t drawops, renderer_t renderopts, render_pass_t pass) {
+void renderer_clear(canvas_t * drawops, renderer_t * renderopts,  render_pass_t  * pass) {
     // fill the background with the default background colour
-    drawops->fill_rect(pass,
-                       (point_t){0,0},
-                       (point_t){drawops->width, drawops->height},
-                       renderopts->background_colour);
+    drawops->clear(pass, renderopts->background_colour);
+
     // now render the grid only
     render_grid(renderopts, drawops, pass);
 }

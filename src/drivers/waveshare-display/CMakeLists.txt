@@ -19,6 +19,7 @@ target_sources(
         waveshare-display
         PUBLIC
         waveshare_display.c
+        waveshare_image_buffer.c
 )
 
 target_link_libraries(

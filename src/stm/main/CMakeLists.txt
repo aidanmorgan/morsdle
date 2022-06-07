@@ -66,6 +66,8 @@ target_link_libraries(
         HAL::STM32::L4::TIM
         HAL::STM32::L4::TIMEx
         HAL::STM32::L4::UART
+        HAL::STM32::L4::RNG
+        HAL::STM32::L4::LL_RNG
         CMSIS::STM32::L476RG
         STM32::NoSys
 )

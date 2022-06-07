@@ -7,7 +7,10 @@
 
 // TODO : consider if these should actually be added to the game struct rather than being global
 static morsdle_game_event_t event_buffer_storage[EVENT_BUFFER_SIZE];
-static cbuff_t event_buffer = (cbuff_t)&(struct cbuff){};
+static cbuff_t* event_buffer = &(cbuff_t){};
+
+static morsdle_letter_t letters[WORDS_PER_GAME * LETTERS_PER_WORD];
+static morsdle_word_t words[WORDS_PER_GAME];
 
 static bool morsdle_append_event(morsdle_game_t* game, morsdle_game_event_t* event) {
     return cbuff_write(game->events, event);
@@ -18,32 +21,14 @@ static bool morsdle_clear_events(morsdle_game_t* game) {
 }
 
 void morsdle_init_game(morsdle_game_t* game) {
-    game->state = GAME_STATE_IN_PROGRESS;
-
-    for(uint8_t w = 0; w < WORDS_PER_GAME; w++) {
-        morsdle_word_t* word = &game->answers[w];
-        word->state = w == 0 ? WORD_STATE_IN_PROGRESS : WORD_STATE_NEW;
-        word->y = w;
-
-        for(uint8_t l = 0; l< LETTERS_PER_WORD;l++) {
-            morsdle_letter_t* letter = &word->letters[l];
-
-            letter->state = LETTER_STATE_UNSET;
-            letter->letter = NULL_CHAR;
-            letter->x = l;
-            letter->y = w;
-        }
-    }
-
     cbuff_init(event_buffer, (void**)&event_buffer_storage, EVENT_BUFFER_SIZE, sizeof(morsdle_game_event_t));
     game->events = event_buffer;
 
-    morsdle_append_event(game, &(morsdle_game_event_t) {
-            .type = EVENT_GAME_CREATED
-    });
+    morsdle_clear(game);
+
     morsdle_append_event(game, &(morsdle_game_event_t) {
             .type = EVENT_WORD_STARTED,
-            .word = &game->answers[0]
+            .word = game->answers[0]
     });
 }
 
@@ -51,29 +36,34 @@ void morsdle_clear(morsdle_game_t* game) {
     game->state = GAME_STATE_IN_PROGRESS;
     morsdle_clear_events(game);
 
-    for(uint8_t w = 0; w < WORDS_PER_GAME; w++) {
-        morsdle_word_t*  word = &game->answers[w];
-        word->state = WORD_STATE_NEW;
+    for(uint8_t idx = 0; idx < (WORDS_PER_GAME * LETTERS_PER_WORD); idx++) {
+        morsdle_letter_t* letter = &letters[idx];
+        morsdle_word_t* word = &words[idx / LETTERS_PER_WORD];
 
-        for(uint8_t l = 0; l < LETTERS_PER_WORD; l++) {
-            morsdle_letter_t*  letter = &word->letters[l];
+        letter->state = LETTER_STATE_UNSET;
+        letter->x = idx % LETTERS_PER_WORD;
+        letter->y = idx / LETTERS_PER_WORD;
+        letter->letter = NULL_CHAR;
 
-            letter->letter = NULL_CHAR;
-            letter->state = LETTER_STATE_UNSET;
-        }
+        word->y = idx / LETTERS_PER_WORD;
+        word->state = idx / LETTERS_PER_WORD == 0 ? WORD_STATE_IN_PROGRESS : WORD_STATE_NEW;
+        word->letters[idx % LETTERS_PER_WORD] = letter;
+
+        game->answers[idx / LETTERS_PER_WORD] = word;
     }
 
     // given we've cleared the board, make sure we add the event to say a new game has been created so we redraw as required.
     morsdle_game_event_t ev = (morsdle_game_event_t) {
         .type = EVENT_GAME_CREATED
     };
+
     morsdle_append_event(game, &ev);
 }
 
 static morsdle_word_t* get_next_word(morsdle_game_t* game, word_state_t state) {
     for(int8_t i = 0; i < WORDS_PER_GAME; i++) {
-        if(game->answers[i].state == state) {
-            return &game->answers[i];
+        if(game->answers[i]->state == state) {
+            return game->answers[i];
         }
     }
 
@@ -82,8 +72,8 @@ static morsdle_word_t* get_next_word(morsdle_game_t* game, word_state_t state) {
 
 static morsdle_letter_t* get_next_letter(morsdle_word_t* word, letter_state_t state) {
     for(int8_t i = 0; i < LETTERS_PER_WORD; i++) {
-        if(word->letters[i].state == state) {
-            return &word->letters[i];
+        if(word->letters[i]->state == state) {
+            return word->letters[i];
         }
     }
 
@@ -92,8 +82,8 @@ static morsdle_letter_t* get_next_letter(morsdle_word_t* word, letter_state_t st
 
 static morsdle_letter_t* get_last_letter(morsdle_word_t* word, letter_state_t state) {
     for(uint8_t i = LETTERS_PER_WORD; i > 0 ; i--) {
-        if(word->letters[i-1].state == state) {
-            return &word->letters[i-1];
+        if(word->letters[i-1]->state == state) {
+            return word->letters[i-1];
         }
     }
 
@@ -150,17 +140,17 @@ morsdle_err_t morsdle_submit_word(morsdle_game_t* game) {
     // go through each letter
     for(uint8_t i = 0; i < LETTERS_PER_WORD; i++) {
         // right letter, right postion
-        if(word->letters[i].letter == game->word[i]) {
-            word->letters[i].state = LETTER_STATE_VALID;
+        if(word->letters[i]->letter == game->word[i]) {
+            word->letters[i]->state = LETTER_STATE_VALID;
             validcount++;
         }
         // right letter, wrong position
-        else if(strstr(game->word, &word->letters[i].letter) != NULL) {
-            word->letters[i].state = LETTER_STATE_VALID_LETTER_INVALID_POSITION;
+        else if(strstr(game->word, &word->letters[i]->letter) != NULL) {
+            word->letters[i]->state = LETTER_STATE_VALID_LETTER_INVALID_POSITION;
         }
         // wrong letter
         else {
-            word->letters[i].state = LETTER_STATE_INVALID_LETTER;
+            word->letters[i]->state = LETTER_STATE_INVALID_LETTER;
         }
     }
 
@@ -174,7 +164,7 @@ morsdle_err_t morsdle_submit_word(morsdle_game_t* game) {
         word->state = WORD_STATE_CORRECT;
         game->state = GAME_STATE_SUCCESS;
 
-        morsdle_game_event_t event = (morsdle_game_event_t) {
+        event = (morsdle_game_event_t) {
                 .type = EVENT_GAME_COMPLETED
         };
         morsdle_append_event(game, &event);
@@ -187,14 +177,14 @@ morsdle_err_t morsdle_submit_word(morsdle_game_t* game) {
         if (nextword == NULL) {
             game->state = GAME_STATE_FAILED;
 
-            morsdle_game_event_t event = (morsdle_game_event_t) {
+            event = (morsdle_game_event_t) {
                     .type = EVENT_GAME_COMPLETED
             };
             morsdle_append_event(game, &event);
         } else {
             nextword->state = WORD_STATE_IN_PROGRESS;
 
-            morsdle_game_event_t event = (morsdle_game_event_t) {
+            event = (morsdle_game_event_t) {
                     .type = EVENT_WORD_STARTED,
                     .word = word
             };

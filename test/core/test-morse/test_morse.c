@@ -7,14 +7,14 @@ void setUp (void) {} /* Is run before every test, put unit init calls here. */
 void tearDown (void) {} /* Is run after every test, put unit clean-up calls here. */
 
 void test_morse_init() {
-    struct morse val = (struct morse) {};
+    morse_t val = (morse_t) {};
     morse_init(&val);
 
     TEST_ASSERT_NOT_NULL(val.signal_buffer);
 }
 
 void test_morse_append() {
-    struct morse* morseconfig = &(struct morse) {};
+    morse_t* morseconfig = &(morse_t) {};
     morse_init(morseconfig);
 
     morse_append_signal(morseconfig, SIGNAL_HIGH, 500);
@@ -39,7 +39,7 @@ void test_morse_append() {
 }
 
 void test_morse_process_dot() {
-    struct morse* morseconfig = &(struct morse) {};
+    morse_t* morseconfig = &(morse_t) {};
     morse_init(morseconfig);
 
     morse_append_signal(morseconfig, SIGNAL_HIGH, 500);
@@ -60,7 +60,7 @@ void test_morse_process_dot() {
 
 
 void test_morse_process_dash() {
-    struct morse* morseconfig = &(struct morse) {};
+    morse_t* morseconfig = &(morse_t) {};
     morse_init(morseconfig);
 
     morse_append_signal(morseconfig, SIGNAL_HIGH, 500);
@@ -78,7 +78,7 @@ void test_morse_process_dash() {
 }
 
 void test_morse_dotdotdash() {
-    struct morse* morseconfig = &(struct morse) {};
+    morse_t* morseconfig = &(morse_t) {};
     morse_init(morseconfig);
 
     morse_append_signal(morseconfig, SIGNAL_LOW, 0);
@@ -102,7 +102,7 @@ void test_morse_dotdotdash() {
 }
 
 void test_morse_process_random() {
-    struct morse* morseconfig = &(struct morse) {};
+    morse_t* morseconfig = &(morse_t) {};
 
     // generate 1000 random sequences of DASH and DOT and use them to
     for(uint16_t i = 0; i < 10000; i++) {
@@ -158,7 +158,7 @@ void test_morse_process_random() {
 }
 
 void test_morse_decode_shortsequence() {
-    struct morse* morseconfig = &(struct morse) {};
+    morse_t* morseconfig = &(morse_t) {};
     morse_init(morseconfig);
 
     morse_input_t  input = MORSE_DOT;
@@ -172,7 +172,7 @@ void test_morse_decode_shortsequence() {
 }
 
 void test_morse_decode_longsequence() {
-    struct morse* morseconfig = &(struct morse) {};
+    morse_t* morseconfig = &(morse_t) {};
     morse_init(morseconfig);
 
     morse_input_t input = MORSE_DASH;
@@ -193,7 +193,7 @@ void test_morse_decode_longsequence() {
 }
 
 void test_morse_decode_wholeword() {
-    struct morse* morseconfig = &(struct morse) {};
+    morse_t* morseconfig = &(morse_t) {};
 
     morse_init(morseconfig);
     morse_input_t input = MORSE_DASH;
@@ -245,7 +245,7 @@ void test_morse_decode_wholeword() {
 }
 
 void test_morse_decode_invalidentry() {
-    struct morse* morseconfig = &(struct morse) {};
+    morse_t* morseconfig = &(morse_t) {};
 
     morse_init(morseconfig);
     morse_input_t input = MORSE_DOT;
@@ -265,7 +265,7 @@ void test_morse_decode_invalidentry() {
 }
 
 void test_morse_decode_overfullbuffer() {
-    struct morse* morseconfig = &(struct morse) {};
+    morse_t* morseconfig = &(morse_t) {};
     morse_init(morseconfig);
     morse_input_t input = MORSE_DOT;
     cbuff_write(morseconfig->morse_input_buffer, &input);
@@ -294,7 +294,7 @@ void test_morse_decode_overfullbuffer() {
 }
 
 void test_morse_short_hold() {
-    struct morse* morseconfig = &(struct morse) {};
+    morse_t* morseconfig = &(morse_t) {};
     morse_init(morseconfig);
 
     morse_append_signal(morseconfig, SIGNAL_LOW, 0);
@@ -314,7 +314,7 @@ void test_morse_short_hold() {
 }
 
 void test_morse_long_hold() {
-    struct morse* morseconfig = &(struct morse) {};
+    morse_t* morseconfig = &(morse_t) {};
     morse_init(morseconfig);
 
     morse_append_signal(morseconfig, SIGNAL_LOW, 0);
@@ -334,7 +334,7 @@ void test_morse_long_hold() {
 }
 
 void test_morse_letter_then_hold() {
-    struct morse* morseconfig = &(struct morse) {};
+    morse_t* morseconfig = &(morse_t) {};
     morse_init(morseconfig);
 
     morse_append_signal(morseconfig, SIGNAL_LOW, 0);
@@ -361,7 +361,7 @@ void test_morse_letter_then_hold() {
 }
 
 void test_morse_letter_and_hold() {
-    struct morse* morseconfig = &(struct morse) {};
+    morse_t* morseconfig = &(morse_t) {};
     morse_init(morseconfig);
 
     morse_append_signal(morseconfig, SIGNAL_LOW, 0);
@@ -388,7 +388,7 @@ void test_morse_letter_and_hold() {
 }
 
 void test_morse_buffer_starts_with_delay() {
-    struct morse* morseconfig = &(struct morse) {};
+    morse_t* morseconfig = &(morse_t) {};
     morse_init(morseconfig);
 
     morse_input_t input = MORSE_DELAY;
@@ -428,7 +428,7 @@ void test_morse_buffer_starts_with_delay() {
 }
 
 void test_morse_longest_letter() {
-    struct morse* morseconfig = &(struct morse) {};
+    morse_t* morseconfig = &(morse_t) {};
     morse_init(morseconfig);
 
     morse_input_t input = MORSE_DOT;

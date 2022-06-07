@@ -5,11 +5,11 @@
 #include <assert.h>
 #include "waveshare_display.h"
 
-#define MAX_DIRTY_REGIONS 32
+#define MAX_DIRTY_REGIONS 64
 
 // allocating the memory that backs the dirty_regions circular buffer
-static region_t dirty_regions_raw[MAX_DIRTY_REGIONS];
-static cbuff_t dirty_regions = (cbuff_t) &(struct cbuff) {};
+static rectangle_t dirty_regions_raw[MAX_DIRTY_REGIONS];
+static cbuff_t dirty_regions = (cbuff_t) {};
 
 static inline uint16_t max(uint16_t a, uint16_t b) {
     return a < b ? b : a;
@@ -56,26 +56,25 @@ static colour_t colour_lookup[7] = {
         WAVESHARE_ORANGE //COLOUR_ORANGE
 };
 
-
-static void waveshare_set_pixel(canvas_t canvas, point_t point, colour_t colour) {
+static void waveshare_set_pixel(canvas_t* canvas, point_t point, colour_t colour) {
     if (point.x > canvas->width || point.y > canvas->height) {
         return;
     }
 
-    uint16_t widthbyte = (canvas->width % 2 == 0) ? (canvas->width / 2) : (canvas->width / 2 + 1);
-    uint16_t pixel_idx = point.x / 8 + point.y * widthbyte;
-
-    uint8_t pixel_data = canvas->display_impl->buffer[pixel_idx];
-
-    if (colour == COLOUR_BLACK) {
-        canvas->display_impl->buffer[pixel_idx] = pixel_data & ~(0x80 >> (point.x % 8));
-    } else {
-        pixel_data = pixel_data & (~(0xF0 >> ((point.x % 2) * 4)));
-        canvas->display_impl->buffer[pixel_idx] = pixel_data | ((colour_lookup[colour] << 4) >> ((point.x % 2) * 4));
+    uint64_t buffer_idx = (point.x / 2)  + (point.y * WAVESHARE_PIXELS_PER_BYTE_WIDE);
+    if(buffer_idx > canvas->display_impl->buffersize) {
+        assert(false);
     }
+
+    uint8_t data = canvas->display_impl->buffer[buffer_idx];
+
+    data = data & (~(0xF0 >> ((point.x % 2) * 4)));//Clear first, then set value
+    data = data | ((colour_lookup[colour] << 4) >> ((point.x % 2) * 4));
+
+    canvas->display_impl->buffer[buffer_idx] = data;
 }
 
-void waveshare_draw_line(render_pass_t pass, point_t start, point_t end, uint8_t thickness, colour_t colour) {
+void waveshare_draw_line_impl(render_pass_t* pass, point_t start, point_t end, uint8_t thickness, colour_t colour, bool updateDirtyRegions) {
     uint16_t current_x = start.x;
     uint16_t current_y = start.y;
 
@@ -107,31 +106,40 @@ void waveshare_draw_line(render_pass_t pass, point_t start, point_t end, uint8_t
         }
     }
 
-    cbuff_write(pass->dirty_regions, &(region_t) {
-            .top_left = start,
-            .bottom_right = end
-    });
+    if(updateDirtyRegions) {
+        cbuff_write(pass->dirty_regions, &(rectangle_t) {
+                .top_left = start,
+                .bottom_right = end
+        });
+    }
 }
 
-void waveshare_fill_rect(render_pass_t pass, point_t topleft, point_t bottomright, colour_t fill_colour) {
-    for (uint16_t y_idx = topleft.y; y_idx < bottomright.y; y_idx++) {
-        // this seems kind of cheeky, but fill a rectangle by just drawing lines next to each other, over and over
-        waveshare_draw_line(
-                pass,
-                (point_t) {.x = topleft.x, .y=y_idx},
-                (point_t) {.x = bottomright.x, .y =y_idx},
-                1,
-                fill_colour);
+void waveshare_draw_line(render_pass_t* pass, point_t start, point_t end, uint8_t thickness, colour_t colour) {
+    waveshare_draw_line_impl(pass, start, end, thickness, colour, true);
+}
+
+
+void waveshare_fill_rect(render_pass_t* pass, point_t topleft, point_t bottomright, colour_t fill_colour) {
+    // moved outside the for loop to try and prevent the stack growing too big in the loop
+    point_t point = (point_t) {};
+
+    for(uint16_t x = topleft.x; x < topleft.x; x++) {
+        for(uint16_t y = bottomright.y; y < bottomright.y; y++) {
+            point.x = x;
+            point.y = y;
+
+            waveshare_set_pixel(pass->canvas, point, fill_colour);
+        }
     }
 
-    cbuff_write(pass->dirty_regions, &(region_t) {
+    cbuff_write(pass->dirty_regions, &(rectangle_t) {
             .top_left = topleft,
             .bottom_right = bottomright
     });
 }
 
 
-void waveshare_draw_char(render_pass_t pass, char c, point_t topleft, uint8_t size, colour_t colour) {
+void waveshare_draw_char(render_pass_t* pass, char c, point_t topleft, uint8_t size, colour_t colour) {
     font_t font = font_buffer[(uint8_t) (c - 'A')];
 
     for (uint16_t column = 0; column < font.width; column++) {
@@ -146,7 +154,7 @@ void waveshare_draw_char(render_pass_t pass, char c, point_t topleft, uint8_t si
         }
     }
 
-    cbuff_write(pass->dirty_regions, &(region_t) {
+    cbuff_write(pass->dirty_regions, &(rectangle_t) {
             .top_left = (point_t) {
                     .x = topleft.x,
                     .y = topleft.y
@@ -158,31 +166,56 @@ void waveshare_draw_char(render_pass_t pass, char c, point_t topleft, uint8_t si
     });
 }
 
+void waveshare_clear(render_pass_t* pass, colour_t colour) {
+    point_t point = (point_t) {};
+
+    for(uint16_t x = 0; x < pass->canvas->width; x++) {
+        for(uint16_t y = 0; y < pass->canvas->height; y++) {
+            point.x = x;
+            point.y = y;
+
+            waveshare_set_pixel(pass->canvas, point, colour);
+        }
+
+        assert(pass->dirty_regions->size == 0);
+    }
+
+    cbuff_write(pass->dirty_regions, &(rectangle_t) {
+        .top_left = (point_t) {
+            .x = 0,
+            .y = 0
+        },
+        .bottom_right = (point_t) {
+            .x = pass->canvas->width,
+            .y = pass->canvas->height
+        }
+    });
+}
 
 // start a rendering pass, indicating to the underlyign display that we are going to soon be
 // sending updated dirty regions
-void render_pass_init(canvas_t canvas, render_pass_t render) {
-    if (dirty_regions->size != 0) {
-        // TODO: return an error here
-        return;
-    }
-
+void render_pass_init(canvas_t* canvas, render_pass_t* render) {
     render->canvas = canvas;
-    render->dirty_regions = dirty_regions;
+    render->dirty_regions = &dirty_regions;
+
+    cbuff_clear(&dirty_regions);
 }
 
 // end the render pass, update the display with the buffer in the handle, updating the regions
 // that are marked
-extern void render_pass_end(render_pass_t render) {
-    size_t dirty_region_count = dirty_regions->size;
+extern void render_pass_end(render_pass_t* render) {
+    size_t dirty_region_count = render->dirty_regions->size;
 
     if (dirty_region_count > 0) {
-        render->canvas->display_impl->pre_render();
-        canvas_t canvas = render->canvas;
+        if(render->canvas->display_impl->pre_render != NULL) {
+            render->canvas->display_impl->pre_render();
+        }
 
-        region_t regions[dirty_region_count];
+        canvas_t* canvas = render->canvas;
+
+        rectangle_t regions[dirty_region_count];
         // read many should empty the buffer
-        cbuff_readmany(dirty_regions, &regions, dirty_region_count);
+        cbuff_readmany(render->dirty_regions, &regions, dirty_region_count);
 
         // these are the coordinates of the "dirty rectangle" of the display that needs to be redrawn
         // this is basically a bounding box around every dirtied region - it's relatively fast to compute
@@ -193,7 +226,7 @@ extern void render_pass_end(render_pass_t render) {
         uint16_t bottom_right_y = 0;
 
         for (size_t i = 0; i < dirty_region_count; i++) {
-            region_t region = regions[i];
+            rectangle_t region = regions[i];
 
             top_left_x = min(region.top_left.x, top_left_x);
             top_left_y = min(regions->top_left.y, top_left_y);
@@ -211,24 +244,27 @@ extern void render_pass_end(render_pass_t render) {
                                                   bottom_right_y);
 
 
-        render->canvas->display_impl->post_render();
+        if(render->canvas->display_impl->post_render != NULL) {
+            render->canvas->display_impl->post_render();
+        }
 
         // the read many should have done this, but just in case it didn't then clear it anyway
-        cbuff_clear(dirty_regions);
+        cbuff_clear(&dirty_regions);
     }
 }
 
-void canvas_init(canvas_t ops) {
-    cbuff_init(dirty_regions, &dirty_regions_raw, MAX_DIRTY_REGIONS, sizeof(region_t));
+void canvas_init(canvas_t* ops) {
+    cbuff_init(&dirty_regions, &dirty_regions_raw, MAX_DIRTY_REGIONS, sizeof(rectangle_t));
 
-    ops->height = 600;
-    ops->width = 448;
+    ops->height = WAVESHARE_PIXEL_HEIGHT;
+    ops->width = WAVESHARE_PIXEL_WIDTH;
 
     ops->fill_rect = waveshare_fill_rect;
     ops->draw_char = waveshare_draw_char;
     ops->draw_line = waveshare_draw_line;
+    ops->clear = waveshare_clear;
 }
 
-void canvas_destroy(canvas_t ops) {
+void canvas_destroy(canvas_t* ops) {
 
 }
