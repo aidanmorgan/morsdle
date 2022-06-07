@@ -1,30 +1,45 @@
-add_executable(test-util)
+add_executable(test-cbuff)
+add_executable(test-imagebuffer)
 
 add_dependencies(
-        test-util
+        test-cbuff
+        morsdle-util
+        unity
+)
+add_dependencies(
+        test-imagebuffer
         morsdle-util
         unity
 )
 
-target_include_directories(
-        test-util
-        PUBLIC
-        include
-)
-
 target_sources(
-        test-util
+        test-cbuff
         PUBLIC
         test_cbuff.c
 )
 
+target_sources(
+        test-imagebuffer
+        PUBLIC
+        test_imagebuffer.c
+)
+
 target_link_libraries(
-        test-util
+        test-cbuff
+        unity
+        morsdle-util
+)
+target_link_libraries(
+        test-imagebuffer
         unity
         morsdle-util
 )
 
 add_test(
-        NAME test-util
-        COMMAND test-util
+        NAME test-cbuff
+        COMMAND test-cbuff
+)
+add_test(
+        NAME test-imagebuffer
+        COMMAND test-imagebuffer
 )

@@ -6,7 +6,7 @@ add_library(waveshare-api)
 add_dependencies(
         waveshare-api
         morsdle-gfx
-        waveshare-util
+        morsdle-util
 )
 
 target_include_directories(
@@ -24,5 +24,5 @@ target_sources(
 target_link_libraries(
         waveshare-api
         morsdle-gfx
-        waveshare-util
+        morsdle-util
 )

@@ -4,7 +4,6 @@
 
 #include <assert.h>
 #include "waveshare_display.h"
-#include "imagebuffer.h"
 
 #define MAX_DIRTY_REGIONS 64
 
@@ -56,8 +55,8 @@ static imagebuffer_colour_t display_to_buffer_lookup[7] = {
         IMAGEBUFFER_ORANGE
 };
 
-void waveshare_draw_line_impl(render_pass_t* pass, point_t start, point_t end, uint8_t thickness, colour_t colour, bool updateDirtyRegions) {
-    imagebuffer_t * buffer = pass->display->buffer;
+void waveshare_draw_line_impl(render_pass_t* pass,display_impl_t * display, point_t start, point_t end, uint8_t thickness, colour_t colour, bool updateDirtyRegions) {
+    imagebuffer_t * buffer = display->buffer;
 
     uint16_t current_x = start.x;
     uint16_t current_y = start.y;
@@ -98,13 +97,13 @@ void waveshare_draw_line_impl(render_pass_t* pass, point_t start, point_t end, u
     }
 }
 
-void waveshare_draw_line(render_pass_t* pass, point_t start, point_t end, uint8_t thickness, colour_t colour) {
-    waveshare_draw_line_impl(pass, start, end, thickness, colour, true);
+void waveshare_draw_line(render_pass_t* pass, display_impl_t * display, point_t start, point_t end, uint8_t thickness, colour_t colour) {
+    waveshare_draw_line_impl(pass, display, start, end, thickness, colour, true);
 }
 
 
-void waveshare_fill_rect(render_pass_t* pass, point_t topleft, point_t bottomright, colour_t fill_colour) {
-    imagebuffer_t * buffer = pass->display->buffer;
+void waveshare_fill_rect(render_pass_t* pass, display_impl_t * display,  point_t topleft, point_t bottomright, colour_t fill_colour) {
+    imagebuffer_t * buffer = display->buffer;
 
     for(uint16_t x = topleft.x; x < topleft.x; x++) {
         for(uint16_t y = bottomright.y; y < bottomright.y; y++) {
@@ -119,8 +118,8 @@ void waveshare_fill_rect(render_pass_t* pass, point_t topleft, point_t bottomrig
 }
 
 
-void waveshare_draw_char(render_pass_t* pass, char c, point_t topleft, uint8_t size, colour_t colour) {
-    imagebuffer_t * buffer = pass->display->buffer;
+void waveshare_draw_char(render_pass_t* pass,display_impl_t * display, char c, point_t topleft, uint8_t size, colour_t colour) {
+    imagebuffer_t * buffer = display->buffer;
 
     font_t font = font_buffer[(uint8_t) (c - 'A')];
 
@@ -148,7 +147,7 @@ void waveshare_draw_char(render_pass_t* pass, char c, point_t topleft, uint8_t s
     });
 }
 
-void waveshare_clear(render_pass_t* pass, colour_t colour) {
+void waveshare_clear(render_pass_t* pass, display_impl_t * display,colour_t colour) {
     imagebuffer_t * buffer = pass->display->buffer;
 
     for(uint16_t x = 0; x < pass->canvas->width; x++) {
@@ -226,16 +225,14 @@ extern void render_pass_end(render_pass_t* render) {
     }
 }
 
+
+
+
 void canvas_init(canvas_t* ops) {
     cbuff_init(&dirty_regions, &dirty_regions_raw, MAX_DIRTY_REGIONS, sizeof(rectangle_t));
 
     ops->height = WAVESHARE_PIXEL_HEIGHT;
     ops->width = WAVESHARE_PIXEL_WIDTH;
-
-    ops->fill_rect = waveshare_fill_rect;
-    ops->draw_char = waveshare_draw_char;
-    ops->draw_line = waveshare_draw_line;
-    ops->clear = waveshare_clear;
 }
 
 void canvas_destroy(canvas_t* ops) {

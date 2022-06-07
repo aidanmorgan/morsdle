@@ -4,7 +4,6 @@ add_library(waveshare-display)
 
 add_dependencies(
         waveshare-display
-        waveshare-util
         morsdle-util
         morsdle-game
         morsdle-gfx
@@ -24,7 +23,6 @@ target_sources(
 
 target_link_libraries(
         waveshare-display
-        waveshare-util
         morsdle-util
         morsdle-game
         morsdle-gfx

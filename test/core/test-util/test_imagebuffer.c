@@ -2,7 +2,7 @@
 #include "imagebuffer.h"
 
 void setUp (void) {} /* Is run before every test, put unit init calls here. */
-void tearDown (void) {}
+void tearDown (void) {} /* Is run after every test, put unit clean-up calls here. */
 
 void do_get_test(uint8_t val, uint8_t one, uint8_t two, uint8_t three, uint8_t four) {
     TEST_ASSERT_EQUAL(one, GET_VAL(val, 2, 0));

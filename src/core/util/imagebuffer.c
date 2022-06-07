@@ -9,7 +9,14 @@ imagebuffer_error_t imagebuffer_init(imagebuffer_t* buffer, uint16_t width, uint
     buffer->buffer_size = (buffer->width / 2) * (buffer->height / 2);
 
     uint8_t * tmp = (uint8_t*)malloc(sizeof(uint8_t) * buffer->buffer_size);
+    if(tmp == NULL) {
+        return IMAGEBUFFER_INIT_FAILED;
+    }
+
+    // initialise with white pixels throughout the image
+    memset(tmp, 0, buffer->buffer_size);
     buffer->buffer = tmp;
+
     return IMAGEBUFFER_OK;
 }
 
@@ -31,13 +38,13 @@ void imagebuffer_setpixel(imagebuffer_t* buffer, uint16_t x, uint16_t y, imagebu
         (*data) = SET_VAL((*data), 2, 0, colour);
     }
     else if(x == 1 && y == 0) {
-        (*data) =SET_VAL((*data), 2, 2, colour);
+        (*data) = SET_VAL((*data), 2, 2, colour);
     }
     else if(x== 0 && y == 1) {
-        (*data) =SET_VAL((*data), 2, 4, colour);
+        (*data) = SET_VAL((*data), 2, 4, colour);
     }
     else if(x==1 && y == 1) {
-        (*data) =SET_VAL((*data), 2, 6, colour);
+        (*data) = SET_VAL((*data), 2, 6, colour);
     }
 }
 

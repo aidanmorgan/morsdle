@@ -8,7 +8,7 @@ static uint16_t min(uint16_t a, uint16_t b) {
 }
 
 
-void renderer_init(canvas_t* canvas, renderer_t* renderopts) {
+void renderer_init(renderer_t* renderopts, uint16_t width, uint16_t height) {
     renderopts->grid_line_width = 1;
     renderopts->cell_padding = 5;
     renderopts->grid_left_border = 5;
@@ -16,13 +16,13 @@ void renderer_init(canvas_t* canvas, renderer_t* renderopts) {
     renderopts->grid_top_border = 5;
     renderopts->grid_bottom_border = 5;
 
-    uint16_t constrained = min(canvas->width, canvas->height);
+    uint16_t constrained = min(width, height);
 
     // try and calculate the cell height/width based on the smaller dimension, as we have a 5x6 grid we need to be conscious of it
-    if(constrained == canvas->width || canvas->width == canvas->height) {
+    if(constrained == width || width == height) {
         // there are 2 paddings (left, right) and 6 lines and 12 insets
 
-        renderopts->letter_cell_width = (canvas->width - ((6 * renderopts->grid_line_width) + renderopts->grid_left_border + renderopts->grid_right_border)) / LETTERS_PER_WORD;
+        renderopts->letter_cell_width = (width - ((6 * renderopts->grid_line_width) + renderopts->grid_left_border + renderopts->grid_right_border)) / LETTERS_PER_WORD;
         renderopts->letter_cell_height = renderopts->letter_cell_width;
     }
     else {
@@ -59,6 +59,7 @@ static void render_grid(const renderer_t* const renderopts, canvas_t* drawops, r
         };
 
         drawops->draw_line(pass,
+                          pass->display,
                           start,
                            end,
                            renderopts->grid_line_width,
@@ -79,6 +80,7 @@ static void render_grid(const renderer_t* const renderopts, canvas_t* drawops, r
         };
 
         drawops->draw_line(pass,
+                          pass->display,
                           start,
                            end,
                             renderopts->grid_line_width,
@@ -128,6 +130,7 @@ static void render_letter_cell(canvas_t* drawops, renderer_t* renderopts, render
      */
     // draw a rect that is grid_line_width smaller in all directons in the actual colour we want the background to be
     drawops->fill_rect(pass,
+                       pass->display,
                        (point_t){start_x + renderopts->grid_line_width, start_y + renderopts->grid_line_width},
                        (point_t){start_x + renderopts->letter_cell_width, start_y + renderopts->letter_cell_height},
                        background_colour
@@ -138,6 +141,7 @@ static void render_letter_cell(canvas_t* drawops, renderer_t* renderopts, render
          start_y = renderopts->grid_top_border + (word_idx * renderopts->grid_line_width) + (word_idx * renderopts->letter_cell_width) + (word_idx * renderopts->cell_padding * 2);
 
          drawops->draw_char(pass,
+                            pass->display,
                             c,
                             (point_t) {start_x, start_y},
                             renderopts->font_size,
@@ -211,11 +215,11 @@ void renderer_handle_event(canvas_t* drawops, renderer_t* renderopts, render_pas
     }
 }
 
-void renderer_clear(canvas_t * drawops, renderer_t * renderopts,  render_pass_t  * pass) {
+void renderer_clear(canvas_t * canvas, renderer_t * renderer, render_pass_t  * pass) {
     // fill the background with the default background colour
-    drawops->clear(pass, renderopts->background_colour);
+    canvas->clear(pass, pass->display, renderer->background_colour);
 
     // now render the grid only
-    render_grid(renderopts, drawops, pass);
+    render_grid(renderer, canvas, pass);
 }
 

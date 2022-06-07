@@ -8,7 +8,6 @@ enable_testing()
 
 # build the core libraries
 add_subdirectory(src/core)
-add_subdirectory(src/drivers/waveshare-util)
 add_subdirectory(src/drivers/waveshare-display)
 add_subdirectory(src/drivers/waveshare-api)
 

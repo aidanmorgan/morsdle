@@ -45,10 +45,10 @@ typedef struct  {
 }render_pass_t;
 
 struct canvas {
-    void (*draw_line)(render_pass_t* pass, point_t start, point_t end, uint8_t thickness, colour_t colour);
-    void (*fill_rect)(render_pass_t* pass, point_t topleft, point_t bottomright, colour_t fill_colour);
-    void (*draw_char)(render_pass_t* pass, char c, point_t topleft, uint8_t size, colour_t colour);
-    void (*clear)(render_pass_t* pass, colour_t colour);
+    void (*draw_line)(render_pass_t* pass, display_impl_t * display, point_t start, point_t end, uint8_t thickness, colour_t colour);
+    void (*fill_rect)(render_pass_t* pass, display_impl_t * display,point_t topleft, point_t bottomright, colour_t fill_colour);
+    void (*draw_char)(render_pass_t* pass, display_impl_t * display,char c, point_t topleft, uint8_t size, colour_t colour);
+    void (*clear)(render_pass_t* pass, display_impl_t * display, colour_t colour);
 
     uint16_t height;
     uint16_t width;
@@ -56,6 +56,7 @@ struct canvas {
 
 
 extern void canvas_init(canvas_t* ops);
+
 extern void canvas_destroy(canvas_t* ops);
 
 // start a rendering pass, indicating to the underlyign display that we are going to soon be

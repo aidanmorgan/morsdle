@@ -17,9 +17,9 @@ struct display_impl_t {
     uint32_t width;
 };
 
-void mockdisplay_draw_line(render_pass_t* render, point_t start, point_t end, uint8_t thickness, colour_t colour);
-void mockdisplay_fill_rect(render_pass_t* render, point_t topleft, point_t bottomright, colour_t fill_colour);
-void mockdisplay_draw_text(render_pass_t* render, char c, point_t topleft, uint8_t size, colour_t colour);
+void mockdisplay_draw_line(render_pass_t* render, display_impl_t * display,point_t start, point_t end, uint8_t thickness, colour_t colour);
+void mockdisplay_fill_rect(render_pass_t* render, display_impl_t * display,point_t topleft, point_t bottomright, colour_t fill_colour);
+void mockdisplay_draw_text(render_pass_t* render, display_impl_t * display,char c, point_t topleft, uint8_t size, colour_t colour);
 
 void mockdisplay_write_buffer(display_impl_t* handle, char* filename);
 

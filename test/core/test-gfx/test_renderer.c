@@ -15,8 +15,8 @@ void test_gamecreatedevent() {
     canvas_t* canvas = &(canvas_t){ };
     canvas_init(canvas);
 
-    renderer_t* options = &(renderer_t) {};
-    renderer_init(canvas, options);
+    renderer_t* renderer = &(renderer_t) {};
+    renderer_init(renderer, MOCK_DISPLAY_WIDTH, MOCK_DISPLAY_HEIGHT);
 
     morsdle_game_event_t ev = {
         .type = EVENT_GAME_CREATED
@@ -27,11 +27,17 @@ void test_gamecreatedevent() {
         .display = display
     };
     render_pass_init(render_pass);
-    renderer_handle_event(canvas, options, render_pass, &ev);
+    renderer_handle_event(canvas, renderer, render_pass, &ev);
 
-    TEST_ASSERT_EQUAL(13, render_pass->dirty_regions->size);
-    rectangle_t regions[13];
-    cbuff_readmany(render_pass->dirty_regions, &regions, 13);
+    TEST_ASSERT_EQUAL(14, render_pass->dirty_regions->size);
+    rectangle_t regions[14];
+    cbuff_readmany(render_pass->dirty_regions, &regions, 14);
+
+    TEST_ASSERT_EQUAL(0, regions[0].top_left.x);
+    TEST_ASSERT_EQUAL(0, regions[0].top_left.y);
+    TEST_ASSERT_EQUAL(MOCK_DISPLAY_WIDTH, regions[0].bottom_right.x);
+    TEST_ASSERT_EQUAL(MOCK_DISPLAY_HEIGHT, regions[0].bottom_right.y);
+
     render_pass_end(render_pass);
 
     mockdisplay_write_buffer(display, "test-rendergrid.svg");
@@ -47,7 +53,7 @@ void test_wordcompletedevent() {
     canvas_init(operations);
 
     renderer_t* options = &(renderer_t) {};
-    renderer_init(operations, options);
+    renderer_init(options, MOCK_DISPLAY_WIDTH, MOCK_DISPLAY_HEIGHT);
 
     morsdle_game_event_t ev = (morsdle_game_event_t){
             .type = EVENT_WORD_COMPLETED,

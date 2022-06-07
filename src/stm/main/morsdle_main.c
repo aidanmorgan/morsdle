@@ -5,7 +5,6 @@
 #include "morsdle.h"
 #include "renderer.h"
 #include "waveshare_display.h"
-#include "imagebuffer.h"
 #include "waveshare_api.h"
 #include "waveshare_spi.h"
 
@@ -29,15 +28,16 @@ static display_impl_t display = (display_impl_t) {
 };
 
 static canvas_t h_canvas = (canvas_t) {
-        .height = WAVESHARE_PIXEL_HEIGHT,
-        .width = WAVESHARE_PIXEL_WIDTH
+    .fill_rect = waveshare_fill_rect,
+    .draw_line = waveshare_draw_line,
+    .clear = waveshare_clear,
+    .draw_char = waveshare_draw_char
 };
 
 // passed into the init board function to get access to the static fields for use elsewhere in this
 // main loop because the STM32CubeMX tool generates the handles to specific hardware as static instances
 // to annoy me even when the "generate main" option is disabled.
 static stm32_config_t hw_config;
-
 
 static const char* morsdle_random_word() {
     uint32_t base = HAL_RNG_GetRandomNumber(hw_config.rng);
@@ -49,22 +49,23 @@ static const char* morsdle_random_word() {
 int main(void) {
     init_stm_board(&hw_config);    // implemented by hand in the generated code to perform initialisation
 
-    if(imagebuffer_init(&image_buffer, WAVESHARE_PIXEL_WIDTH, WAVESHARE_PIXEL_HEIGHT) != IMAGEBUFFER_OK) {
-        // what do?
-    }
-
     // initialise the morse processor
     morse_init(&h_morse);
-
     // initialise the  morsdle game engine
     morsdle_init_game(&h_game, morsdle_random_word());
 
     // plug the waveshare handle into the display container and then initialise
     canvas_init(&h_canvas);
-    // initialise the renderer that connects the morsdle game with the display
-    renderer_init(&h_canvas, &h_renderer);
 
-    // initialise the waveshare display for a STM
+    // initialise the renderer that connects the morsdle game with the display
+    renderer_init(&h_renderer, h_canvas.width, h_canvas.height);
+
+    // allocate the 2-bit image buffer as we're using a waveshare display to render
+    if(imagebuffer_init(&image_buffer, h_canvas.width, h_canvas.height) != IMAGEBUFFER_OK) {
+        assert(false);
+    }
+
+    // initialise the display now, we should have everything in place?
     display.init();
 
     while (1) {

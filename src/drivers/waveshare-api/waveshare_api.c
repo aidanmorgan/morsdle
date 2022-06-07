@@ -5,6 +5,13 @@
 #include "waveshare_api.h"
 #include "waveshare_spi.h"
 
+static uint8_t buffer_to_waveshare_lookup[4] = {
+        WAVESHARE_WHITE,  // clear
+        WAVESHARE_ORANGE,// orange
+        WAVESHARE_GREEN, // green
+        WAVESHARE_BLACK  // black
+};
+
 
 void waveshareapi_wake(void)
 {
@@ -57,7 +64,7 @@ void waveshareapi_reset() {
     wavesharespi_delay(200);
 }
 
-void waveshareapi_init(imagebuffer_t * buffer) {
+void waveshareapi_init() {
     waveshareapi_reset();
 
     waveshareapi_waitbusy_high();
@@ -96,7 +103,7 @@ void waveshareapi_init(imagebuffer_t * buffer) {
     waveshareapi_send_data( 0x37);
 }
 
-void waveshareapi_destroy(imagebuffer_t * buffer) {
+void waveshareapi_destroy() {
 
 }
 
@@ -112,7 +119,7 @@ void waveshareapi_render_region(imagebuffer_t* buffer, uint16_t width, uint16_t 
     waveshareapi_send_data(0xC0);
     waveshareapi_send_command(0x10);
 
-    // The waveshare device encodes to colours to a byte in the width direction, so we need to always make sure
+    // The waveshare device encodes two colours to a byte in the width direction, so we need to always make sure
     // we are reading an even number of colors
     if(xstart % 2 != 0) {
         xstart -= 1;
@@ -122,16 +129,23 @@ void waveshareapi_render_region(imagebuffer_t* buffer, uint16_t width, uint16_t 
         xend += 1;
     }
 
+    // step through in twos in the x-direction, because we're going to read out two values in one go as the waveshare
+    // device encodes two pixels into each horizontal only, whereas I encode 2 in both directions (because im using less colours).
     for(i=0; i<buffer->height; i++) {
-        // step through in twos, because we're going to read out two values in one go as the waveshare device encodes two
-        // pixels into each horizontal
         for(j=0; j<buffer->width; j+=2) {
             imagebuffer_colour_t color[2] = {IMAGEBUFFER_INVALID, IMAGEBUFFER_INVALID};
 
             imagebuffer_getpixel(buffer, j, i, &color[0]);
             imagebuffer_getpixel(buffer, j + 1, i, &color[1]);
 
-            uint8_t data = buffer_to_waveshare_lookup[color[0]] << 4 | buffer_to_waveshare_lookup[color[1]];
+            if(color[0] == IMAGEBUFFER_INVALID || color[1] == IMAGEBUFFER_INVALID) {
+                continue;
+            }
+
+            uint8_t left = buffer_to_waveshare_lookup[color[0]];
+            uint8_t right = buffer_to_waveshare_lookup[color[1]];
+
+            uint8_t data = (left << 4) | right;
             waveshareapi_send_data(data);
         }
     }
