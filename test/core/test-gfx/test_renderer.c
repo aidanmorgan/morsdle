@@ -3,11 +3,16 @@
 #include "renderer.h"
 #include "mock_display.h"
 
+#define  MOCK_DISPLAY_WIDTH 448
+#define MOCK_DISPLAY_HEIGHT 600
+
 void setUp (void) {} /* Is run before every test, put unit init calls here. */
 void tearDown (void) {} /* Is run after every test, put unit clean-up calls here. */
 
 void test_gamecreatedevent() {
-    canvas_t* canvas = &(canvas_t){};
+    display_impl_t* display = (display_impl_t*)INLINE_MALLOC(display_impl_t, .buffer = svg_create(MOCK_DISPLAY_WIDTH, MOCK_DISPLAY_HEIGHT), .width = MOCK_DISPLAY_WIDTH, .height = MOCK_DISPLAY_HEIGHT);
+
+    canvas_t* canvas = &(canvas_t){ };
     canvas_init(canvas);
 
     renderer_t* options = &(renderer_t) {};
@@ -17,27 +22,27 @@ void test_gamecreatedevent() {
         .type = EVENT_GAME_CREATED
     };
 
-    render_pass_t* render_pass = &(render_pass_t){};
-    render_pass_init(canvas, render_pass);
+    render_pass_t* render_pass = &(render_pass_t){
+        .canvas = canvas,
+        .display = display
+    };
+    render_pass_init(render_pass);
     renderer_handle_event(canvas, options, render_pass, &ev);
 
-    TEST_ASSERT_EQUAL(14, render_pass->dirty_regions->size);
-    rectangle_t regions[14];
-    cbuff_readmany(render_pass->dirty_regions, &regions, 14);
-
-    // check that the first call is to clear the entire background, so the bounding box is EVERYTHING
-    TEST_ASSERT_EQUAL(0, regions[0].top_left.x);
-    TEST_ASSERT_EQUAL(0, regions[0].top_left.y);
-    TEST_ASSERT_EQUAL(448, regions[0].bottom_right.x);
-    TEST_ASSERT_EQUAL(600, regions[0].bottom_right.y);
-
+    TEST_ASSERT_EQUAL(13, render_pass->dirty_regions->size);
+    rectangle_t regions[13];
+    cbuff_readmany(render_pass->dirty_regions, &regions, 13);
     render_pass_end(render_pass);
 
-    mockdisplay_write_buffer(canvas->display_impl, "test-rendergrid.svg");
+    mockdisplay_write_buffer(display, "test-rendergrid.svg");
     canvas_destroy(canvas);
+
+    free(display);
 }
 
 void test_wordcompletedevent() {
+    display_impl_t* display = (display_impl_t*)INLINE_MALLOC(display_impl_t, .buffer = svg_create(MOCK_DISPLAY_WIDTH, MOCK_DISPLAY_HEIGHT), .width = MOCK_DISPLAY_WIDTH, .height = MOCK_DISPLAY_HEIGHT);
+
     canvas_t* operations = &(canvas_t){};
     canvas_init(operations);
 
@@ -78,8 +83,11 @@ void test_wordcompletedevent() {
             }
     };
 
-    render_pass_t* render_pass = &(render_pass_t){};
-    render_pass_init(operations, render_pass);
+    render_pass_t* render_pass = &(render_pass_t){
+        .display = display,
+        .canvas = operations
+    };
+    render_pass_init(render_pass);
     renderer_handle_event(operations, options, render_pass, &ev);
 
     // this should have caused the 5 grid squares for each of the letters in the word on the first line to have changed
@@ -89,8 +97,10 @@ void test_wordcompletedevent() {
 
     render_pass_end(render_pass);
 
-    mockdisplay_write_buffer(operations->display_impl, "test-wordcompleted.svg");
+    mockdisplay_write_buffer(display, "test-wordcompleted.svg");
     canvas_destroy(operations);
+
+    free(display);
 }
 
 int main(void)

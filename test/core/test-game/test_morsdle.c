@@ -18,8 +18,8 @@ static void assert_eventsequence(morsdle_game_t* game, game_event_t* events, uin
 }
 
 void test_basic_init() {
-    morsdle_game_t game = (morsdle_game_t) {.word = "ratio" };
-    morsdle_init_game(&game);
+    morsdle_game_t game = (morsdle_game_t) { };
+    morsdle_init_game(&game, "ratio");
 
     TEST_ASSERT_TRUE(game.state == GAME_STATE_IN_PROGRESS);
     TEST_ASSERT_EQUAL_STRING("ratio", game.word);
@@ -37,8 +37,8 @@ void test_basic_init() {
 }
 
 void test_add_letter() {
-    morsdle_game_t game = (morsdle_game_t) {.word = "ratio" };
-    morsdle_init_game(&game);
+    morsdle_game_t game = (morsdle_game_t) { };
+    morsdle_init_game(&game,  "ratio");
 
     morsdle_add_letter(&game, 'b');
     TEST_ASSERT_EQUAL('b', game.answers[0]->letters[0]->letter);
@@ -68,8 +68,8 @@ void test_add_letter() {
 }
 
 void test_add_letter_alreadyfiveletters_shouldreturnerror() {
-    morsdle_game_t game = (morsdle_game_t) {.word = "ratio" };
-    morsdle_init_game(&game);
+    morsdle_game_t game = (morsdle_game_t) {};
+    morsdle_init_game(&game,  "ratio");
 
     TEST_ASSERT_EQUAL(MORSDLE_OK, morsdle_add_letter(&game, 'b'));
     TEST_ASSERT_EQUAL(MORSDLE_OK, morsdle_add_letter(&game, 'u'));
@@ -82,8 +82,8 @@ void test_add_letter_alreadyfiveletters_shouldreturnerror() {
 }
 
 void test_remove_letter() {
-    morsdle_game_t game = (morsdle_game_t) {.word = "ratio"};
-    morsdle_init_game(&game);
+    morsdle_game_t game = (morsdle_game_t) {};
+    morsdle_init_game(&game,  "ratio");
 
     TEST_ASSERT_EQUAL(MORSDLE_OK, morsdle_add_letter(&game, 'b'));
     TEST_ASSERT_EQUAL(LETTER_STATE_SET, game.answers[0]->letters[0]->state);
@@ -125,16 +125,16 @@ void test_remove_letter() {
 }
 
 void test_remove_letter_nolettertoremove_shouldreturnerror() {
-    morsdle_game_t game = (morsdle_game_t) {.word = "ratio" };
-    morsdle_init_game(&game);
+    morsdle_game_t game = (morsdle_game_t) { };
+    morsdle_init_game(&game,  "ratio");
 
     morsdle_err_t result = morsdle_remove_letter(&game);
     TEST_ASSERT_EQUAL(MORSDLE_ERR_NOSETLETTER, result);
 }
 
 void test_submit_word() {
-    morsdle_game_t game = (morsdle_game_t) {.word = "ratio" };
-    morsdle_init_game(&game);
+    morsdle_game_t game = (morsdle_game_t) {};
+    morsdle_init_game(&game,  "ratio");
 
     TEST_ASSERT_EQUAL(MORSDLE_OK, morsdle_add_letter(&game, 'b'));
     TEST_ASSERT_EQUAL(MORSDLE_OK, morsdle_add_letter(&game, 'u'));
@@ -166,8 +166,8 @@ void test_submit_word() {
 }
 
 void test_submit_word_notenoughletters_shouldreturnerror() {
-    morsdle_game_t game = (morsdle_game_t) {.word = "ratio" };
-    morsdle_init_game(&game);
+    morsdle_game_t game = (morsdle_game_t) { };
+    morsdle_init_game(&game,  "ratio");
 
     TEST_ASSERT_EQUAL(MORSDLE_OK, morsdle_add_letter(&game, 'b'));
     TEST_ASSERT_EQUAL(MORSDLE_OK, morsdle_add_letter(&game, 'u'));
@@ -180,8 +180,8 @@ void test_submit_word_notenoughletters_shouldreturnerror() {
 }
 
 void test_submit_word_correctanswer() {
-    morsdle_game_t game = (morsdle_game_t) {.word = "ratio" };
-    morsdle_init_game(&game);
+    morsdle_game_t game = (morsdle_game_t) {};
+    morsdle_init_game(&game,  "ratio");
 
     TEST_ASSERT_EQUAL(MORSDLE_OK, morsdle_add_letter(&game, 'r'));
     TEST_ASSERT_EQUAL(MORSDLE_OK, morsdle_add_letter(&game, 'a'));
@@ -206,8 +206,8 @@ void test_submit_word_correctanswer() {
 }
 
 void test_submit_word_incorrectanswer() {
-    morsdle_game_t game = (morsdle_game_t) {.word = "ratio" };
-    morsdle_init_game(&game);
+    morsdle_game_t game = (morsdle_game_t) { };
+    morsdle_init_game(&game,  "ratio");
 
     for(uint8_t i = 0; i < WORDS_PER_GAME; i++) {
         TEST_ASSERT_EQUAL(MORSDLE_OK, morsdle_add_letter(&game, 'b'));

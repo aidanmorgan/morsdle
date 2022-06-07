@@ -57,7 +57,7 @@ void waveshareapi_reset() {
     wavesharespi_delay(200);
 }
 
-void waveshareapi_init() {
+void waveshareapi_init(imagebuffer_t * buffer) {
     waveshareapi_reset();
 
     waveshareapi_waitbusy_high();
@@ -96,14 +96,14 @@ void waveshareapi_init() {
     waveshareapi_send_data( 0x37);
 }
 
-void waveshareapi_destroy() {
+void waveshareapi_destroy(imagebuffer_t * buffer) {
 
 }
 
 #define EPD_5IN65F_HEIGHT 448
 #define EPD_5IN65F_WIDTH 600
 
-void waveshareapi_render_region(uint8_t* buffer, uint16_t width, uint16_t height, uint16_t xstart, uint16_t ystart, uint16_t xend, uint16_t yend) {
+void waveshareapi_render_region(imagebuffer_t* buffer, uint16_t width, uint16_t height, uint16_t xstart, uint16_t ystart, uint16_t xend, uint16_t yend) {
     uint64_t i,j;
     waveshareapi_send_command(0x61);//Set Resolution setting
     waveshareapi_send_data(0x02);
@@ -111,10 +111,28 @@ void waveshareapi_render_region(uint8_t* buffer, uint16_t width, uint16_t height
     waveshareapi_send_data(0x01);
     waveshareapi_send_data(0xC0);
     waveshareapi_send_command(0x10);
-    for(i=0; i<EPD_5IN65F_HEIGHT; i++) {
-        for(j=0; j<EPD_5IN65F_WIDTH/2; j++) {
-            uint64_t idx = j + ((EPD_5IN65F_WIDTH / 2) * i);
-            waveshareapi_send_data(buffer[idx]);
+
+    // The waveshare device encodes to colours to a byte in the width direction, so we need to always make sure
+    // we are reading an even number of colors
+    if(xstart % 2 != 0) {
+        xstart -= 1;
+    }
+
+    if(xend %2 != 0) {
+        xend += 1;
+    }
+
+    for(i=0; i<buffer->height; i++) {
+        // step through in twos, because we're going to read out two values in one go as the waveshare device encodes two
+        // pixels into each horizontal
+        for(j=0; j<buffer->width; j+=2) {
+            imagebuffer_colour_t color[2] = {IMAGEBUFFER_INVALID, IMAGEBUFFER_INVALID};
+
+            imagebuffer_getpixel(buffer, j, i, &color[0]);
+            imagebuffer_getpixel(buffer, j + 1, i, &color[1]);
+
+            uint8_t data = buffer_to_waveshare_lookup[color[0]] << 4 | buffer_to_waveshare_lookup[color[1]];
+            waveshareapi_send_data(data);
         }
     }
     waveshareapi_send_command(0x04);//0x04

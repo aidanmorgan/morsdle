@@ -87,7 +87,7 @@ typedef struct {
     morsdle_word_t* answers[WORDS_PER_GAME];
 } morsdle_game_t;
 
-void morsdle_init_game(morsdle_game_t* game);
+void morsdle_init_game(morsdle_game_t* game, const char* word);
 morsdle_err_t morsdle_add_letter(morsdle_game_t* game, char letter);
 morsdle_err_t morsdle_remove_letter(morsdle_game_t* game);
 morsdle_err_t morsdle_submit_word(morsdle_game_t* game);

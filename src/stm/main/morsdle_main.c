@@ -5,6 +5,7 @@
 #include "morsdle.h"
 #include "renderer.h"
 #include "waveshare_display.h"
+#include "imagebuffer.h"
 #include "waveshare_api.h"
 #include "waveshare_spi.h"
 
@@ -16,19 +17,18 @@ static renderer_t h_renderer = (renderer_t) {
         .game_mode = MORSDLE_GAME_SINGLE_LETTER
 };
 
+static imagebuffer_t image_buffer = (imagebuffer_t){};
+
 // this is the waveshare implementation of the handle
-static display_impl_t display_impl = (display_impl_t) {
-        .buffersize = WAVESHARE_BUFFER_SIZE,
+static display_impl_t display = (display_impl_t) {
+        .buffer = &image_buffer,
         .render_dirty_region = waveshareapi_render_region,
-//        .pre_render = waveshareapi_wake,
-//        .post_render = waveshareapi_sleep,
         .pre_render = NULL,
         .post_render = NULL,
         .init = waveshareapi_init
 };
 
 static canvas_t h_canvas = (canvas_t) {
-        .display_impl = &display_impl,
         .height = WAVESHARE_PIXEL_HEIGHT,
         .width = WAVESHARE_PIXEL_WIDTH
 };
@@ -49,15 +49,15 @@ static const char* morsdle_random_word() {
 int main(void) {
     init_stm_board(&hw_config);    // implemented by hand in the generated code to perform initialisation
 
-    // i know i really should statically allocate this, but im trying to debug
-    display_impl.buffer = (uint8_t*)malloc(sizeof(uint8_t)*WAVESHARE_BUFFER_SIZE);
+    if(imagebuffer_init(&image_buffer, WAVESHARE_PIXEL_WIDTH, WAVESHARE_PIXEL_HEIGHT) != IMAGEBUFFER_OK) {
+        // what do?
+    }
 
     // initialise the morse processor
     morse_init(&h_morse);
 
-    h_game.word = morsdle_random_word();
     // initialise the  morsdle game engine
-    morsdle_init_game(&h_game);
+    morsdle_init_game(&h_game, morsdle_random_word());
 
     // plug the waveshare handle into the display container and then initialise
     canvas_init(&h_canvas);
@@ -65,7 +65,7 @@ int main(void) {
     renderer_init(&h_canvas, &h_renderer);
 
     // initialise the waveshare display for a STM
-    h_canvas.display_impl->init();
+    display.init();
 
     while (1) {
         // this probably only needs to happen every 2 * MORSE_DIT ms (dit to high, dit to low)
@@ -98,15 +98,17 @@ int main(void) {
 
             // we aren't going to bother drawing unless there's an event, and even then they may not dirty the display
             // so collect any dirty regions into a render_pass and then see if we actually need to redraw.
-            render_pass_t render_pass = (render_pass_t){};
-            render_pass_init(&h_canvas, &render_pass);
+            render_pass_t render_pass = (render_pass_t){
+                .display = &display,
+                .canvas = &h_canvas,
+            };
+            render_pass_init(&render_pass);
 
-//            while (morsdle_has_events(&h_game)) {
-//                if (morsdle_read_event(&h_game, &ev)) {
-//                    renderer_handle_event(&h_canvas, &h_renderer, &render_pass, &ev);
-//                }
-//            }
-            waveshare_clear(&render_pass, COLOUR_RED);
+            while (morsdle_has_events(&h_game)) {
+                if (morsdle_read_event(&h_game, &ev)) {
+                    renderer_handle_event(&h_canvas, &h_renderer, &render_pass, &ev);
+                }
+            }
 
             render_pass_end(&render_pass);
         }

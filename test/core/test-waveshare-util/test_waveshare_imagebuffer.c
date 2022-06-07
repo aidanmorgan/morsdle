@@ -1,5 +1,5 @@
 #include "unity.h"
-#include "waveshare_image_buffer.h"
+#include "imagebuffer.h"
 
 void setUp (void) {} /* Is run before every test, put unit init calls here. */
 void tearDown (void) {}

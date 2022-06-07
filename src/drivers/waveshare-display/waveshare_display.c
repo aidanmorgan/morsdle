@@ -4,6 +4,7 @@
 
 #include <assert.h>
 #include "waveshare_display.h"
+#include "imagebuffer.h"
 
 #define MAX_DIRTY_REGIONS 64
 
@@ -45,36 +46,19 @@ const font_t font_buffer[1] = {
                 }
 };
 
-
-static colour_t colour_lookup[7] = {
-        WAVESHARE_BLACK, //COLOUR_BLACK
-        WAVESHARE_WHITE, //COLOUR_WHITE,
-        WAVESHARE_GREEN, // COLOUR_GREEN,
-        WAVESHARE_BLUE, // COLOUR_BLUE,
-        WAVESHARE_RED, //COLOUR_RED,
-        WAVESHARE_YELLOW, //COLOUR_YELLOW,
-        WAVESHARE_ORANGE //COLOUR_ORANGE
+static imagebuffer_colour_t display_to_buffer_lookup[7] = {
+        IMAGEBUFFER_BLACK,
+        IMAGEBUFFER_CLEAR,
+        IMAGEBUFFER_GREEN,
+        IMAGEBUFFER_INVALID,
+        IMAGEBUFFER_INVALID,
+        IMAGEBUFFER_INVALID,
+        IMAGEBUFFER_ORANGE
 };
 
-static void waveshare_set_pixel(canvas_t* canvas, point_t point, colour_t colour) {
-    if (point.x > canvas->width || point.y > canvas->height) {
-        return;
-    }
-
-    uint64_t buffer_idx = (point.x / 2)  + (point.y * WAVESHARE_PIXELS_PER_BYTE_WIDE);
-    if(buffer_idx > canvas->display_impl->buffersize) {
-        assert(false);
-    }
-
-    uint8_t data = canvas->display_impl->buffer[buffer_idx];
-
-    data = data & (~(0xF0 >> ((point.x % 2) * 4)));//Clear first, then set value
-    data = data | ((colour_lookup[colour] << 4) >> ((point.x % 2) * 4));
-
-    canvas->display_impl->buffer[buffer_idx] = data;
-}
-
 void waveshare_draw_line_impl(render_pass_t* pass, point_t start, point_t end, uint8_t thickness, colour_t colour, bool updateDirtyRegions) {
+    imagebuffer_t * buffer = pass->display->buffer;
+
     uint16_t current_x = start.x;
     uint16_t current_y = start.y;
 
@@ -88,7 +72,7 @@ void waveshare_draw_line_impl(render_pass_t* pass, point_t start, point_t end, u
     int cumulativeerror = dx + dy;
 
     for (;;) {
-        waveshare_set_pixel(pass->canvas, (point_t) {.x = current_x, .y = current_y}, colour);
+        imagebuffer_setpixel(buffer, current_x, current_y, display_to_buffer_lookup[colour]);
 
         if (2 * cumulativeerror >= dy) {
             if (current_x == end.x) {
@@ -120,15 +104,11 @@ void waveshare_draw_line(render_pass_t* pass, point_t start, point_t end, uint8_
 
 
 void waveshare_fill_rect(render_pass_t* pass, point_t topleft, point_t bottomright, colour_t fill_colour) {
-    // moved outside the for loop to try and prevent the stack growing too big in the loop
-    point_t point = (point_t) {};
+    imagebuffer_t * buffer = pass->display->buffer;
 
     for(uint16_t x = topleft.x; x < topleft.x; x++) {
         for(uint16_t y = bottomright.y; y < bottomright.y; y++) {
-            point.x = x;
-            point.y = y;
-
-            waveshare_set_pixel(pass->canvas, point, fill_colour);
+            imagebuffer_setpixel(buffer, x, y, display_to_buffer_lookup[fill_colour]);
         }
     }
 
@@ -140,6 +120,8 @@ void waveshare_fill_rect(render_pass_t* pass, point_t topleft, point_t bottomrig
 
 
 void waveshare_draw_char(render_pass_t* pass, char c, point_t topleft, uint8_t size, colour_t colour) {
+    imagebuffer_t * buffer = pass->display->buffer;
+
     font_t font = font_buffer[(uint8_t) (c - 'A')];
 
     for (uint16_t column = 0; column < font.width; column++) {
@@ -149,7 +131,7 @@ void waveshare_draw_char(render_pass_t* pass, char c, point_t topleft, uint8_t s
             bool value = (font.hex[pixel / 8] >> (pixel % 8)) & 1;
 
             if (value) {
-                waveshare_set_pixel(pass->canvas, (point_t) {.x = topleft.x + column, .y = topleft.y + row}, colour);
+                imagebuffer_setpixel(buffer, topleft.x + column, topleft.y + row, display_to_buffer_lookup[colour]);
             }
         }
     }
@@ -167,17 +149,12 @@ void waveshare_draw_char(render_pass_t* pass, char c, point_t topleft, uint8_t s
 }
 
 void waveshare_clear(render_pass_t* pass, colour_t colour) {
-    point_t point = (point_t) {};
+    imagebuffer_t * buffer = pass->display->buffer;
 
     for(uint16_t x = 0; x < pass->canvas->width; x++) {
         for(uint16_t y = 0; y < pass->canvas->height; y++) {
-            point.x = x;
-            point.y = y;
-
-            waveshare_set_pixel(pass->canvas, point, colour);
+            imagebuffer_setpixel(buffer, x, y, display_to_buffer_lookup[colour]);
         }
-
-        assert(pass->dirty_regions->size == 0);
     }
 
     cbuff_write(pass->dirty_regions, &(rectangle_t) {
@@ -194,10 +171,8 @@ void waveshare_clear(render_pass_t* pass, colour_t colour) {
 
 // start a rendering pass, indicating to the underlyign display that we are going to soon be
 // sending updated dirty regions
-void render_pass_init(canvas_t* canvas, render_pass_t* render) {
-    render->canvas = canvas;
+void render_pass_init(render_pass_t* render) {
     render->dirty_regions = &dirty_regions;
-
     cbuff_clear(&dirty_regions);
 }
 
@@ -207,11 +182,9 @@ extern void render_pass_end(render_pass_t* render) {
     size_t dirty_region_count = render->dirty_regions->size;
 
     if (dirty_region_count > 0) {
-        if(render->canvas->display_impl->pre_render != NULL) {
-            render->canvas->display_impl->pre_render();
+        if(render->display->pre_render != NULL) {
+            render->display->pre_render(render->display->buffer);
         }
-
-        canvas_t* canvas = render->canvas;
 
         rectangle_t regions[dirty_region_count];
         // read many should empty the buffer
@@ -235,7 +208,7 @@ extern void render_pass_end(render_pass_t* render) {
             bottom_right_y = max(regions->bottom_right.y, bottom_right_y);
         }
 
-        canvas->display_impl->render_dirty_region(render->canvas->display_impl->buffer,
+        render->display->render_dirty_region(render->display->buffer,
                                                   render->canvas->width,
                                                   render->canvas->height,
                                                   top_left_x,
@@ -244,8 +217,8 @@ extern void render_pass_end(render_pass_t* render) {
                                                   bottom_right_y);
 
 
-        if(render->canvas->display_impl->post_render != NULL) {
-            render->canvas->display_impl->post_render();
+        if(render->display->post_render != NULL) {
+            render->display->post_render();
         }
 
         // the read many should have done this, but just in case it didn't then clear it anyway

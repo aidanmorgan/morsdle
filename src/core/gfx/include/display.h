@@ -41,6 +41,7 @@ typedef struct  {
     // a circular buffer of region_t
     cbuff_t* dirty_regions;
     canvas_t* canvas;
+    display_impl_t * display;
 }render_pass_t;
 
 struct canvas {
@@ -48,8 +49,6 @@ struct canvas {
     void (*fill_rect)(render_pass_t* pass, point_t topleft, point_t bottomright, colour_t fill_colour);
     void (*draw_char)(render_pass_t* pass, char c, point_t topleft, uint8_t size, colour_t colour);
     void (*clear)(render_pass_t* pass, colour_t colour);
-
-    display_impl_t* display_impl;
 
     uint16_t height;
     uint16_t width;
@@ -61,7 +60,7 @@ extern void canvas_destroy(canvas_t* ops);
 
 // start a rendering pass, indicating to the underlyign display that we are going to soon be
 // sending updated dirty regions
-extern void render_pass_init(canvas_t* canvas, render_pass_t* render);
+extern void render_pass_init(render_pass_t* render);
 
 // end the render pass, update the display with the buffer in the handle, updating the regions
 // that are marked

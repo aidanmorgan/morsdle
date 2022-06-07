@@ -20,9 +20,10 @@ static bool morsdle_clear_events(morsdle_game_t* game) {
     return cbuff_clear(game->events);
 }
 
-void morsdle_init_game(morsdle_game_t* game) {
+void morsdle_init_game(morsdle_game_t* game, const char* word) {
     cbuff_init(event_buffer, (void**)&event_buffer_storage, EVENT_BUFFER_SIZE, sizeof(morsdle_game_event_t));
     game->events = event_buffer;
+    game->word = word;
 
     morsdle_clear(game);
 
