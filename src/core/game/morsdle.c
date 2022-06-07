@@ -7,21 +7,21 @@
 
 // TODO : consider if these should actually be added to the game struct rather than being global
 static morsdle_game_event_t event_buffer_storage[EVENT_BUFFER_SIZE];
-static cbuff_t* event_buffer = &(cbuff_t){};
+static cbuff_t *event_buffer = &(cbuff_t) {};
 
 static morsdle_letter_t letters[WORDS_PER_GAME * LETTERS_PER_WORD];
 static morsdle_word_t words[WORDS_PER_GAME];
 
-static bool morsdle_append_event(morsdle_game_t* game, morsdle_game_event_t* event) {
+static bool morsdle_append_event(morsdle_game_t *game, morsdle_game_event_t *event) {
     return cbuff_write(game->events, event);
 }
 
-static bool morsdle_clear_events(morsdle_game_t* game) {
+static bool morsdle_clear_events(morsdle_game_t *game) {
     return cbuff_clear(game->events);
 }
 
-void morsdle_init_game(morsdle_game_t* game, const char* word) {
-    cbuff_init(event_buffer, (void**)&event_buffer_storage, EVENT_BUFFER_SIZE, sizeof(morsdle_game_event_t));
+void morsdle_init_game(morsdle_game_t *game, const char *word) {
+    cbuff_init(event_buffer, (void **) &event_buffer_storage, EVENT_BUFFER_SIZE, sizeof(morsdle_game_event_t));
     game->events = event_buffer;
     game->word = word;
 
@@ -33,13 +33,13 @@ void morsdle_init_game(morsdle_game_t* game, const char* word) {
     });
 }
 
-void morsdle_clear(morsdle_game_t* game) {
+void morsdle_clear(morsdle_game_t *game) {
     game->state = GAME_STATE_IN_PROGRESS;
     morsdle_clear_events(game);
 
-    for(uint8_t idx = 0; idx < (WORDS_PER_GAME * LETTERS_PER_WORD); idx++) {
-        morsdle_letter_t* letter = &letters[idx];
-        morsdle_word_t* word = &words[idx / LETTERS_PER_WORD];
+    for (uint8_t idx = 0; idx < (WORDS_PER_GAME * LETTERS_PER_WORD); idx++) {
+        morsdle_letter_t *letter = &letters[idx];
+        morsdle_word_t *word = &words[idx / LETTERS_PER_WORD];
 
         letter->state = LETTER_STATE_UNSET;
         letter->x = idx % LETTERS_PER_WORD;
@@ -55,15 +55,15 @@ void morsdle_clear(morsdle_game_t* game) {
 
     // given we've cleared the board, make sure we add the event to say a new game has been created so we redraw as required.
     morsdle_game_event_t ev = (morsdle_game_event_t) {
-        .type = EVENT_GAME_CREATED
+            .type = EVENT_GAME_CREATED
     };
 
     morsdle_append_event(game, &ev);
 }
 
-static morsdle_word_t* get_next_word(morsdle_game_t* game, word_state_t state) {
-    for(int8_t i = 0; i < WORDS_PER_GAME; i++) {
-        if(game->answers[i]->state == state) {
+static morsdle_word_t *get_next_word(morsdle_game_t *game, word_state_t state) {
+    for (int8_t i = 0; i < WORDS_PER_GAME; i++) {
+        if (game->answers[i]->state == state) {
             return game->answers[i];
         }
     }
@@ -71,9 +71,9 @@ static morsdle_word_t* get_next_word(morsdle_game_t* game, word_state_t state) {
     return NULL;
 }
 
-static morsdle_letter_t* get_next_letter(morsdle_word_t* word, letter_state_t state) {
-    for(int8_t i = 0; i < LETTERS_PER_WORD; i++) {
-        if(word->letters[i]->state == state) {
+static morsdle_letter_t *get_next_letter(morsdle_word_t *word, letter_state_t state) {
+    for (int8_t i = 0; i < LETTERS_PER_WORD; i++) {
+        if (word->letters[i]->state == state) {
             return word->letters[i];
         }
     }
@@ -81,28 +81,28 @@ static morsdle_letter_t* get_next_letter(morsdle_word_t* word, letter_state_t st
     return NULL;
 }
 
-static morsdle_letter_t* get_last_letter(morsdle_word_t* word, letter_state_t state) {
-    for(uint8_t i = LETTERS_PER_WORD; i > 0 ; i--) {
-        if(word->letters[i-1]->state == state) {
-            return word->letters[i-1];
+static morsdle_letter_t *get_last_letter(morsdle_word_t *word, letter_state_t state) {
+    for (uint8_t i = LETTERS_PER_WORD; i > 0; i--) {
+        if (word->letters[i - 1]->state == state) {
+            return word->letters[i - 1];
         }
     }
 
     return NULL;
 }
 
-morsdle_err_t morsdle_add_letter(morsdle_game_t* game, char l) {
-    if(game->state != GAME_STATE_IN_PROGRESS) {
+morsdle_err_t morsdle_add_letter(morsdle_game_t *game, char l) {
+    if (game->state != GAME_STATE_IN_PROGRESS) {
         return MORSDLE_ERR_GAMENOTINPROGRESS;
     }
 
-    morsdle_word_t* word = get_next_word(game, WORD_STATE_IN_PROGRESS);
-    if(word == NULL) {
+    morsdle_word_t *word = get_next_word(game, WORD_STATE_IN_PROGRESS);
+    if (word == NULL) {
         return MORSDLE_ERR_NOINPROGRESSWORD;
     }
 
-    morsdle_letter_t* letter = get_next_letter(word, LETTER_STATE_UNSET);
-    if(letter == NULL) {
+    morsdle_letter_t *letter = get_next_letter(word, LETTER_STATE_UNSET);
+    if (letter == NULL) {
         return MORSDLE_ERR_NOINPROGRESSLETTER;
     }
 
@@ -110,9 +110,9 @@ morsdle_err_t morsdle_add_letter(morsdle_game_t* game, char l) {
     letter->state = LETTER_STATE_SET;
 
     morsdle_game_event_t event = (morsdle_game_event_t) {
-        .type = EVENT_LETTER_ADDED,
-        .word = word,
-        .letter = letter
+            .type = EVENT_LETTER_ADDED,
+            .word = word,
+            .letter = letter
     };
 
     morsdle_append_event(game, &event);
@@ -120,36 +120,36 @@ morsdle_err_t morsdle_add_letter(morsdle_game_t* game, char l) {
     return MORSDLE_OK;
 }
 
-morsdle_err_t morsdle_submit_word(morsdle_game_t* game) {
-    if(game->state != GAME_STATE_IN_PROGRESS) {
+morsdle_err_t morsdle_submit_word(morsdle_game_t *game) {
+    if (game->state != GAME_STATE_IN_PROGRESS) {
         return MORSDLE_ERR_GAMENOTINPROGRESS;
     }
 
-    morsdle_word_t* word = get_next_word(game, WORD_STATE_IN_PROGRESS);
-    if(word == NULL) {
+    morsdle_word_t *word = get_next_word(game, WORD_STATE_IN_PROGRESS);
+    if (word == NULL) {
         return MORSDLE_ERR_NOINPROGRESSWORD;
     }
 
     // this will look for the next letter in the word that is UNSET, returning NULL means we have no unset letters
     // which means we are okay to submit the word for checking
-    morsdle_letter_t* letter = get_next_letter(word, LETTER_STATE_UNSET);
-    if(letter != NULL) {
+    morsdle_letter_t *letter = get_next_letter(word, LETTER_STATE_UNSET);
+    if (letter != NULL) {
         return MORSDLE_ERR_WORDINCOMPLETE;
     }
 
     uint8_t validcount = 0;
     // go through each letter
-    for(uint8_t i = 0; i < LETTERS_PER_WORD; i++) {
+    for (uint8_t i = 0; i < LETTERS_PER_WORD; i++) {
         // right letter, right postion
-        if(word->letters[i]->letter == game->word[i]) {
+        if (word->letters[i]->letter == game->word[i]) {
             word->letters[i]->state = LETTER_STATE_VALID;
             validcount++;
         }
-        // right letter, wrong position
-        else if(strstr(game->word, &word->letters[i]->letter) != NULL) {
+            // right letter, wrong position
+        else if (strstr(game->word, &word->letters[i]->letter) != NULL) {
             word->letters[i]->state = LETTER_STATE_VALID_LETTER_INVALID_POSITION;
         }
-        // wrong letter
+            // wrong letter
         else {
             word->letters[i]->state = LETTER_STATE_INVALID_LETTER;
         }
@@ -161,7 +161,7 @@ morsdle_err_t morsdle_submit_word(morsdle_game_t* game) {
     };
     morsdle_append_event(game, &event);
 
-    if(validcount == LETTERS_PER_WORD) {
+    if (validcount == LETTERS_PER_WORD) {
         word->state = WORD_STATE_CORRECT;
         game->state = GAME_STATE_SUCCESS;
 
@@ -169,12 +169,11 @@ morsdle_err_t morsdle_submit_word(morsdle_game_t* game) {
                 .type = EVENT_GAME_COMPLETED
         };
         morsdle_append_event(game, &event);
-    }
-    else {
+    } else {
         word->state = WORD_STATE_COMPLETE;
         // get the next word and update it's state to start filling it, if it's null then we're at the end of the
         // list and the game is over - you failed.
-        morsdle_word_t* nextword = get_next_word(game, WORD_STATE_NEW);
+        morsdle_word_t *nextword = get_next_word(game, WORD_STATE_NEW);
         if (nextword == NULL) {
             game->state = GAME_STATE_FAILED;
 
@@ -196,18 +195,18 @@ morsdle_err_t morsdle_submit_word(morsdle_game_t* game) {
     return MORSDLE_OK;
 }
 
-morsdle_err_t morsdle_remove_letter(morsdle_game_t* game) {
-    if(game->state != GAME_STATE_IN_PROGRESS) {
+morsdle_err_t morsdle_remove_letter(morsdle_game_t *game) {
+    if (game->state != GAME_STATE_IN_PROGRESS) {
         return MORSDLE_ERR_GAMENOTINPROGRESS;
     }
 
-    morsdle_word_t* word = get_next_word(game, WORD_STATE_IN_PROGRESS);
-    if(word == NULL) {
+    morsdle_word_t *word = get_next_word(game, WORD_STATE_IN_PROGRESS);
+    if (word == NULL) {
         return MORSDLE_ERR_NOINPROGRESSWORD;
     }
 
-    morsdle_letter_t* letter = get_last_letter(word, LETTER_STATE_SET);
-    if(letter == NULL) {
+    morsdle_letter_t *letter = get_last_letter(word, LETTER_STATE_SET);
+    if (letter == NULL) {
         return MORSDLE_ERR_NOSETLETTER;
     }
 
@@ -225,12 +224,11 @@ morsdle_err_t morsdle_remove_letter(morsdle_game_t* game) {
 }
 
 
-
-bool morsdle_has_events(morsdle_game_t* game) {
+bool morsdle_has_events(morsdle_game_t *game) {
     return cbuff_canread(game->events);
 }
 
-bool morsdle_read_event(morsdle_game_t* game, morsdle_game_event_t * event) {
+bool morsdle_read_event(morsdle_game_t *game, morsdle_game_event_t *event) {
     return cbuff_read(game->events, event);
 }
 

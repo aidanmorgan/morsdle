@@ -7,12 +7,8 @@
 
 #define WORDS_LENGTH 5;
 
-const char* const wordle_dictionary[] = {
-        "borne"
-        ,"hoist"
-        ,"wooer"
-        ,"legal"
-        ,"dwarf"
+const char *const wordle_dictionary[] = {
+        "borne", "hoist", "wooer", "legal", "dwarf"
 };
 
 #endif //WORDS_H

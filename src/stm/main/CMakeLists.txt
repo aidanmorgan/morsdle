@@ -12,7 +12,7 @@ target_compile_definitions(morsdle-stm PUBLIC STM32L476xx)
 find_package(CMSIS COMPONENTS STM32L476 REQUIRED)
 find_package(HAL COMPONENTS STM32L476 REQUIRED)
 
-file(GLOB STM32CUBEMX_GENERATED_SRC  ${CMAKE_SOURCE_DIR}/ioc/morsdle/Core/*/main.c ${CMAKE_SOURCE_DIR}/ioc/morsdle/Core/*/stm32l4*.c)
+file(GLOB STM32CUBEMX_GENERATED_SRC ${CMAKE_SOURCE_DIR}/ioc/morsdle/Core/*/main.c ${CMAKE_SOURCE_DIR}/ioc/morsdle/Core/*/stm32l4*.c)
 message("STM32CUBEMX_GENERATED_SRC: ${STM32CUBEMX_GENERATED_SRC}")
 
 target_compile_options(morsdle-stm PRIVATE -g)

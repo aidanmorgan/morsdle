@@ -330,11 +330,10 @@ void init_stm_board(stm32_config_t* config)
     // changes to this method only).
     HAL_Init();
     SystemClock_Config();
-    MX_TIM1_Init();
     MX_GPIO_Init();
     MX_SPI2_Init();
     MX_USART2_UART_Init();
-
+    MX_TIM1_Init();
     MX_RNG_Init();
 
     config->spi_handle = &hspi2;

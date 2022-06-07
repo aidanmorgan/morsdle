@@ -4,6 +4,7 @@
 
 #ifndef MORSE_H
 #define MORSE_H
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -76,20 +77,17 @@ typedef struct {
 #define DEBOUNCE_THRESHOLD 15
 
 typedef struct {
-    cbuff_t* signal_buffer;
-    cbuff_t* morse_input_buffer;
+    cbuff_t *signal_buffer;
+    cbuff_t *morse_input_buffer;
 } morse_t;
 
-void morse_init(morse_t* morse);
-bool morse_append_signal(morse_t* morse, signal_t signal, uint64_t timestamp);
+void morse_init(morse_t *morse);
+
+bool morse_append_signal(morse_t *morse, signal_t signal, uint64_t timestamp);
 // is responsible for converting the buffer of SIGNAL_HIGH/SIGNAL_LOW into MORSE_DOT/MORSE_DASH/MORSE_DELAY/MORSE_SHORT_HOLD/MORSE_LONG_HOLD
-bool morse_convert(morse_t* morse, uint64_t timestamp);
+bool morse_convert(morse_t *morse, uint64_t timestamp);
 // is responsible for converting the buffer of MORSE_DOT/MORSE_DASH/MORSE_DELAY in to a character
-bool morse_decode(morse_t* morse, morse_action_event_t* letter);
-
-
-
-
+bool morse_decode(morse_t *morse, morse_action_event_t *letter);
 
 
 #endif //MORSE_H

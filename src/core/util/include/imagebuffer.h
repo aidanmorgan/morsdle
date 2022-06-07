@@ -11,19 +11,16 @@
 
 
 // length, offset
-#define MASK(L,P)            (~(0xff << (L)) << (P))
-// value, length, offset
-#define GET_VAL(BF,L,P)      (((BF) & MASK(L,P)) >> P)
-// value, length, offset, newvalue
-#define SET_VAL(BF,L,P,V)    ( (BF) = ((BF) & ~MASK(L,P)) | (((V) << (P)) & MASK(L,P)) )
-
-
-#define WAVESHARE_IB_BUFFER_SIZE(l,w) ((l / 2) * (w / 2) * sizeof(uint8_t))
+#define MASK(L, P)            (~(0xff << (L)) << (P))
+// value to read from, length (in bits), offset (in bits)
+#define GET_VAL(BF, L, P)      (((BF) & MASK(L,P)) >> P)
+// value to update, length (in bits), offset (in bits), newvalue (value to set)
+#define SET_VAL(BF, L, P, V)    ( (BF) = ((BF) & ~MASK(L,P)) | (((V) << (P)) & MASK(L,P)) )
 
 typedef enum {
     IMAGEBUFFER_OK,
     IMAGEBUFFER_INIT_FAILED
-}imagebuffer_error_t;
+} imagebuffer_error_t;
 
 typedef enum {
     IMAGEBUFFER_CLEAR = 0,
@@ -36,7 +33,7 @@ typedef enum {
 typedef struct {
     uint16_t width;
     uint16_t height;
-    uint8_t* buffer;
+    uint8_t *buffer;
     uint32_t buffer_size;
 } imagebuffer_t;
 
@@ -56,9 +53,10 @@ typedef struct {
  *  pixels into each byte, that means that each "row" in the data is actually 2-pixels high and 2-pixels
  *  wide.
  */
-imagebuffer_error_t imagebuffer_init(imagebuffer_t* buffer, uint16_t width, uint16_t height);
+imagebuffer_error_t imagebuffer_init(imagebuffer_t *buffer, uint16_t width, uint16_t height);
 
-void imagebuffer_setpixel(imagebuffer_t* buffer, uint16_t x, uint16_t y, imagebuffer_colour_t colour);
-void imagebuffer_getpixel(imagebuffer_t*buffer, uint16_t x, uint16_t y, imagebuffer_colour_t* colour);
+void imagebuffer_setpixel(imagebuffer_t *buffer, uint16_t x, uint16_t y, imagebuffer_colour_t colour);
+
+void imagebuffer_getpixel(imagebuffer_t *buffer, uint16_t x, uint16_t y, imagebuffer_colour_t *colour);
 
 #endif //MORSDLE_IMAGEBUFFER_H

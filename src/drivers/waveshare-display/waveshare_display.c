@@ -42,7 +42,7 @@ const font_t font_buffer[1] = {
                 .length = 32,
                 .height=64,
                 .width=64,
-                }
+        }
 };
 
 static imagebuffer_colour_t display_to_buffer_lookup[7] = {
@@ -55,8 +55,10 @@ static imagebuffer_colour_t display_to_buffer_lookup[7] = {
         IMAGEBUFFER_ORANGE
 };
 
-void waveshare_draw_line_impl(render_pass_t* pass,display_impl_t * display, point_t start, point_t end, uint8_t thickness, colour_t colour, bool updateDirtyRegions) {
-    imagebuffer_t * buffer = display->buffer;
+void
+waveshare_draw_line_impl(render_pass_t *pass, display_impl_t *display, point_t start, point_t end, uint8_t thickness,
+                         colour_t colour, bool updateDirtyRegions) {
+    imagebuffer_t *buffer = display->buffer;
 
     uint16_t current_x = start.x;
     uint16_t current_y = start.y;
@@ -89,7 +91,7 @@ void waveshare_draw_line_impl(render_pass_t* pass,display_impl_t * display, poin
         }
     }
 
-    if(updateDirtyRegions) {
+    if (updateDirtyRegions) {
         cbuff_write(pass->dirty_regions, &(rectangle_t) {
                 .top_left = start,
                 .bottom_right = end
@@ -97,16 +99,18 @@ void waveshare_draw_line_impl(render_pass_t* pass,display_impl_t * display, poin
     }
 }
 
-void waveshare_draw_line(render_pass_t* pass, display_impl_t * display, point_t start, point_t end, uint8_t thickness, colour_t colour) {
+void waveshare_draw_line(render_pass_t *pass, display_impl_t *display, point_t start, point_t end, uint8_t thickness,
+                         colour_t colour) {
     waveshare_draw_line_impl(pass, display, start, end, thickness, colour, true);
 }
 
 
-void waveshare_fill_rect(render_pass_t* pass, display_impl_t * display,  point_t topleft, point_t bottomright, colour_t fill_colour) {
-    imagebuffer_t * buffer = display->buffer;
+void waveshare_fill_rect(render_pass_t *pass, display_impl_t *display, point_t topleft, point_t bottomright,
+                         colour_t fill_colour) {
+    imagebuffer_t *buffer = display->buffer;
 
-    for(uint16_t x = topleft.x; x < topleft.x; x++) {
-        for(uint16_t y = bottomright.y; y < bottomright.y; y++) {
+    for (uint16_t x = topleft.x; x < topleft.x; x++) {
+        for (uint16_t y = bottomright.y; y < bottomright.y; y++) {
             imagebuffer_setpixel(buffer, x, y, display_to_buffer_lookup[fill_colour]);
         }
     }
@@ -118,22 +122,24 @@ void waveshare_fill_rect(render_pass_t* pass, display_impl_t * display,  point_t
 }
 
 
-void waveshare_draw_char(render_pass_t* pass,display_impl_t * display, char c, point_t topleft, uint8_t size, colour_t colour) {
-    imagebuffer_t * buffer = display->buffer;
+void waveshare_draw_char(render_pass_t *pass, display_impl_t *display, char c, point_t topleft, uint8_t size,
+                         colour_t colour) {
+    imagebuffer_t *buffer = display->buffer;
 
-    font_t font = font_buffer[(uint8_t) (c - 'A')];
-
-    for (uint16_t column = 0; column < font.width; column++) {
-        for (uint16_t row = 0; row < font.height; row++) {
-            uint16_t pixel = (row * font.width) + column;
-
-            bool value = (font.hex[pixel / 8] >> (pixel % 8)) & 1;
-
-            if (value) {
-                imagebuffer_setpixel(buffer, topleft.x + column, topleft.y + row, display_to_buffer_lookup[colour]);
-            }
-        }
-    }
+    // no-op this until we work out how to store fonts properly
+//    font_t font = font_buffer[(uint8_t) (c - 'A')];
+//
+//    for (uint16_t column = 0; column < font.width; column++) {
+//        for (uint16_t row = 0; row < font.height; row++) {
+//            uint16_t pixel = (row * font.width) + column;
+//
+//            bool value = (font.hex[pixel / 8] >> (pixel % 8)) & 1;
+//
+//            if (value) {
+//                imagebuffer_setpixel(buffer, topleft.x + column, topleft.y + row, display_to_buffer_lookup[colour]);
+//            }
+//        }
+//    }
 
     cbuff_write(pass->dirty_regions, &(rectangle_t) {
             .top_left = (point_t) {
@@ -141,47 +147,47 @@ void waveshare_draw_char(render_pass_t* pass,display_impl_t * display, char c, p
                     .y = topleft.y
             },
             .bottom_right = (point_t) {
-                    .x = topleft.x + font.width,
-                    .y = topleft.y + font.height
+                    .x = topleft.x + size,
+                    .y = topleft.y + size
             }
     });
 }
 
-void waveshare_clear(render_pass_t* pass, display_impl_t * display,colour_t colour) {
-    imagebuffer_t * buffer = pass->display->buffer;
+void waveshare_clear(render_pass_t *pass, display_impl_t *display, colour_t colour) {
+    imagebuffer_t *buffer = pass->display->buffer;
 
-    for(uint16_t x = 0; x < pass->canvas->width; x++) {
-        for(uint16_t y = 0; y < pass->canvas->height; y++) {
+    for (uint16_t x = 0; x < pass->canvas->width; x++) {
+        for (uint16_t y = 0; y < pass->canvas->height; y++) {
             imagebuffer_setpixel(buffer, x, y, display_to_buffer_lookup[colour]);
         }
     }
 
     cbuff_write(pass->dirty_regions, &(rectangle_t) {
-        .top_left = (point_t) {
-            .x = 0,
-            .y = 0
-        },
-        .bottom_right = (point_t) {
-            .x = pass->canvas->width,
-            .y = pass->canvas->height
-        }
+            .top_left = (point_t) {
+                    .x = 0,
+                    .y = 0
+            },
+            .bottom_right = (point_t) {
+                    .x = pass->canvas->width,
+                    .y = pass->canvas->height
+            }
     });
 }
 
 // start a rendering pass, indicating to the underlyign display that we are going to soon be
 // sending updated dirty regions
-void render_pass_init(render_pass_t* render) {
+void render_pass_init(render_pass_t *render) {
     render->dirty_regions = &dirty_regions;
     cbuff_clear(&dirty_regions);
 }
 
 // end the render pass, update the display with the buffer in the handle, updating the regions
 // that are marked
-extern void render_pass_end(render_pass_t* render) {
+extern void render_pass_end(render_pass_t *render) {
     size_t dirty_region_count = render->dirty_regions->size;
 
     if (dirty_region_count > 0) {
-        if(render->display->pre_render != NULL) {
+        if (render->display->pre_render != NULL) {
             render->display->pre_render(render->display->buffer);
         }
 
@@ -208,15 +214,13 @@ extern void render_pass_end(render_pass_t* render) {
         }
 
         render->display->render_dirty_region(render->display->buffer,
-                                                  render->canvas->width,
-                                                  render->canvas->height,
-                                                  top_left_x,
-                                                  top_left_y,
-                                                  bottom_right_x,
-                                                  bottom_right_y);
+                                             top_left_x,
+                                             top_left_y,
+                                             bottom_right_x,
+                                             bottom_right_y);
 
 
-        if(render->display->post_render != NULL) {
+        if (render->display->post_render != NULL) {
             render->display->post_render();
         }
 
@@ -226,15 +230,13 @@ extern void render_pass_end(render_pass_t* render) {
 }
 
 
-
-
-void canvas_init(canvas_t* ops) {
+void canvas_init(canvas_t *ops) {
     cbuff_init(&dirty_regions, &dirty_regions_raw, MAX_DIRTY_REGIONS, sizeof(rectangle_t));
 
     ops->height = WAVESHARE_PIXEL_HEIGHT;
     ops->width = WAVESHARE_PIXEL_WIDTH;
 }
 
-void canvas_destroy(canvas_t* ops) {
+void canvas_destroy(canvas_t *ops) {
 
 }

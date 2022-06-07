@@ -41,9 +41,10 @@ typedef struct {
     morsdle_game_mode_t game_mode;
 } renderer_t;
 
-void renderer_init(renderer_t* renderopts, uint16_t width, uint16_t height);
+void renderer_init(renderer_t *renderopts, uint16_t width, uint16_t height);
 
-void renderer_handle_event(canvas_t* canvas, renderer_t* renderopts, render_pass_t* pass, morsdle_game_event_t *event);
-void renderer_clear(canvas_t* canvas, renderer_t * renderer, render_pass_t* pass);
+void renderer_handle_event(canvas_t *canvas, renderer_t *renderopts, render_pass_t *pass, morsdle_game_event_t *event);
+
+void renderer_clear(canvas_t *canvas, renderer_t *renderer, render_pass_t *pass);
 
 #endif //RENDERER_H
