@@ -26,6 +26,10 @@ void imagebuffer_setpixel(imagebuffer_t *buffer, uint16_t x, uint16_t y, imagebu
         return;
     }
 
+    if(x > buffer->width || y > buffer->height) {
+        return;
+    }
+
     uint16_t x_idx = x / 2;
     uint16_t y_idx = y / 2;
 
@@ -39,10 +43,15 @@ void imagebuffer_setpixel(imagebuffer_t *buffer, uint16_t x, uint16_t y, imagebu
     // 1, 0 = 2
     // 0, 1 = 4
     // 1, 1 = 6
-    (*data) = SET_VAL((*data), 2, ((2*x)+(4*y)), colour);
+    (*data) = SET_VAL((*data), 2U, ((2U*x)+(4U*y)), colour);
 }
 
 void imagebuffer_getpixel(imagebuffer_t *buffer, uint16_t x, uint16_t y, imagebuffer_colour_t *colour) {
+    if(x > buffer->width || y > buffer->height) {
+        *colour = IMAGEBUFFER_INVALID;
+        return;
+    }
+
     uint16_t x_idx = x / 2;
     uint16_t y_idx = y / 2;
 
@@ -56,5 +65,5 @@ void imagebuffer_getpixel(imagebuffer_t *buffer, uint16_t x, uint16_t y, imagebu
     // 1, 0 = 2
     // 0, 1 = 4
     // 1, 1 = 6
-    (*colour) = (imagebuffer_colour_t) GET_VAL((*data), 2, ((2*x)+(4*y)));
+    (*colour) = (imagebuffer_colour_t) GET_VAL((*data), 2U, ((2U*x)+(4U*y)));
 }

@@ -20,7 +20,7 @@ struct display_impl_t {
     imagebuffer_t *buffer;
 
     // this is the callback to perform the actual render, required to be set by the implementation
-    void (*render_dirty_region)(imagebuffer_t *, uint16_t, uint16_t, uint16_t, uint16_t);
+    void (*render_region)(imagebuffer_t *, uint16_t, uint16_t, uint16_t, uint16_t);
 
     void (*init)();
 

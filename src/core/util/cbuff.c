@@ -12,7 +12,7 @@ void cbuff_init(cbuff_t *buff, void *buffer, size_t capacity, size_t itemsize) {
     cbuff_clear(buff);
 }
 
-bool cbuff_write(cbuff_t *buff, const void *data) {
+bool cbuff_write(cbuff_t *buff, void *data) {
     if (!cbuff_canwrite(buff)) {
         return false;
     }

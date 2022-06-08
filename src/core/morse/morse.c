@@ -1,39 +1,43 @@
 #include "morse.h"
 
-const static morse_input_t morse_table[26][5] = {
-        {MORSE_DOT,  MORSE_DASH,  MORSE_DELAY, MORSE_NULL,  MORSE_NULL}, // a
-        {MORSE_DASH, MORSE_DOT,   MORSE_DOT,   MORSE_DOT,   MORSE_DELAY}, // b
-        {MORSE_DASH, MORSE_DOT,   MORSE_DASH,  MORSE_DOT,   MORSE_DELAY}, // c
-        {MORSE_DASH, MORSE_DOT,   MORSE_DOT,   MORSE_DELAY, MORSE_NULL}, // d
-        {MORSE_DOT,  MORSE_DELAY, MORSE_NULL,  MORSE_NULL,  MORSE_NULL}, // e
-        {MORSE_DOT,  MORSE_DOT,   MORSE_DASH,  MORSE_DOT,   MORSE_DELAY}, // f
-        {MORSE_DASH, MORSE_DASH,  MORSE_DOT,   MORSE_DELAY, MORSE_NULL}, // g
-        {MORSE_DOT,  MORSE_DOT,   MORSE_DOT,   MORSE_DOT,   MORSE_DELAY}, // h
-        {MORSE_DOT,  MORSE_DOT,   MORSE_DELAY, MORSE_NULL,  MORSE_NULL}, // i
-        {MORSE_DOT,  MORSE_DASH,  MORSE_DASH,  MORSE_DASH,  MORSE_DELAY}, // j
-        {MORSE_DASH, MORSE_DOT,   MORSE_DASH,  MORSE_DELAY, MORSE_NULL}, // k
-        {MORSE_DOT,  MORSE_DASH,  MORSE_DOT,   MORSE_DOT,   MORSE_DELAY}, // l
-        {MORSE_DASH, MORSE_DASH,  MORSE_DELAY, MORSE_NULL,  MORSE_NULL}, // m
-        {MORSE_DASH, MORSE_DOT,   MORSE_DELAY, MORSE_NULL,  MORSE_NULL}, // n
-        {MORSE_DASH, MORSE_DASH,  MORSE_DASH,  MORSE_DELAY, MORSE_NULL}, // o
-        {MORSE_DOT,  MORSE_DASH,  MORSE_DASH,  MORSE_DOT,   MORSE_DELAY}, // p
-        {MORSE_DASH, MORSE_DASH,  MORSE_DOT,   MORSE_DASH,  MORSE_DELAY}, // q
-        {MORSE_DOT,  MORSE_DASH,  MORSE_DOT,   MORSE_DELAY, MORSE_NULL}, // r
-        {MORSE_DOT,  MORSE_DOT,   MORSE_DOT,   MORSE_DELAY, MORSE_NULL}, // s
-        {MORSE_DASH, MORSE_DELAY, MORSE_NULL,  MORSE_NULL,  MORSE_NULL}, // t
-        {MORSE_DOT,  MORSE_DOT,   MORSE_DASH,  MORSE_DELAY, MORSE_NULL}, // u
-        {MORSE_DOT,  MORSE_DOT,   MORSE_DOT,   MORSE_DASH,  MORSE_DELAY}, // v
-        {MORSE_DOT,  MORSE_DASH,  MORSE_DASH,  MORSE_DELAY, MORSE_NULL}, // w
-        {MORSE_DASH, MORSE_DOT,   MORSE_DOT,   MORSE_DASH,  MORSE_DELAY}, // x
-        {MORSE_DASH, MORSE_DOT,   MORSE_DASH,  MORSE_DASH,  MORSE_DELAY}, // y
-        {MORSE_DASH, MORSE_DASH,  MORSE_DOT,   MORSE_DOT,   MORSE_DELAY}  // z
+typedef struct {
+    // the length of the signals - INCLUDING THE MORSE_DELAY entry
+    uint8_t length;
+    morse_input_t values[5];
+} morse_table_entry_t;
+
+const static morse_table_entry_t morse_table[26] = {
+        (morse_table_entry_t) { .length = 3, .values = {MORSE_DOT,  MORSE_DASH,  MORSE_DELAY, MORSE_NULL,  MORSE_NULL}}, // a
+        (morse_table_entry_t) { .length = 5, .values ={MORSE_DASH, MORSE_DOT,   MORSE_DOT,   MORSE_DOT,   MORSE_DELAY}}, // b
+        (morse_table_entry_t) { .length = 5, .values ={MORSE_DASH, MORSE_DOT,   MORSE_DASH,  MORSE_DOT,   MORSE_DELAY}}, // c
+        (morse_table_entry_t) { .length = 6, .values ={MORSE_DASH, MORSE_DOT,   MORSE_DOT,   MORSE_DELAY, MORSE_NULL}}, // d
+        (morse_table_entry_t) { .length = 2, .values ={MORSE_DOT,  MORSE_DELAY, MORSE_NULL,  MORSE_NULL,  MORSE_NULL}}, // e
+        (morse_table_entry_t) { .length = 5, .values ={MORSE_DOT,  MORSE_DOT,   MORSE_DASH,  MORSE_DOT,   MORSE_DELAY}}, // f
+        (morse_table_entry_t) { .length = 4, .values ={MORSE_DASH, MORSE_DASH,  MORSE_DOT,   MORSE_DELAY, MORSE_NULL}}, // g
+        (morse_table_entry_t) { .length = 5, .values ={MORSE_DOT,  MORSE_DOT,   MORSE_DOT,   MORSE_DOT,   MORSE_DELAY}}, // h
+        (morse_table_entry_t) { .length = 3, .values ={MORSE_DOT,  MORSE_DOT,   MORSE_DELAY, MORSE_NULL,  MORSE_NULL}}, // i
+        (morse_table_entry_t) { .length = 5, .values ={MORSE_DOT,  MORSE_DASH,  MORSE_DASH,  MORSE_DASH,  MORSE_DELAY}}, // j
+        (morse_table_entry_t) { .length = 4, .values ={MORSE_DASH, MORSE_DOT,   MORSE_DASH,  MORSE_DELAY, MORSE_NULL}}, // k
+        (morse_table_entry_t) { .length = 5, .values ={MORSE_DOT,  MORSE_DASH,  MORSE_DOT,   MORSE_DOT,   MORSE_DELAY}}, // l
+        (morse_table_entry_t) { .length = 3, .values ={MORSE_DASH, MORSE_DASH,  MORSE_DELAY, MORSE_NULL,  MORSE_NULL}}, // m
+        (morse_table_entry_t) { .length = 3, .values ={MORSE_DASH, MORSE_DOT,   MORSE_DELAY, MORSE_NULL,  MORSE_NULL}}, // n
+        (morse_table_entry_t) { .length = 4, .values ={MORSE_DASH, MORSE_DASH,  MORSE_DASH,  MORSE_DELAY, MORSE_NULL}}, // o
+        (morse_table_entry_t) { .length = 5, .values ={MORSE_DOT,  MORSE_DASH,  MORSE_DASH,  MORSE_DOT,   MORSE_DELAY}}, // p
+        (morse_table_entry_t) { .length = 5, .values ={MORSE_DASH, MORSE_DASH,  MORSE_DOT,   MORSE_DASH,  MORSE_DELAY}}, // q
+        (morse_table_entry_t) { .length = 4, .values ={MORSE_DOT,  MORSE_DASH,  MORSE_DOT,   MORSE_DELAY, MORSE_NULL}}, // r
+        (morse_table_entry_t) { .length = 4, .values ={MORSE_DOT,  MORSE_DOT,   MORSE_DOT,   MORSE_DELAY, MORSE_NULL}}, // s
+        (morse_table_entry_t) { .length = 2, .values ={MORSE_DASH, MORSE_DELAY, MORSE_NULL,  MORSE_NULL,  MORSE_NULL}}, // t
+        (morse_table_entry_t) { .length = 4, .values ={MORSE_DOT,  MORSE_DOT,   MORSE_DASH,  MORSE_DELAY, MORSE_NULL}}, // u
+        (morse_table_entry_t) { .length = 5, .values ={MORSE_DOT,  MORSE_DOT,   MORSE_DOT,   MORSE_DASH,  MORSE_DELAY}}, // v
+        (morse_table_entry_t) { .length = 4, .values ={MORSE_DOT,  MORSE_DASH,  MORSE_DASH,  MORSE_DELAY, MORSE_NULL}}, // w
+        (morse_table_entry_t) { .length = 5, .values ={MORSE_DASH, MORSE_DOT,   MORSE_DOT,   MORSE_DASH,  MORSE_DELAY}}, // x
+        (morse_table_entry_t) { .length = 5, .values ={MORSE_DASH, MORSE_DOT,   MORSE_DASH,  MORSE_DASH,  MORSE_DELAY}}, // y
+        (morse_table_entry_t) { .length = 5, .values ={MORSE_DASH, MORSE_DASH,  MORSE_DOT,   MORSE_DOT,   MORSE_DELAY}}  // z
 };
 
 static morse_signal_t signal_backing_buffer[64];
 static cbuff_t signal_buffer = (cbuff_t) {};
 
-// TODO : this can probably be 25 (at most), worst-case per-letter is 5, and we are loading
-// TODO : 5 letter words, but adding a bit more for safety and to make it a power of 2
 static morse_input_t action_backing_buffer[32];
 static cbuff_t action_buffer = (cbuff_t) {};
 
@@ -43,29 +47,32 @@ void morse_init(morse_t *morse) {
 
     morse->signal_buffer = &signal_buffer;
     morse->morse_input_buffer = &action_buffer;
+
+    // initialise the buffer to be initialised to having a low signal
+    morse_signal_t sig = (morse_signal_t) {
+        .value = SIGNAL_LOW,
+        .timestamp = 0
+    };
+    cbuff_write(&signal_buffer, &sig);
 }
 
-bool morse_append_signal(morse_t *morse, signal_t signal, uint64_t timestamp) {
+bool morse_append_signal(morse_t *morse, signal_t signal, uint32_t timestamp) {
     if (signal == SIGNAL_VOID) {
         return false;
     }
 
-    morse_signal_t head;
-    size_t head_peeked = cbuff_peekhead(morse->signal_buffer, &head, 1);
-    if (head_peeked == 1) {
-        // there's no point attempting to check this if the buffer is empty
+    // don't bother doing this on an empty buffer
+    if(cbuff_size(morse->signal_buffer) > 0) {
+        morse_signal_t head;
+        cbuff_peekhead(morse->signal_buffer, &head, 1);
+
         if (signal == head.value) {
             return false;
         }
-    }
 
-    uint64_t difference = timestamp - head.timestamp;
-    if (difference < DEBOUNCE_THRESHOLD) {
-        return false;
-    }
-
-    if (!cbuff_canwrite(morse->signal_buffer)) {
-        return false;
+        if (!cbuff_canwrite(morse->signal_buffer)) {
+            return false;
+        }
     }
 
     morse_signal_t entry = (morse_signal_t) {
@@ -77,15 +84,17 @@ bool morse_append_signal(morse_t *morse, signal_t signal, uint64_t timestamp) {
     return true;
 }
 
-bool morse_convert(morse_t *morse, uint64_t timestamp) {
+bool morse_convert_input(morse_t *morse, uint32_t timestamp) {
     bool processing_performed = false;
     size_t signal_buffer_size = cbuff_size(morse->signal_buffer);
 
     size_t processed_idx = 0;
 
-    if (signal_buffer_size > 1) {
+    // should we insert the delay here and just cal it over and over?
+    if (signal_buffer_size >= 1) {
         morse_signal_t signals[signal_buffer_size];
         size_t readcount = cbuff_peektail(morse->signal_buffer, signals, signal_buffer_size);
+
 
         for (size_t i = 1; i < readcount; i++) {
             morse_signal_t prev = signals[i - 1];
@@ -94,7 +103,7 @@ bool morse_convert(morse_t *morse, uint64_t timestamp) {
             // find the difference in milliseconds from the last transition to the current one
             // and then convert that to "dits" which are the basic unit of how morse code
             // is determined...
-            uint64_t duration = current.timestamp - prev.timestamp;
+            uint32_t duration = current.timestamp - prev.timestamp;
 
             double dits = (double) duration / (double) MORSE_DIT_MS;
 
@@ -119,24 +128,17 @@ bool morse_convert(morse_t *morse, uint64_t timestamp) {
                 cbuff_write(morse->morse_input_buffer, &input);
                 processed_idx = i;
             }
-                // if we are going from LOW to HIGH and there's been a long enough break, prepend the DELAY into the buffer
-            else if (prev.value == SIGNAL_LOW && current.value == SIGNAL_HIGH) {
-                if (dits > MORSE_DELAY_START) {
-                    input = MORSE_DELAY;
+            // if we are transitioning from LOW to HIGH, check and see if a delay should be added to the buffer before
+            // we process the next transition.
+            else if(prev.value == SIGNAL_LOW && current.value == SIGNAL_HIGH) {
+                double difference = (((double)current.timestamp) - ((double)prev.timestamp)) / (double) MORSE_DIT_MS;
 
-                    if (cbuff_size(morse->morse_input_buffer) > 0) {
-                        morse_input_t head;
-                        cbuff_peekhead(morse->morse_input_buffer, &head, 1);
+                morse_input_t headInput;
+                cbuff_peekhead(morse->morse_input_buffer, &headInput, 1);
 
-                        // don't write a delay to the input buffer if there is already one there...
-                        if (head != MORSE_DELAY) {
-                            cbuff_write(morse->morse_input_buffer, &input);
-                            processed_idx = i;
-                        }
-                    } else {
-                        cbuff_write(morse->morse_input_buffer, &input);
-                        processed_idx = i;
-                    }
+                if(difference > MORSE_DELAY_START && headInput != MORSE_DELAY) {
+                    morse_input_t delay = MORSE_DELAY;
+                    cbuff_write(morse->morse_input_buffer, &delay);
                 }
             }
         }
@@ -145,38 +147,22 @@ bool morse_convert(morse_t *morse, uint64_t timestamp) {
             cbuff_seek(morse->signal_buffer, processed_idx);
             processing_performed = true;
         }
-    }
 
-    if (cbuff_size(morse->signal_buffer) > 0) {
-        // this is a quirk of how we are implementing the signal reading, as we only record the timestamp of the FIRST
-        // time the signal changes in the buffer we then struggle to find when a delay has occurred between letters.
-        // In morse code, the gap between a letter is considered 7 * MORSE_DIT_MS, so we need to look at the last value
-        // that was written to the signal buffer, if it is a LOW signal, but it happened more than 7*MORSE_DIT_MS ago then
-        // we need to artificially inject a MORSE_DELAY into the decoded buffer.
-        morse_signal_t tail;
-        cbuff_peektail(morse->signal_buffer, &tail, 1);
+        // we have a signal in the buffer, it's pretty likely to be a LOW, so we need to check the time and see if
+        // we should append a delay to the input queue
+        morse_signal_t headSignal = signals[readcount - 1];
+        double headDifference = ((double)(timestamp - headSignal.timestamp)) / (double)MORSE_DIT_MS;
 
-        // before we do the next check we need to see if there has already been a delay inserted into
-        // the morse sequence, if so then we can just return, if not we need to process the next section to
-        // check and insert the delay if it's required.
-        if (cbuff_size(morse->morse_input_buffer) > 0) {
-            morse_input_t head;
-            cbuff_peekhead(morse->morse_input_buffer, &head, 1);
+        if(headDifference > MORSE_DELAY_START && headSignal.value == SIGNAL_LOW) {
+            morse_input_t headInput;
+            cbuff_peekhead(morse->morse_input_buffer, &headInput, 1);
 
-            if (head == MORSE_DELAY) {
-                return processing_performed;
-            }
-        }
+            // don't write a delay to the input buffer if there is already one there...
+            if (headInput != MORSE_DELAY) {
+                headInput = MORSE_DELAY;
+                cbuff_write(morse->morse_input_buffer, &headInput);
 
-        // if we see that there is a LOW in the signal buffer, we need to potentially insert a DELAY into the morse
-        // buffer based on how long it's been since we've seen the LOW value
-        if (tail.value == SIGNAL_LOW) {
-            uint64_t difference = timestamp - tail.timestamp;
-
-            if (difference / MORSE_DIT_MS >= 7) {
-                morse_input_t input = MORSE_DELAY;
-                cbuff_write(morse->morse_input_buffer, &input);
-                cbuff_seek(morse->signal_buffer, 1);
+                processing_performed = true;
             }
         }
     }
@@ -187,7 +173,6 @@ bool morse_convert(morse_t *morse, uint64_t timestamp) {
 
 #define MAX_INPUTS_PER_LETTER 5
 #define MAX_LETTERS 26
-#define MINIMUM_INPUTS_TO_PROCESS 2
 
 static inline uint8_t min(uint8_t a, uint8_t b) {
     return a < b ? a : b;
@@ -231,29 +216,32 @@ bool morse_decode(morse_t *morse, morse_action_event_t *letter) {
         // take that action - effectively throwing away the partially completed letter
         if (inputs[i] == MORSE_SHORT_HOLD) {
             letter->type = MORSE_ACTION_BACKSPACE;
-            cbuff_seek(morse->morse_input_buffer, i + 1);
+            cbuff_seek(morse->morse_input_buffer, offset + i + 1);
 
             return true;
         } else if (inputs[i] == MORSE_LONG_HOLD) {
             letter->type = MORSE_ACTION_RESET;
-            cbuff_seek(morse->morse_input_buffer, i + 1);
+            cbuff_seek(morse->morse_input_buffer, offset + i + 1);
 
             return true;
-        } else if (i > 0 && (inputs[i] == MORSE_DELAY)) {
-            uint8_t start_idx = 0;
+        }
+        else if (i > 0 && (inputs[i] == MORSE_DELAY)) {
 
             // so we have a delay which means we need to process everything up to the delay
             // and compare it against the morse table to find the letter
             for (uint8_t j = 0; j < MAX_LETTERS; j++) {
                 // check if the values match, if they do then we can assign the letter, otherwise we move
-                // on to the next entry
-                if (memcmp(&(inputs[start_idx]), morse_table[j], MAX_INPUTS_PER_LETTER * sizeof(morse_input_t)) == 0) {
+                // on to the next entry, this linear search is also stupidly slow, and it would be better in some
+                // sort of ternary/binary tree to actually search quicker, but I cbf implementing one right now
+                // TODO : be f'd to write a binary tree to speed the searching of this up
+
+                if(morse_table[j].length == (i+1) && memcmp(&(inputs[0]), morse_table[j].values, MAX_INPUTS_PER_LETTER * sizeof(morse_input_t)) == 0) {
                     letter->type = MORSE_ACTION_ADD_LETTER;
                     letter->ch = (char) (((uint8_t) 'A') + j);
 
                     // we have found a match, so we want to move the read pointer forward through
                     // the buffer so they aren't ingested in the future.
-                    cbuff_seek(morse->morse_input_buffer, i + 1);
+                    cbuff_seek(morse->morse_input_buffer, offset + i + 1);
                     return true;
                 }
             }
@@ -261,9 +249,10 @@ bool morse_decode(morse_t *morse, morse_action_event_t *letter) {
             // if we get to this point, we've found a delay which means we want to try and match against
             // the letters, but it doesnt match anything in the morse table, but we need to reject the
             // entries and move through the buffer, otherwise we will just spin at this point forever.
-            cbuff_seek(morse->morse_input_buffer, i + 1);
+            cbuff_seek(morse->morse_input_buffer, offset + i + 1);
             return false;
         }
+
     }
 
     // if we have hit the maximum size and we haven't found a delay, then throw away the head of the

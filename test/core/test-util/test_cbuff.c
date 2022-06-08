@@ -238,7 +238,32 @@ void test_cbuff_peektail() {
     TEST_ASSERT_EQUAL(1006, multireadback[0]);
     TEST_ASSERT_EQUAL(1007, multireadback[1]);
     TEST_ASSERT_EQUAL(1008, multireadback[2]);
+}
 
+void test_cbuff_peektailafter() {
+    cbuff_t* buff = &(cbuff_t){ };
+    uint32_t backing[32];
+
+    cbuff_init(buff, (void**)&backing, 32, sizeof(uint8_t));
+
+    for(uint8_t i = 0; i < 32; i++) {
+        cbuff_write(buff, &i);
+    }
+
+    uint8_t value[5];
+    cbuff_peektail_after(buff, &value, 0, 5);
+    TEST_ASSERT_EQUAL(0, value[0]);
+    TEST_ASSERT_EQUAL(1, value[1]);
+    TEST_ASSERT_EQUAL(2, value[2]);
+    TEST_ASSERT_EQUAL(3, value[3]);
+    TEST_ASSERT_EQUAL(4, value[4]);
+
+    cbuff_peektail_after(buff, &value, 27, 5);
+    TEST_ASSERT_EQUAL(27, value[0]);
+    TEST_ASSERT_EQUAL(28, value[1]);
+    TEST_ASSERT_EQUAL(29, value[2]);
+    TEST_ASSERT_EQUAL(30, value[3]);
+    TEST_ASSERT_EQUAL(31, value[4]);
 }
 
 void test_cbuff_peekhead() {
@@ -340,6 +365,7 @@ int main(void)
     RUN_TEST(test_cbuff_readmany_lessentries);
     RUN_TEST(test_cbuff_peekhead);
     RUN_TEST(test_cbuff_peektail);
+    RUN_TEST(test_cbuff_peektailafter);
     RUN_TEST(test_cbuff_seek);
 
     return UNITY_END();

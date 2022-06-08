@@ -18,9 +18,9 @@ static imagebuffer_t image_buffer = (imagebuffer_t) {};
 // this is the waveshare implementation of the handle
 static display_impl_t display = (display_impl_t) {
         .buffer = &image_buffer,
-        .render_dirty_region = waveshareapi_render_region,
-        .pre_render = NULL,
-        .post_render = NULL,
+        .render_region = waveshareapi_render_region,
+        .pre_render = waveshareapi_wake,
+        .post_render = waveshareapi_sleep,
         .init = waveshareapi_init
 };
 static canvas_t h_canvas = (canvas_t) {
@@ -42,21 +42,23 @@ static const char *morsdle_random_word() {
     return word;
 }
 
-int main(void) {
-    init_stm_board(&hw_config);    // implemented by hand in the generated code to perform initialisation
+void flash_programming_loop() {
+    while(1) {
+        // do stuff
+    }
+}
 
+void game_loop() {
     // initialise the morse processor
     morse_init(&h_morse);
     // initialise the  morsdle game engine
     morsdle_init_game(&h_game, morsdle_random_word());
-
     // plug the waveshare handle into the display container and then initialise
     canvas_init(&h_canvas);
-
     // initialise the renderer that connects the morsdle game with the display
     renderer_init(&h_renderer, h_canvas.width, h_canvas.height);
 
-    // allocate the 2-bit image buffer as we're using a waveshare display to render
+    // allocate the 2-bit image buffer as we're using a waveshare display to render and the STM32L476 sucks for heap space
     if (imagebuffer_init(&image_buffer, h_canvas.width, h_canvas.height) != IMAGEBUFFER_OK) {
         assert(false);
     }
@@ -64,15 +66,27 @@ int main(void) {
     // initialise the display now, we should have everything in place?
     display.init();
 
-    while (1) {
-        // this probably only needs to happen every 2 * MORSE_DIT ms (dit to high, dit to low)
-        bool converted = morse_convert(&h_morse, 0);
+    morse_action_event_t result = (morse_action_event_t) {};
+    render_pass_t render_pass = (render_pass_t) {
+            .display = &display,
+            .canvas = &h_canvas,
+    };
+    morsdle_game_event_t ev;
 
-        if (converted) {
-            morse_action_event_t result = (morse_action_event_t) {};
+    while (1) {
+        HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+        HAL_Delay(50);
+        HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+
+        uint32_t tick = HAL_GetTick();
+
+        // keep calling this as it will eventually insert a delay so the next step can process
+        bool inputConverted = morse_convert_input(&h_morse, tick);
+
+        if(inputConverted) {
             // process the signal buffer and see if there are any letters completed, if there are then we need to
             // send them to the game engine for processing
-            if (morse_decode(&h_morse, &result)) {
+            while (morse_decode(&h_morse, &result)) {
                 if (result.type == MORSE_ACTION_ADD_LETTER) {
                     morsdle_add_letter(&h_game, result.ch);
                 } else if (result.type == MORSE_ACTION_BACKSPACE) {
@@ -88,14 +102,8 @@ int main(void) {
 
         // are there any game events that may require processing
         if (morsdle_has_events(&h_game)) {
-            morsdle_game_event_t ev;
-
             // we aren't going to bother drawing unless there's an event, and even then they may not dirty the display
             // so collect any dirty regions into a render_pass and then see if we actually need to redraw.
-            render_pass_t render_pass = (render_pass_t) {
-                    .display = &display,
-                    .canvas = &h_canvas,
-            };
             render_pass_init(&render_pass);
 
             while (morsdle_has_events(&h_game)) {
@@ -110,16 +118,35 @@ int main(void) {
         }
     }
 
+}
+
+
+int main(void) {
+    init_stm_board(&hw_config);    // implemented by hand in the generated code to perform initialisation
+
+    // if this pin is high (by applying a jumper on the board) we will drop into a programming mode
+    // for programming the external flash with new icons/dictionary entries via UART rather than
+    // playing the game.
+    if(HAL_GPIO_ReadPin(hw_config.startup_mode_port, hw_config.startup_mode_pin)) {
+        flash_programming_loop();
+    }
+    else {
+        game_loop();
+    }
+
+
     return 0;
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+    uint32_t tick = HAL_GetTick();
+
     // TODO : add some form of debouncing here
     if (GPIO_Pin == hw_config.button_pin) {
         if (HAL_GPIO_ReadPin(hw_config.button_port, hw_config.button_pin)) {
-            morse_append_signal(&h_morse, SIGNAL_HIGH, HAL_GetTick());
+            morse_append_signal(&h_morse, SIGNAL_LOW, tick);
         } else {
-            morse_append_signal(&h_morse, SIGNAL_LOW, HAL_GetTick());
+            morse_append_signal(&h_morse, SIGNAL_HIGH, tick);
         }
     }
 }

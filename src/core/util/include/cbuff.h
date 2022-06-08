@@ -30,7 +30,7 @@ void cbuff_init(cbuff_t *buff, void *buffer, size_t capacity, size_t itemsize);
 
 // add the provided element to the buffer at the next head pointer
 // WILL COPY the data into the buffer rather than share the pointer
-bool cbuff_write(cbuff_t *buff, const void *data);
+bool cbuff_write(cbuff_t *buff, void *data);
 
 // read the next element from the tail pointer of the list
 // WILL COPY the data into the provided pointer

@@ -68,6 +68,7 @@ target_link_libraries(
         HAL::STM32::L4::UART
         HAL::STM32::L4::RNG
         HAL::STM32::L4::LL_RNG
+        HAL::STM32::L4::QSPI
         CMSIS::STM32::L476RG
         STM32::NoSys
 )
@@ -92,7 +93,7 @@ add_custom_target(flash
 
 
 # Run OpenOCD as a GDB host.
-add_custom_target(gdbhost
+add_custom_target(gdb
         openocd
         -f interface/stlink.cfg
         -f board/stm32l4discovery.cfg

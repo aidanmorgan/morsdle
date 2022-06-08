@@ -5,10 +5,10 @@ void setUp (void) {} /* Is run before every test, put unit init calls here. */
 void tearDown (void) {} /* Is run after every test, put unit clean-up calls here. */
 
 void do_get_test(uint8_t val, uint8_t one, uint8_t two, uint8_t three, uint8_t four) {
-    TEST_ASSERT_EQUAL(one, GET_VAL(val, 2, 0));
-    TEST_ASSERT_EQUAL(two, GET_VAL(val, 2, 2));
-    TEST_ASSERT_EQUAL(three, GET_VAL(val, 2, 4));
-    TEST_ASSERT_EQUAL(four, GET_VAL(val, 2, 6));
+    TEST_ASSERT_EQUAL(one, GET_VAL(val, 2U, 0U));
+    TEST_ASSERT_EQUAL(two, GET_VAL(val, 2U, 2U));
+    TEST_ASSERT_EQUAL(three, GET_VAL(val, 2U, 4U));
+    TEST_ASSERT_EQUAL(four, GET_VAL(val, 2U, 6U));
 }
 
 void waveshare_ib_test_bit_set_macro() {
@@ -283,10 +283,10 @@ void waveshare_ib_test_bit_set_macro() {
 
 void do_set_test(uint8_t expected, uint8_t one, uint8_t two, uint8_t three, uint8_t four) {
     uint8_t data = 0;
-    data = SET_VAL(data, 2, 0, one);
-    data = SET_VAL(data, 2, 2, two);
-    data = SET_VAL(data, 2, 4, three);
-    data = SET_VAL(data, 2, 6, four);
+    data = SET_VAL(data, 2U, 0U, one);
+    data = SET_VAL(data, 2U, 2U, two);
+    data = SET_VAL(data, 2U, 4U, three);
+    data = SET_VAL(data, 2U, 6U, four);
 
     TEST_ASSERT_EQUAL(expected, data);
 }
@@ -299,11 +299,112 @@ void waveshare_ib_test_bit_get_macro() {
     do_set_test(64, 0, 0 ,0 ,1);
 }
 
+
+void imagebuffer_test_get_and_set_pixel() {
+    imagebuffer_t buffer = (imagebuffer_t) {  };
+    imagebuffer_colour_t colour;
+
+
+    imagebuffer_init(&buffer, 10, 10);
+    imagebuffer_setpixel(&buffer, 0, 0, IMAGEBUFFER_BLACK);
+    imagebuffer_setpixel(&buffer, 1, 0, IMAGEBUFFER_GREEN);
+    imagebuffer_setpixel(&buffer, 2, 0, IMAGEBUFFER_ORANGE);
+    imagebuffer_setpixel(&buffer, 3, 0, IMAGEBUFFER_CLEAR);
+
+    imagebuffer_getpixel(&buffer, 0, 0, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_BLACK, colour);
+    imagebuffer_getpixel(&buffer, 1, 0, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_GREEN, colour);
+    imagebuffer_getpixel(&buffer, 2, 0, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_ORANGE, colour);
+    imagebuffer_getpixel(&buffer, 3, 0, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_CLEAR, colour);
+
+    imagebuffer_init(&buffer, 10, 10);
+    imagebuffer_setpixel(&buffer, 0, 0, IMAGEBUFFER_BLACK);
+    imagebuffer_setpixel(&buffer, 0, 1, IMAGEBUFFER_GREEN);
+    imagebuffer_setpixel(&buffer, 0, 2, IMAGEBUFFER_ORANGE);
+    imagebuffer_setpixel(&buffer, 0, 3, IMAGEBUFFER_CLEAR);
+
+    imagebuffer_getpixel(&buffer, 0, 0, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_BLACK, colour);
+    imagebuffer_getpixel(&buffer, 0, 1, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_GREEN, colour);
+    imagebuffer_getpixel(&buffer, 0, 2, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_ORANGE, colour);
+    imagebuffer_getpixel(&buffer, 0, 3, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_CLEAR, colour);
+
+    imagebuffer_init(&buffer, 10, 10);
+    imagebuffer_setpixel(&buffer, 1, 1, IMAGEBUFFER_BLACK);
+    imagebuffer_setpixel(&buffer, 2, 1, IMAGEBUFFER_GREEN);
+    imagebuffer_setpixel(&buffer, 3, 1, IMAGEBUFFER_ORANGE);
+    imagebuffer_setpixel(&buffer, 4, 1, IMAGEBUFFER_CLEAR);
+
+    imagebuffer_getpixel(&buffer, 1, 1, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_BLACK, colour);
+    imagebuffer_getpixel(&buffer, 2, 1, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_GREEN, colour);
+    imagebuffer_getpixel(&buffer, 3, 1, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_ORANGE, colour);
+    imagebuffer_getpixel(&buffer, 4, 1, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_CLEAR, colour);
+
+    // re-initialise the buffer
+    imagebuffer_init(&buffer, 10, 10);
+    imagebuffer_setpixel(&buffer, 1, 1, IMAGEBUFFER_BLACK);
+    imagebuffer_setpixel(&buffer, 1, 2, IMAGEBUFFER_GREEN);
+    imagebuffer_setpixel(&buffer, 1, 3, IMAGEBUFFER_ORANGE);
+    imagebuffer_setpixel(&buffer, 1, 4, IMAGEBUFFER_CLEAR);
+
+    imagebuffer_getpixel(&buffer, 1, 1, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_BLACK, colour);
+    imagebuffer_getpixel(&buffer, 1, 2, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_GREEN, colour);
+    imagebuffer_getpixel(&buffer, 1, 3, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_ORANGE, colour);
+    imagebuffer_getpixel(&buffer, 1, 4, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_CLEAR, colour);
+
+    // reinitialise the buffer
+    imagebuffer_init(&buffer, 10, 10);
+    imagebuffer_setpixel(&buffer, 6, 9, IMAGEBUFFER_BLACK);
+    imagebuffer_setpixel(&buffer, 7, 9, IMAGEBUFFER_GREEN);
+    imagebuffer_setpixel(&buffer, 8, 9, IMAGEBUFFER_ORANGE);
+    imagebuffer_setpixel(&buffer, 9, 9, IMAGEBUFFER_CLEAR);
+
+    imagebuffer_getpixel(&buffer, 6, 9, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_BLACK, colour);
+    imagebuffer_getpixel(&buffer, 7, 9, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_GREEN, colour);
+    imagebuffer_getpixel(&buffer, 8, 9, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_ORANGE, colour);
+    imagebuffer_getpixel(&buffer, 9, 9, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_CLEAR, colour);
+
+    // reinitialise the buffer
+    imagebuffer_init(&buffer, 10, 10);
+    imagebuffer_setpixel(&buffer, 9, 6, IMAGEBUFFER_BLACK);
+    imagebuffer_setpixel(&buffer, 9, 7, IMAGEBUFFER_GREEN);
+    imagebuffer_setpixel(&buffer, 9, 8, IMAGEBUFFER_ORANGE);
+    imagebuffer_setpixel(&buffer, 9, 9, IMAGEBUFFER_CLEAR);
+
+    imagebuffer_getpixel(&buffer, 9, 6, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_BLACK, colour);
+    imagebuffer_getpixel(&buffer, 9, 7, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_GREEN, colour);
+    imagebuffer_getpixel(&buffer, 9, 8, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_ORANGE, colour);
+    imagebuffer_getpixel(&buffer, 9, 9, &colour);
+    TEST_ASSERT_EQUAL(IMAGEBUFFER_CLEAR, colour);
+}
+
 int main(void)
 {
     UNITY_BEGIN();
     RUN_TEST(waveshare_ib_test_bit_set_macro);
     RUN_TEST(waveshare_ib_test_bit_get_macro);
+    RUN_TEST(imagebuffer_test_get_and_set_pixel);
 
     return UNITY_END();
 }

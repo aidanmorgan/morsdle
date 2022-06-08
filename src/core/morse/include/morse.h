@@ -47,7 +47,7 @@ typedef struct {
 
 
 // a dit is the "unit" of time of a morse code signal
-#define MORSE_DIT_MS 75
+#define MORSE_DIT_MS 100
 
 // the minimum time in dits of the start of a "dot"
 #define MORSE_DOT_START 0
@@ -83,9 +83,9 @@ typedef struct {
 
 void morse_init(morse_t *morse);
 
-bool morse_append_signal(morse_t *morse, signal_t signal, uint64_t timestamp);
+bool morse_append_signal(morse_t *morse, signal_t signal, uint32_t timestamp);
 // is responsible for converting the buffer of SIGNAL_HIGH/SIGNAL_LOW into MORSE_DOT/MORSE_DASH/MORSE_DELAY/MORSE_SHORT_HOLD/MORSE_LONG_HOLD
-bool morse_convert(morse_t *morse, uint64_t timestamp);
+bool morse_convert_input(morse_t *morse, uint32_t timestamp);
 // is responsible for converting the buffer of MORSE_DOT/MORSE_DASH/MORSE_DELAY in to a character
 bool morse_decode(morse_t *morse, morse_action_event_t *letter);
 

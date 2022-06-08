@@ -26,7 +26,8 @@ void renderer_init(renderer_t *renderopts, uint16_t width, uint16_t height) {
                                                   renderopts->grid_right_border)) / LETTERS_PER_WORD;
         renderopts->letter_cell_height = renderopts->letter_cell_width;
     } else {
-        // TODO : implement this from a height-calculation perspective
+        renderopts->letter_cell_height= (height - ((7 * renderopts->grid_line_width) + renderopts->grid_top_border + renderopts->grid_bottom_border)) / WORDS_PER_GAME;
+        renderopts->letter_cell_width = renderopts->letter_cell_height;
     }
 
     renderopts->background_colour = COLOUR_WHITE;

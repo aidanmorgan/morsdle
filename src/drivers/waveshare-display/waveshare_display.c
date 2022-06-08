@@ -124,8 +124,6 @@ void waveshare_fill_rect(render_pass_t *pass, display_impl_t *display, point_t t
 
 void waveshare_draw_char(render_pass_t *pass, display_impl_t *display, char c, point_t topleft, uint8_t size,
                          colour_t colour) {
-    imagebuffer_t *buffer = display->buffer;
-
     // no-op this until we work out how to store fonts properly
 //    font_t font = font_buffer[(uint8_t) (c - 'A')];
 //
@@ -184,11 +182,11 @@ void render_pass_init(render_pass_t *render) {
 // end the render pass, update the display with the buffer in the handle, updating the regions
 // that are marked
 extern void render_pass_end(render_pass_t *render) {
-    size_t dirty_region_count = render->dirty_regions->size;
+    size_t dirty_region_count = cbuff_size(render->dirty_regions);
 
     if (dirty_region_count > 0) {
         if (render->display->pre_render != NULL) {
-            render->display->pre_render(render->display->buffer);
+            render->display->pre_render();
         }
 
         rectangle_t regions[dirty_region_count];
@@ -213,11 +211,11 @@ extern void render_pass_end(render_pass_t *render) {
             bottom_right_y = max(regions->bottom_right.y, bottom_right_y);
         }
 
-        render->display->render_dirty_region(render->display->buffer,
-                                             top_left_x,
-                                             top_left_y,
-                                             bottom_right_x,
-                                             bottom_right_y);
+        render->display->render_region(render->display->buffer,
+                                       top_left_x,
+                                       top_left_y,
+                                       bottom_right_x,
+                                       bottom_right_y);
 
 
         if (render->display->post_render != NULL) {

@@ -33,8 +33,8 @@ typedef enum {
 typedef struct {
     uint16_t width;
     uint16_t height;
-    uint8_t *buffer;
     uint32_t buffer_size;
+    uint8_t *buffer;
 } imagebuffer_t;
 
 

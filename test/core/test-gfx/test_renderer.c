@@ -9,14 +9,15 @@
 void setUp (void) {} /* Is run before every test, put unit init calls here. */
 void tearDown (void) {} /* Is run after every test, put unit clean-up calls here. */
 
-void test_gamecreatedevent() {
-    display_impl_t* display = (display_impl_t*)INLINE_MALLOC(display_impl_t, .buffer = svg_create(MOCK_DISPLAY_WIDTH, MOCK_DISPLAY_HEIGHT), .width = MOCK_DISPLAY_WIDTH, .height = MOCK_DISPLAY_HEIGHT);
+
+void test_gamecreatedevent(uint16_t width, uint16_t height, char* filename) {
+    display_impl_t* display = (display_impl_t*)INLINE_MALLOC(display_impl_t, .buffer = svg_create(width, height), .width = width, .height = height);
 
     canvas_t* canvas = &(canvas_t){ };
     canvas_init(canvas);
 
     renderer_t* renderer = &(renderer_t) {};
-    renderer_init(renderer, MOCK_DISPLAY_WIDTH, MOCK_DISPLAY_HEIGHT);
+    renderer_init(renderer, width, height);
 
     morsdle_game_event_t ev = {
         .type = EVENT_GAME_CREATED
@@ -40,20 +41,29 @@ void test_gamecreatedevent() {
 
     render_pass_end(render_pass);
 
-    mockdisplay_write_buffer(display, "test-rendergrid.svg");
+    mockdisplay_write_buffer(display, filename);
     canvas_destroy(canvas);
 
     free(display);
 }
 
-void test_wordcompletedevent() {
-    display_impl_t* display = (display_impl_t*)INLINE_MALLOC(display_impl_t, .buffer = svg_create(MOCK_DISPLAY_WIDTH, MOCK_DISPLAY_HEIGHT), .width = MOCK_DISPLAY_WIDTH, .height = MOCK_DISPLAY_HEIGHT);
+void test_gamecreatedevent_vertical() {
+    test_gamecreatedevent(448, 600, "test-gamecreated-vertical.svg");
+}
+
+void test_gamecreatedevent_horizontal() {
+    test_gamecreatedevent(600, 448, "test-gamecreated-horizontal.svg");
+
+}
+
+void test_wordcompletedevent(uint16_t width, uint16_t height, char* filename) {
+    display_impl_t* display = (display_impl_t*)INLINE_MALLOC(display_impl_t, .buffer = svg_create(width, height), .width = width, .height = height);
 
     canvas_t* operations = &(canvas_t){};
     canvas_init(operations);
 
     renderer_t* options = &(renderer_t) {};
-    renderer_init(options, MOCK_DISPLAY_WIDTH, MOCK_DISPLAY_HEIGHT);
+    renderer_init(options, width, height);
 
     morsdle_game_event_t ev = (morsdle_game_event_t){
             .type = EVENT_WORD_COMPLETED,
@@ -103,16 +113,27 @@ void test_wordcompletedevent() {
 
     render_pass_end(render_pass);
 
-    mockdisplay_write_buffer(display, "test-wordcompleted.svg");
+    mockdisplay_write_buffer(display, filename);
     canvas_destroy(operations);
 
     free(display);
 }
 
+void test_wordcompletedevent_vertical() {
+    test_wordcompletedevent(448, 600, "test-wordcompletedevent-vertical.svg");
+}
+
+void test_wordcompletedevent_horizontal() {
+    test_wordcompletedevent(600, 448, "test-wordcompletedevent-horizontal.svg");
+}
+
+
 int main(void)
 {
     UNITY_BEGIN();
-    RUN_TEST(test_gamecreatedevent);
-    RUN_TEST(test_wordcompletedevent);
+    RUN_TEST(test_gamecreatedevent_vertical);
+    RUN_TEST(test_gamecreatedevent_horizontal);
+    RUN_TEST(test_wordcompletedevent_vertical);
+    RUN_TEST(test_wordcompletedevent_horizontal);
     return UNITY_END();
 }

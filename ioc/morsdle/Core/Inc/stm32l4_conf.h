@@ -30,6 +30,9 @@ struct stm32l4_conf {
 
     GPIO_TypeDef * led_port;
     uint16_t led_pin;
+
+    GPIO_TypeDef * startup_mode_port;
+    uint16_t startup_mode_pin;
 };
 
 typedef struct stm32l4_conf stm32_config_t;

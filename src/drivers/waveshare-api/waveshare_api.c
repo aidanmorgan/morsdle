@@ -61,9 +61,9 @@ void waveshareapi_send_data(uint8_t data) {
 
 void waveshareapi_send_command(uint8_t data) {
     wavesharespi_write_dc(0);
-    wavesharespi_write_dc(0);
+    wavesharespi_write_cs(0);
     wavesharespi_write_spi(data);
-    wavesharespi_write_dc(1);
+    wavesharespi_write_cs(1);
 }
 
 void waveshareapi_reset() {
@@ -95,7 +95,7 @@ void waveshareapi_init() {
     waveshareapi_send_data(0x1D);
     waveshareapi_send_command(0x30);
     waveshareapi_send_data(0x3C);
-    waveshareapi_send_command(0x41);
+    waveshareapi_send_command(0x40);
     waveshareapi_send_data(0x00);
     waveshareapi_send_command(0x50);
     waveshareapi_send_data(0x37);
@@ -123,12 +123,6 @@ void waveshareapi_destroy() {
 
 void waveshareapi_render_region(imagebuffer_t *buffer, uint16_t xstart, uint16_t ystart, uint16_t xend, uint16_t yend) {
     uint64_t i, j;
-    waveshareapi_send_command(0x61);//Set Resolution setting
-    waveshareapi_send_data(0x02);
-    waveshareapi_send_data(0x58);
-    waveshareapi_send_data(0x01);
-    waveshareapi_send_data(0xC0);
-    waveshareapi_send_command(0x10);
 
     // The waveshare device encodes two colours to a byte in the width direction, so we need to always make sure
     // we are reading an even number of colors
@@ -147,6 +141,14 @@ void waveshareapi_render_region(imagebuffer_t *buffer, uint16_t xstart, uint16_t
         assert(false);
     }
 
+    waveshareapi_send_command(0x61);//Set Resolution setting
+    waveshareapi_send_data(0x02);
+    waveshareapi_send_data(0x58);
+    waveshareapi_send_data(0x01);
+    waveshareapi_send_data(0xC0);
+    waveshareapi_send_command(0x10);
+
+
     // step through in twos in the x-direction, because we're going to read out two values in one go as the waveshare
     // device encodes two pixels into each horizontal only, whereas I encode 2 in both directions (because im using less colours).
     for (i = 0; i < buffer->height; i++) {
@@ -158,7 +160,7 @@ void waveshareapi_render_region(imagebuffer_t *buffer, uint16_t xstart, uint16_t
             imagebuffer_getpixel(buffer, j + 1, i, &right);
 
             if (left== IMAGEBUFFER_INVALID || right == IMAGEBUFFER_INVALID) {
-                continue;
+                assert(false);
             }
 
             uint8_t data = (buffer_to_waveshare_lookup[left] << 4) | buffer_to_waveshare_lookup[right];
