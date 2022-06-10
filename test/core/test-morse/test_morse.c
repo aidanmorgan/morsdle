@@ -309,6 +309,7 @@ void test_morse_decode_wholeword() {
 
 
     morse_action_event_t result = (morse_action_event_t) {};
+
     TEST_ASSERT_TRUE(morse_decode(morseconfig, &result));
     TEST_ASSERT_EQUAL('B', result.ch);
     TEST_ASSERT_TRUE(morse_decode(morseconfig, &result));

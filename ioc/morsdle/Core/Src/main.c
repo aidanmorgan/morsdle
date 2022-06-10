@@ -49,6 +49,8 @@ TIM_HandleTypeDef htim1;
 
 UART_HandleTypeDef huart4;
 UART_HandleTypeDef huart2;
+DMA_HandleTypeDef hdma_uart4_tx;
+DMA_HandleTypeDef hdma_uart4_rx;
 
 /* USER CODE BEGIN PV */
 
@@ -61,8 +63,9 @@ static void MX_SPI2_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_RNG_Init(void);
-static void MX_QUADSPI_Init(void);
+static void MX_DMA_Init(void);
 static void MX_UART4_Init(void);
+static void MX_QUADSPI_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -343,6 +346,25 @@ static void MX_USART2_UART_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA2_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA2_Channel3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Channel3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Channel3_IRQn);
+  /* DMA2_Channel5_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Channel5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Channel5_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -407,6 +429,7 @@ void init_stm_board(stm32_config_t* config)
     MX_SPI2_Init();
     MX_USART2_UART_Init();
     MX_UART4_Init();
+    MX_DMA_Init();
     MX_TIM1_Init();
     MX_RNG_Init();
     MX_QUADSPI_Init();
@@ -437,6 +460,12 @@ void init_stm_board(stm32_config_t* config)
 
     config->startup_mode_port = StartupMode_GPIO_Port;
     config->startup_mode_pin = StartupMode_Pin;
+
+#ifdef DEBUG
+    config->debug_uart_handle = &huart4;
+    config->debug_dma_tx = &hdma_uart4_tx;
+    config->debug_dma_rx = &hdma_uart4_rx;
+#endif
 }
 
 /* USER CODE END 4 */

@@ -168,8 +168,7 @@ static void render_letter_cell(canvas_t *drawops,
     }
 }
 
-void
-renderer_handle_event(canvas_t *drawops, renderer_t *renderopts, render_pass_t *pass, morsdle_game_event_t *event) {
+void renderer_handle_event(canvas_t *drawops, renderer_t *renderopts, render_pass_t *pass, morsdle_game_event_t *event) {
     switch (event->type) {
         case EVENT_GAME_CREATED: {
             renderer_clear(drawops, renderopts, pass);

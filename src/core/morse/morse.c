@@ -1,38 +1,66 @@
 #include "morse.h"
 
 typedef struct {
-    // the length of the signals - INCLUDING THE MORSE_DELAY entry
-    uint8_t length;
+    uint8_t letter;
     morse_input_t values[5];
 } morse_table_entry_t;
 
-const static morse_table_entry_t morse_table[26] = {
-        (morse_table_entry_t) { .length = 3, .values = {MORSE_DOT,  MORSE_DASH,  MORSE_DELAY, MORSE_NULL,  MORSE_NULL}}, // a
-        (morse_table_entry_t) { .length = 5, .values ={MORSE_DASH, MORSE_DOT,   MORSE_DOT,   MORSE_DOT,   MORSE_DELAY}}, // b
-        (morse_table_entry_t) { .length = 5, .values ={MORSE_DASH, MORSE_DOT,   MORSE_DASH,  MORSE_DOT,   MORSE_DELAY}}, // c
-        (morse_table_entry_t) { .length = 6, .values ={MORSE_DASH, MORSE_DOT,   MORSE_DOT,   MORSE_DELAY, MORSE_NULL}}, // d
-        (morse_table_entry_t) { .length = 2, .values ={MORSE_DOT,  MORSE_DELAY, MORSE_NULL,  MORSE_NULL,  MORSE_NULL}}, // e
-        (morse_table_entry_t) { .length = 5, .values ={MORSE_DOT,  MORSE_DOT,   MORSE_DASH,  MORSE_DOT,   MORSE_DELAY}}, // f
-        (morse_table_entry_t) { .length = 4, .values ={MORSE_DASH, MORSE_DASH,  MORSE_DOT,   MORSE_DELAY, MORSE_NULL}}, // g
-        (morse_table_entry_t) { .length = 5, .values ={MORSE_DOT,  MORSE_DOT,   MORSE_DOT,   MORSE_DOT,   MORSE_DELAY}}, // h
-        (morse_table_entry_t) { .length = 3, .values ={MORSE_DOT,  MORSE_DOT,   MORSE_DELAY, MORSE_NULL,  MORSE_NULL}}, // i
-        (morse_table_entry_t) { .length = 5, .values ={MORSE_DOT,  MORSE_DASH,  MORSE_DASH,  MORSE_DASH,  MORSE_DELAY}}, // j
-        (morse_table_entry_t) { .length = 4, .values ={MORSE_DASH, MORSE_DOT,   MORSE_DASH,  MORSE_DELAY, MORSE_NULL}}, // k
-        (morse_table_entry_t) { .length = 5, .values ={MORSE_DOT,  MORSE_DASH,  MORSE_DOT,   MORSE_DOT,   MORSE_DELAY}}, // l
-        (morse_table_entry_t) { .length = 3, .values ={MORSE_DASH, MORSE_DASH,  MORSE_DELAY, MORSE_NULL,  MORSE_NULL}}, // m
-        (morse_table_entry_t) { .length = 3, .values ={MORSE_DASH, MORSE_DOT,   MORSE_DELAY, MORSE_NULL,  MORSE_NULL}}, // n
-        (morse_table_entry_t) { .length = 4, .values ={MORSE_DASH, MORSE_DASH,  MORSE_DASH,  MORSE_DELAY, MORSE_NULL}}, // o
-        (morse_table_entry_t) { .length = 5, .values ={MORSE_DOT,  MORSE_DASH,  MORSE_DASH,  MORSE_DOT,   MORSE_DELAY}}, // p
-        (morse_table_entry_t) { .length = 5, .values ={MORSE_DASH, MORSE_DASH,  MORSE_DOT,   MORSE_DASH,  MORSE_DELAY}}, // q
-        (morse_table_entry_t) { .length = 4, .values ={MORSE_DOT,  MORSE_DASH,  MORSE_DOT,   MORSE_DELAY, MORSE_NULL}}, // r
-        (morse_table_entry_t) { .length = 4, .values ={MORSE_DOT,  MORSE_DOT,   MORSE_DOT,   MORSE_DELAY, MORSE_NULL}}, // s
-        (morse_table_entry_t) { .length = 2, .values ={MORSE_DASH, MORSE_DELAY, MORSE_NULL,  MORSE_NULL,  MORSE_NULL}}, // t
-        (morse_table_entry_t) { .length = 4, .values ={MORSE_DOT,  MORSE_DOT,   MORSE_DASH,  MORSE_DELAY, MORSE_NULL}}, // u
-        (morse_table_entry_t) { .length = 5, .values ={MORSE_DOT,  MORSE_DOT,   MORSE_DOT,   MORSE_DASH,  MORSE_DELAY}}, // v
-        (morse_table_entry_t) { .length = 4, .values ={MORSE_DOT,  MORSE_DASH,  MORSE_DASH,  MORSE_DELAY, MORSE_NULL}}, // w
-        (morse_table_entry_t) { .length = 5, .values ={MORSE_DASH, MORSE_DOT,   MORSE_DOT,   MORSE_DASH,  MORSE_DELAY}}, // x
-        (morse_table_entry_t) { .length = 5, .values ={MORSE_DASH, MORSE_DOT,   MORSE_DASH,  MORSE_DASH,  MORSE_DELAY}}, // y
-        (morse_table_entry_t) { .length = 5, .values ={MORSE_DASH, MORSE_DASH,  MORSE_DOT,   MORSE_DOT,   MORSE_DELAY}}  // z
+// This lookup table is based on (what I believe) the fact that the most common occuring letters are shorter in sequence
+// so if we group all of the letters of the same morse length together we can have a shorter list to loop through when
+// we detect a delay, this way we just look at the length of the sequence, get the array of potential matches, loop throgh
+// them until a NULL is encountered or we get a comparison match.
+//
+// Doubled with the fact that the list is always 5 entries long, even if the tail end are NULL we should get some speed of
+// alignment/consistency benefits by just at worst looking through 12 entries rather than what was there originally which required always
+// scanning thouhgh all 26 letters.
+//
+// My theory is (to be tested on a device, I am in Donnelley River right now with no internet access) that because the morse
+// table encodes more frequent letters with less dits, and there are less of them (due to the reduced encoding space of shorter
+// sequences) I should be able to get more performance here in the lookups - for example, finding the letter E would require at MOST
+// 2 memcmp's given this design, wheres it would have originally taken 5, and for the letter T, it is at MOST 2, whereas in the original
+// design it would have been 15 memcmp's which are relatively computationally expensive operations.
+const static morse_table_entry_t* morse_lookup_table[4][12] = {
+    // letters with an input length of 2 (including the DELAY)
+    {
+        &(morse_table_entry_t) { .letter = 'E', .values ={MORSE_DOT,  MORSE_DELAY, MORSE_NULL,  MORSE_NULL,  MORSE_NULL}}, // e
+        &(morse_table_entry_t) { .letter = 'T', .values ={MORSE_DASH, MORSE_DELAY, MORSE_NULL,  MORSE_NULL,  MORSE_NULL}}, // t
+        NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+    },
+    // letters with an input length of 3 (including the DELAY)
+    {
+        &(morse_table_entry_t) { .letter = 'A', .values = {MORSE_DOT,  MORSE_DASH,  MORSE_DELAY, MORSE_NULL,  MORSE_NULL}}, // a
+        &(morse_table_entry_t) { .letter = 'I', .values ={MORSE_DOT,  MORSE_DOT,   MORSE_DELAY, MORSE_NULL,  MORSE_NULL}}, // i
+        &(morse_table_entry_t) { .letter = 'M', .values ={MORSE_DASH, MORSE_DASH,  MORSE_DELAY, MORSE_NULL,  MORSE_NULL}}, // m
+        &(morse_table_entry_t) { .letter = 'N', .values ={MORSE_DASH, MORSE_DOT,   MORSE_DELAY, MORSE_NULL,  MORSE_NULL}}, // n
+        NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+    },
+    // letters with an input length of 4 (including the DELAY)
+    {
+        &(morse_table_entry_t) { .letter = 'D', .values ={MORSE_DASH, MORSE_DOT,   MORSE_DOT,   MORSE_DELAY, MORSE_NULL}}, // d
+        &(morse_table_entry_t) { .letter = 'G', .values ={MORSE_DASH, MORSE_DASH,  MORSE_DOT,   MORSE_DELAY, MORSE_NULL}}, // g
+        &(morse_table_entry_t) { .letter = 'K', .values ={MORSE_DASH, MORSE_DOT,   MORSE_DASH,  MORSE_DELAY, MORSE_NULL}}, // k
+        &(morse_table_entry_t) { .letter = 'O', .values ={MORSE_DASH, MORSE_DASH,  MORSE_DASH,  MORSE_DELAY, MORSE_NULL}}, // o
+        &(morse_table_entry_t) { .letter = 'R', .values ={MORSE_DOT,  MORSE_DASH,  MORSE_DOT,   MORSE_DELAY, MORSE_NULL}}, // r
+        &(morse_table_entry_t) { .letter = 'S', .values ={MORSE_DOT,  MORSE_DOT,   MORSE_DOT,   MORSE_DELAY, MORSE_NULL}}, // s
+        &(morse_table_entry_t) { .letter = 'U', .values ={MORSE_DOT,  MORSE_DOT,   MORSE_DASH,  MORSE_DELAY, MORSE_NULL}}, // u
+        &(morse_table_entry_t) { .letter = 'W', .values ={MORSE_DOT,  MORSE_DASH,  MORSE_DASH,  MORSE_DELAY, MORSE_NULL}}, // w
+        NULL,NULL,NULL,NULL
+    },
+    // letters with an input length of 5 (including the DELAY)
+    {
+        &(morse_table_entry_t) { .letter = 'B', .values ={MORSE_DASH, MORSE_DOT,   MORSE_DOT,   MORSE_DOT,   MORSE_DELAY}}, // b
+        &(morse_table_entry_t) { .letter = 'C', .values ={MORSE_DASH, MORSE_DOT,   MORSE_DASH,  MORSE_DOT,   MORSE_DELAY}}, // c
+        &(morse_table_entry_t) { .letter = 'F', .values ={MORSE_DOT,  MORSE_DOT,   MORSE_DASH,  MORSE_DOT,   MORSE_DELAY}}, // f
+        &(morse_table_entry_t) { .letter = 'H', .values ={MORSE_DOT,  MORSE_DOT,   MORSE_DOT,   MORSE_DOT,   MORSE_DELAY}}, // h
+        &(morse_table_entry_t) { .letter = 'J', .values ={MORSE_DOT,  MORSE_DASH,  MORSE_DASH,  MORSE_DASH,  MORSE_DELAY}}, // j
+        &(morse_table_entry_t) { .letter = 'L', .values ={MORSE_DOT,  MORSE_DASH,  MORSE_DOT,   MORSE_DOT,   MORSE_DELAY}}, // l
+        &(morse_table_entry_t) { .letter = 'P', .values ={MORSE_DOT,  MORSE_DASH,  MORSE_DASH,  MORSE_DOT,   MORSE_DELAY}}, // p
+        &(morse_table_entry_t) { .letter = 'Q', .values ={MORSE_DASH, MORSE_DASH,  MORSE_DOT,   MORSE_DASH,  MORSE_DELAY}}, // q
+        &(morse_table_entry_t) { .letter = 'V', .values ={MORSE_DOT,  MORSE_DOT,   MORSE_DOT,   MORSE_DASH,  MORSE_DELAY}}, // v
+        &(morse_table_entry_t) { .letter = 'X', .values ={MORSE_DASH, MORSE_DOT,   MORSE_DOT,   MORSE_DASH,  MORSE_DELAY}}, // x
+        &(morse_table_entry_t) { .letter = 'Y', .values ={MORSE_DASH, MORSE_DOT,   MORSE_DASH,  MORSE_DASH,  MORSE_DELAY}}, // y
+        &(morse_table_entry_t) { .letter = 'Z', .values ={MORSE_DASH, MORSE_DASH,  MORSE_DOT,   MORSE_DOT,   MORSE_DELAY}}  // z
+    }
 };
 
 static morse_signal_t signal_backing_buffer[64];
@@ -90,7 +118,6 @@ bool morse_convert_input(morse_t *morse, uint32_t timestamp) {
 
     size_t processed_idx = 0;
 
-    // should we insert the delay here and just cal it over and over?
     if (signal_buffer_size >= 1) {
         morse_signal_t signals[signal_buffer_size];
         size_t readcount = cbuff_peektail(morse->signal_buffer, signals, signal_buffer_size);
@@ -131,12 +158,11 @@ bool morse_convert_input(morse_t *morse, uint32_t timestamp) {
             // if we are transitioning from LOW to HIGH, check and see if a delay should be added to the buffer before
             // we process the next transition.
             else if(prev.value == SIGNAL_LOW && current.value == SIGNAL_HIGH) {
-                double difference = (((double)current.timestamp) - ((double)prev.timestamp)) / (double) MORSE_DIT_MS;
 
                 morse_input_t headInput;
                 cbuff_peekhead(morse->morse_input_buffer, &headInput, 1);
 
-                if(difference > MORSE_DELAY_START && headInput != MORSE_DELAY) {
+                if(dits > MORSE_DELAY_START && headInput != MORSE_DELAY) {
                     morse_input_t delay = MORSE_DELAY;
                     cbuff_write(morse->morse_input_buffer, &delay);
                 }
@@ -151,9 +177,9 @@ bool morse_convert_input(morse_t *morse, uint32_t timestamp) {
         // we have a signal in the buffer, it's pretty likely to be a LOW, so we need to check the time and see if
         // we should append a delay to the input queue
         morse_signal_t headSignal = signals[readcount - 1];
-        double headDifference = ((double)(timestamp - headSignal.timestamp)) / (double)MORSE_DIT_MS;
+        double headDifferenceDits = ((double)(timestamp - headSignal.timestamp)) / (double)MORSE_DIT_MS;
 
-        if(headDifference > MORSE_DELAY_START && headSignal.value == SIGNAL_LOW) {
+        if(headDifferenceDits > MORSE_DELAY_START && headSignal.value == SIGNAL_LOW) {
             morse_input_t headInput;
             cbuff_peekhead(morse->morse_input_buffer, &headInput, 1);
 
@@ -225,25 +251,24 @@ bool morse_decode(morse_t *morse, morse_action_event_t *letter) {
 
             return true;
         }
-        else if (i > 0 && (inputs[i] == MORSE_DELAY)) {
+        else if (i >= 1 && (inputs[i] == MORSE_DELAY)) {
+            const morse_table_entry_t** length_table = morse_lookup_table[i - 1];
 
-            // so we have a delay which means we need to process everything up to the delay
-            // and compare it against the morse table to find the letter
-            for (uint8_t j = 0; j < MAX_LETTERS; j++) {
-                // check if the values match, if they do then we can assign the letter, otherwise we move
-                // on to the next entry, this linear search is also stupidly slow, and it would be better in some
-                // sort of ternary/binary tree to actually search quicker, but I cbf implementing one right now
-                // TODO : be f'd to write a binary tree to speed the searching of this up
+            uint8_t idx = 0;
+            while(length_table[idx] != NULL) {
+                const morse_table_entry_t * entry = length_table[idx];
 
-                if(morse_table[j].length == (i+1) && memcmp(&(inputs[0]), morse_table[j].values, MAX_INPUTS_PER_LETTER * sizeof(morse_input_t)) == 0) {
+                if(memcmp(&(inputs[0]), entry->values, MAX_INPUTS_PER_LETTER * sizeof(morse_input_t)) == 0) {
                     letter->type = MORSE_ACTION_ADD_LETTER;
-                    letter->ch = (char) (((uint8_t) 'A') + j);
+                    letter->ch = entry->letter;
 
                     // we have found a match, so we want to move the read pointer forward through
                     // the buffer so they aren't ingested in the future.
                     cbuff_seek(morse->morse_input_buffer, offset + i + 1);
                     return true;
                 }
+
+                idx++;
             }
 
             // if we get to this point, we've found a delay which means we want to try and match against

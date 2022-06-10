@@ -11,6 +11,11 @@ struct stm32l4_conf {
     SPI_HandleTypeDef* spi_handle;
     TIM_HandleTypeDef* timer_handle;
     UART_HandleTypeDef* uart_handle;
+
+    UART_HandleTypeDef* debug_uart_handle;
+    DMA_HandleTypeDef *debug_dma_tx;
+    DMA_HandleTypeDef *debug_dma_rx;
+
     RNG_HandleTypeDef* rng;
 
     GPIO_TypeDef * dc_port;

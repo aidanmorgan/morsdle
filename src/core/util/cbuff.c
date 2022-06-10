@@ -31,6 +31,24 @@ bool cbuff_write(cbuff_t *buff, void *data) {
     return true;
 }
 
+size_t cbuff_writemany(cbuff_t* buff, void* data, size_t count) {
+    if(count > (buff->capacity - buff->size)) {
+        count = (buff->capacity - buff->size);
+    }
+
+    for(size_t i = 0; i < count; i++) {
+        void *entry = buff->buffer + ((buff->write_idx + i) * buff->item_sz);
+        void *value = data + (buff->item_sz * i);
+
+        memcpy(value, entry, buff->item_sz);
+    }
+
+    buff->write_idx = (buff->write_idx + count) % buff->capacity;
+    buff->size += count;
+
+    return count;
+}
+
 bool cbuff_read(cbuff_t *buff, void *data) {
     if (!cbuff_canread(buff)) {
         return false;

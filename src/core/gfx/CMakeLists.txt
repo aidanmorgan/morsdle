@@ -16,6 +16,7 @@ target_sources(
         morsdle-gfx
         PUBLIC
         renderer.c
+        display.c
 )
 
 target_link_libraries(
