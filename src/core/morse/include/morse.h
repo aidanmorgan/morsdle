@@ -41,7 +41,7 @@ typedef enum {
 typedef struct {
     morse_action_t type;
     union {
-        char ch;
+        uint8_t ch;
     };
 } morse_action_event_t;
 

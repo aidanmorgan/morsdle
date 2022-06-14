@@ -283,10 +283,11 @@ void waveshare_ib_test_bit_set_macro() {
 
 void do_set_test(uint8_t expected, uint8_t one, uint8_t two, uint8_t three, uint8_t four) {
     uint8_t data = 0;
-    data = SET_VAL(data, 2U, 0U, one);
-    data = SET_VAL(data, 2U, 2U, two);
-    data = SET_VAL(data, 2U, 4U, three);
-    data = SET_VAL(data, 2U, 6U, four);
+
+    SET_VAL(data, 2U, 0U, one);
+    SET_VAL(data, 2U, 2U, two);
+    SET_VAL(data, 2U, 4U, three);
+    SET_VAL(data, 2U, 6U, four);
 
     TEST_ASSERT_EQUAL(expected, data);
 }

@@ -19,31 +19,6 @@ static inline uint16_t min(uint16_t a, uint16_t b) {
     return a < b ? a : b;
 }
 
-struct font_t {
-    char c;
-
-    uint16_t length;
-    uint16_t height;
-    uint16_t width;
-    uint32_t hex[];
-};
-
-typedef struct font_t font_t;
-
-// FIXME : This is super gross and needs to be done a different way, but it will do for the moment
-// FIXME : should probably just have these files on the file system, with some structure to allow different sizes etc
-// FIXME : but this will do for the moment until I can be bothered incorporating TinyFS or something similar.
-//
-// So this contains a base64 encoded binary, of 1-bit per pixel, row-first order
-//
-const font_t font_buffer[1] = {
-        (font_t) {
-                .c = 'A',
-                .length = 32,
-                .height=64,
-                .width=64,
-        }
-};
 
 static imagebuffer_colour_t display_to_buffer_lookup[7] = {
         IMAGEBUFFER_BLACK,
@@ -211,11 +186,13 @@ extern void render_pass_end(render_pass_t *render) {
             bottom_right_y = max(regions->bottom_right.y, bottom_right_y);
         }
 
+
         render->display->render_region(render->display->buffer,
                                        top_left_x,
                                        top_left_y,
                                        bottom_right_x,
-                                       bottom_right_y);
+                                       bottom_right_y,
+                                       render->canvas->rotation);
 
 
         if (render->display->post_render != NULL) {
@@ -233,6 +210,7 @@ void canvas_init(canvas_t *ops) {
 
     ops->height = WAVESHARE_PIXEL_HEIGHT;
     ops->width = WAVESHARE_PIXEL_WIDTH;
+    ops->rotation = ROTATION_NONE;
 }
 
 void canvas_destroy(canvas_t *ops) {

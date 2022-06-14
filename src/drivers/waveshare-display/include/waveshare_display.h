@@ -16,11 +16,13 @@
 #define WAVESHARE_PIXEL_WIDTH 600
 #define WAVESHARE_PIXEL_HEIGHT 448
 
+
+
 struct display_impl_t {
     imagebuffer_t *buffer;
 
     // this is the callback to perform the actual render, required to be set by the implementation
-    void (*render_region)(imagebuffer_t *, uint16_t, uint16_t, uint16_t, uint16_t);
+    void (*render_region)(imagebuffer_t *, uint16_t, uint16_t, uint16_t, uint16_t, uint8_t);
 
     void (*init)();
 

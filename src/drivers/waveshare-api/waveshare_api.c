@@ -14,13 +14,15 @@ static uint8_t buffer_to_waveshare_lookup[4] = {
 };
 
 
-void waveshareapi_wake(void) {
+waveshareapi_error waveshareapi_moduleinit(void) {
     wavesharespi_write_dc(0);
     wavesharespi_write_cs(0);
     wavesharespi_write_rst(1);
+
+    return WAVESHAREAPI_OK;
 }
 
-void waveshareapi_sleep(void) {
+void waveshareapi_moduleexit(void) {
     wavesharespi_write_dc(0);
     wavesharespi_write_cs(0);
     wavesharespi_write_rst(0);
@@ -28,25 +30,25 @@ void waveshareapi_sleep(void) {
 
 #define WAVESHAREAPI_MAX_BUSY_WAIT (60 * 1000)
 
-static void inline waveshareapi_waitbusy_high() {
-    uint32_t  start = wavesharespi_ticks();
+static void inline waveshareapi_wait_busyhigh() {
+    uint32_t start = wavesharespi_ticks();
 
-    while(!wavesharespi_read_busy()) {
+    while (!wavesharespi_read_busy()) {
         uint32_t now = wavesharespi_ticks();
 
-        if((now - start) > WAVESHAREAPI_MAX_BUSY_WAIT) {
+        if ((now - start) > WAVESHAREAPI_MAX_BUSY_WAIT) {
             assert(false);
         }
     }
 }
 
-static void inline waveshareapi_waitbusy_low() {
-    uint32_t  start = wavesharespi_ticks();
+static void inline waveshareapi_wait_busylow() {
+    uint32_t start = wavesharespi_ticks();
 
-    while(wavesharespi_read_busy()){
+    while (wavesharespi_read_busy()) {
         uint32_t now = wavesharespi_ticks();
 
-        if((now - start) > WAVESHAREAPI_MAX_BUSY_WAIT) {
+        if ((now - start) > WAVESHAREAPI_MAX_BUSY_WAIT) {
             assert(false);
         }
     }
@@ -78,7 +80,7 @@ void waveshareapi_reset() {
 void waveshareapi_init() {
     waveshareapi_reset();
 
-    waveshareapi_waitbusy_high();
+    waveshareapi_wait_busyhigh();
     waveshareapi_send_command(0x00);
     waveshareapi_send_data(0xEF);
     waveshareapi_send_data(0x08);
@@ -95,7 +97,7 @@ void waveshareapi_init() {
     waveshareapi_send_data(0x1D);
     waveshareapi_send_command(0x30);
     waveshareapi_send_data(0x3C);
-    waveshareapi_send_command(0x40);
+    waveshareapi_send_command(0x41);
     waveshareapi_send_data(0x00);
     waveshareapi_send_command(0x50);
     waveshareapi_send_data(0x37);
@@ -121,7 +123,8 @@ void waveshareapi_destroy() {
 #define EPD_5IN65F_HEIGHT 448
 #define EPD_5IN65F_WIDTH 600
 
-void waveshareapi_render_region(imagebuffer_t *buffer, uint16_t xstart, uint16_t ystart, uint16_t xend, uint16_t yend) {
+void waveshareapi_render_region(imagebuffer_t *buffer, uint16_t xstart, uint16_t ystart, uint16_t xend, uint16_t yend,
+                                uint8_t rotation) {
     uint64_t i, j;
 
     // The waveshare device encodes two colours to a byte in the width direction, so we need to always make sure
@@ -159,7 +162,7 @@ void waveshareapi_render_region(imagebuffer_t *buffer, uint16_t xstart, uint16_t
             imagebuffer_getpixel(buffer, j, i, &left);
             imagebuffer_getpixel(buffer, j + 1, i, &right);
 
-            if (left== IMAGEBUFFER_INVALID || right == IMAGEBUFFER_INVALID) {
+            if (left == IMAGEBUFFER_INVALID || right == IMAGEBUFFER_INVALID) {
                 assert(false);
             }
 
@@ -169,12 +172,38 @@ void waveshareapi_render_region(imagebuffer_t *buffer, uint16_t xstart, uint16_t
     }
 
     waveshareapi_send_command(0x04);//0x04
-    waveshareapi_waitbusy_high();
+    waveshareapi_wait_busyhigh();
     waveshareapi_send_command(0x12);//0x12
-    waveshareapi_waitbusy_high();
+    waveshareapi_wait_busyhigh();
     waveshareapi_send_command(0x02);  //0x02
-    waveshareapi_waitbusy_low();
+    waveshareapi_wait_busylow();
     wavesharespi_delay(200);
+}
+
+void waveshareapi_clear(uint8_t colour) {
+    waveshareapi_send_command(0x61);//Set Resolution setting
+    waveshareapi_send_data(0x02);
+    waveshareapi_send_data(0x58);
+    waveshareapi_send_data(0x01);
+    waveshareapi_send_data(0xC0);
+    waveshareapi_send_command(0x10);
+
+    // we can loop over the phusical constraints here because it's a clear operation, we don't actually care about the
+    // rotation at the moment.
+    for (int i = 0; i < EPD_5IN65F_WIDTH / 2; i++) {
+        for (int j = 0; j < EPD_5IN65F_HEIGHT; j++)
+            waveshareapi_send_data((colour << 4) | colour);
+    }
+
+    waveshareapi_send_command(0x04);//0x04
+    waveshareapi_wait_busyhigh();
+    waveshareapi_send_command(0x12);//0x12
+    waveshareapi_wait_busyhigh();
+    waveshareapi_send_command(0x02);  //0x02
+    waveshareapi_wait_busylow();
+    wavesharespi_delay(500);
+
+
 }
 
 

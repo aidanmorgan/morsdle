@@ -11,7 +11,7 @@
 
 
 // length, offset
-#define MASK(L, P)            (~(0xff << (L)) << (P))
+#define MASK(L, P)            (~(0xffU << (L)) << (P))
 // value to read from, length (in bits), offset (in bits)
 #define GET_VAL(BF, L, P)      (((BF) & MASK(L,P)) >> P)
 // value to update, length (in bits), offset (in bits), newvalue (value to set)

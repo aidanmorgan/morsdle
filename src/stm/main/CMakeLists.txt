@@ -15,8 +15,6 @@ find_package(HAL COMPONENTS STM32L476 REQUIRED)
 file(GLOB STM32CUBEMX_GENERATED_SRC ${CMAKE_SOURCE_DIR}/ioc/morsdle/Core/*/main.c ${CMAKE_SOURCE_DIR}/ioc/morsdle/Core/*/stm32l4*.c)
 message("STM32CUBEMX_GENERATED_SRC: ${STM32CUBEMX_GENERATED_SRC}")
 
-#target_compile_options(morsdle-stm PRIVATE -g)
-
 
 add_dependencies(
         morsdle-stm
@@ -34,6 +32,7 @@ target_include_directories(
         PUBLIC
         include
         ${CMAKE_SOURCE_DIR}/ioc/morsdle/core/Inc
+        ${CMAKE_SOURCE_DIR}/src/stm/flash/include
 )
 
 target_sources(
@@ -44,6 +43,7 @@ target_sources(
         loader.c
         debug.c
         ${STM32CUBEMX_GENERATED_SRC}
+        ${CMAKE_SOURCE_DIR}/src/stm/flash/stm_flash.c
 )
 
 target_link_libraries(
@@ -58,6 +58,7 @@ target_link_libraries(
 
         HAL::STM32::L4::CORTEX
         HAL::STM32::L4::DMA
+        HAL::STM32::L4::LL_DMA
         HAL::STM32::L4::FLASH
         HAL::STM32::L4::GPIO
         HAL::STM32::L4::I2C

@@ -38,6 +38,8 @@ struct stm32l4_conf {
 
     GPIO_TypeDef * startup_mode_port;
     uint16_t startup_mode_pin;
+
+    QSPI_HandleTypeDef *flash_qspi;
 };
 
 typedef struct stm32l4_conf stm32_config_t;

@@ -18,9 +18,12 @@
 #define WAVESHARE_ORANGE  0x6    ///	110
 
 
+typedef enum {
+    WAVESHAREAPI_OK = 0
+} waveshareapi_error;
+
 // public interface methods that are used by the waveshare driver, but are specialised for writing to a STM32 device
 void waveshareapi_init();
-
 void waveshareapi_destroy();
 
 void waveshareapi_send_data(uint8_t data);
@@ -29,11 +32,12 @@ void waveshareapi_send_command(uint8_t data);
 
 void waveshareapi_reset();
 
-void waveshareapi_wake();
+waveshareapi_error waveshareapi_moduleinit();
 
-void waveshareapi_sleep();
+void waveshareapi_moduleexit();
 
-void
-waveshareapi_render_region(imagebuffer_t *buffer, uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end);
+void waveshareapi_render_region(imagebuffer_t *buffer, uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end, uint8_t rotation);
+
+void waveshareapi_clear(uint8_t colour);
 
 #endif //MORSDLE_WAVESHARE_API_H

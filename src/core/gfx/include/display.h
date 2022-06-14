@@ -32,6 +32,13 @@ typedef struct {
     point_t bottom_right;
 } rectangle_t;
 
+typedef enum {
+    ROTATION_NONE = 0,
+    ROTATION_NINETY = 90,
+    ROTATION_ONEHINDREDEIGHTY = 180,
+    ROTATION_TWOHUNDREDSEVENTY = 270
+} rotation_t;
+
 // forward declaration
 typedef struct canvas canvas_t;
 
@@ -57,6 +64,7 @@ struct canvas {
 
     uint16_t height;
     uint16_t width;
+    rotation_t rotation;
 };
 
 

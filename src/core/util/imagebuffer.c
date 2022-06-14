@@ -43,7 +43,7 @@ void imagebuffer_setpixel(imagebuffer_t *buffer, uint16_t x, uint16_t y, imagebu
     // 1, 0 = 2
     // 0, 1 = 4
     // 1, 1 = 6
-    (*data) = SET_VAL((*data), 2U, ((2U*x)+(4U*y)), colour);
+    SET_VAL((*data), 2U, ((2U*x)+(4U*y)), colour);
 }
 
 void imagebuffer_getpixel(imagebuffer_t *buffer, uint16_t x, uint16_t y, imagebuffer_colour_t *colour) {

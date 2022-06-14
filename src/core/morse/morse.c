@@ -47,6 +47,7 @@ const static morse_table_entry_t* morse_lookup_table[4][12] = {
         NULL,NULL,NULL,NULL
     },
     // letters with an input length of 5 (including the DELAY)
+    // TODO : Resort the list below based on a frequency analysis of the wordle dictionary so the more frequent letters appear earlier
     {
         &(morse_table_entry_t) { .letter = 'B', .values ={MORSE_DASH, MORSE_DOT,   MORSE_DOT,   MORSE_DOT,   MORSE_DELAY}}, // b
         &(morse_table_entry_t) { .letter = 'C', .values ={MORSE_DASH, MORSE_DOT,   MORSE_DASH,  MORSE_DOT,   MORSE_DELAY}}, // c
@@ -252,6 +253,9 @@ bool morse_decode(morse_t *morse, morse_action_event_t *letter) {
             return true;
         }
         else if (i >= 1 && (inputs[i] == MORSE_DELAY)) {
+            // see the relatively long essay of a comment at the top of this file to explain what
+            // this code is actually doing as it's not immediately obvious, but THEORETICALLY should be
+            // fairly performant
             const morse_table_entry_t** length_table = morse_lookup_table[i - 1];
 
             uint8_t idx = 0;

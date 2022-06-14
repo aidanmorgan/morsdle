@@ -5,6 +5,7 @@
 #include "morse.h"
 #include "morsdle.h"
 #include "renderer.h"
+#include "stm_flash_read.h"
 #include "waveshare_display.h"
 #include "waveshare_api.h"
 #include "waveshare_spi.h"
@@ -15,10 +16,10 @@ static morsdle_game_t h_game = (morsdle_game_t) {};
 static renderer_t h_renderer = (renderer_t) {
         .game_mode = MORSDLE_GAME_SINGLE_LETTER
 };
-static imagebuffer_t image_buffer = (imagebuffer_t) {};
+static imagebuffer_t h_image_buffer = (imagebuffer_t) {};
 // this is the waveshare implementation of the handle
-static display_impl_t display = (display_impl_t) {
-        .buffer = &image_buffer,
+static display_impl_t h_display = (display_impl_t) {
+        .buffer = &h_image_buffer,
         .render_region = waveshareapi_render_region,
 //        .pre_render = waveshareapi_wake,
 //        .post_render = waveshareapi_sleep,
@@ -31,12 +32,14 @@ static canvas_t h_canvas = (canvas_t) {
         .draw_char = waveshare_draw_char
 };
 
-static stm32_config_t* hw_config;
+static stm32_config_t* h_board_cfg;
+static flash_cfg_t* h_flash_cfg;
 
 static const char *morsdle_random_word() {
     uint32_t base;
 
-    if(HAL_RNG_GenerateRandomNumber(hw_config->rng, &base) == HAL_OK) {
+    // TODO : implement flash dictionary loading here
+    if(HAL_RNG_GenerateRandomNumber(h_board_cfg->rng, &base) == HAL_OK) {
         uint32_t index = base % WORDS_LENGTH;
         const char *word = wordle_dictionary[index];
         return word;
@@ -46,8 +49,9 @@ static const char *morsdle_random_word() {
     }
 }
 
-void game_main(stm32_config_t* config, stm_delegates_t* delegates) {
-    hw_config = config;
+void game_main(stm32_config_t* boardcfg, flash_cfg_t* flashcfg) {
+    h_board_cfg = boardcfg;
+    h_flash_cfg = flashcfg;
 
     // initialise the morse processor
     morse_init(&h_morse);
@@ -59,21 +63,24 @@ void game_main(stm32_config_t* config, stm_delegates_t* delegates) {
     renderer_init(&h_renderer, h_canvas.width, h_canvas.height);
 
     // allocate the 2-bit image buffer as we're using a waveshare display to render and the STM32L476 sucks for heap space
-    if (imagebuffer_init(&image_buffer, h_canvas.width, h_canvas.height) != IMAGEBUFFER_OK) {
+    if (imagebuffer_init(&h_image_buffer, h_canvas.width, h_canvas.height) != IMAGEBUFFER_OK) {
         assert(false);
     }
 
+    // TODO : remove this call eventually with something proper, but trying to align with the example code
+    waveshareapi_moduleinit();
     // initialise the display now, we should have everything in place?
-    display.init();
+    h_display.init();
+    // TODO : remove this call eventually with something proper, but trying to align with the example code
+    waveshareapi_clear(0x1);
 
     morse_action_event_t result = (morse_action_event_t) {};
     render_pass_t render_pass = (render_pass_t) {
-            .display = &display,
+            .display = &h_display,
             .canvas = &h_canvas,
     };
     morsdle_game_event_t ev;
 
-    uint32_t loop_counter = 0;
     while (1) {
         uint32_t tick = HAL_GetTick();
 
@@ -114,24 +121,21 @@ void game_main(stm32_config_t* config, stm_delegates_t* delegates) {
             render_pass_end(&render_pass);
         }
 
-        // don't do this super often, but often enough
-        if(loop_counter % 10 == 0) {
-            printf("Loop time (%lu): %lu ticks", loop_counter, HAL_GetTick() - tick);
-        }
+        uint64_t looptime = HAL_GetTick() - tick;
     }
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     // if this isn't set then we aren't in the game loop, so return
-    if(hw_config == NULL) {
+    if(h_board_cfg == NULL) {
         return;
     }
 
     uint32_t tick = HAL_GetTick();
 
     // TODO : add some form of debouncing here
-    if (GPIO_Pin == hw_config->button_pin) {
-        if (HAL_GPIO_ReadPin(hw_config->button_port, hw_config->button_pin)) {
+    if (GPIO_Pin == h_board_cfg->button_pin) {
+        if (HAL_GPIO_ReadPin(h_board_cfg->button_port, h_board_cfg->button_pin)) {
             morse_append_signal(&h_morse, SIGNAL_LOW, tick);
         } else {
             morse_append_signal(&h_morse, SIGNAL_HIGH, tick);
@@ -141,22 +145,22 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 
 // currently configured to PC7
 extern void wavesharespi_write_dc(uint8_t val) {
-    HAL_GPIO_WritePin(hw_config->dc_port, hw_config->dc_pin, val == 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(h_board_cfg->dc_port, h_board_cfg->dc_pin, val == 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
 
 // currently configured to PC9
 extern void wavesharespi_write_cs(uint8_t val) {
-    HAL_GPIO_WritePin(hw_config->cs_port, hw_config->cs_pin, val == 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(h_board_cfg->cs_port, h_board_cfg->cs_pin, val == 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
 
 // currently configured to PC8
 extern void wavesharespi_write_rst(uint8_t val) {
-    HAL_GPIO_WritePin(hw_config->rst_port, hw_config->rst_pin, val == 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(h_board_cfg->rst_port, h_board_cfg->rst_pin, val == 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
 
 // currently configured to SPI2
 extern void wavesharespi_write_spi(uint8_t val) {
-    HAL_StatusTypeDef writeResult = HAL_SPI_Transmit(hw_config->spi_handle, &val, 1, 1000);
+    HAL_StatusTypeDef writeResult = HAL_SPI_Transmit(h_board_cfg->spi_handle, &val, 1, 1000);
 
     if(writeResult != HAL_OK) {
         return;
@@ -165,7 +169,7 @@ extern void wavesharespi_write_spi(uint8_t val) {
 
 // currently configured to PC6
 extern uint8_t wavesharespi_read_busy() {
-    GPIO_PinState readResult = HAL_GPIO_ReadPin(hw_config->busy_port, hw_config->busy_pin);
+    GPIO_PinState readResult = HAL_GPIO_ReadPin(h_board_cfg->busy_port, h_board_cfg->busy_pin);
     return readResult;
 }
 
