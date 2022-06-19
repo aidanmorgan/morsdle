@@ -18,6 +18,7 @@ typedef enum {
 
 typedef struct {
     uint8_t ch;
+    uint32_t offset;
     size_t size;
 } flash_font_metadata_t;
 

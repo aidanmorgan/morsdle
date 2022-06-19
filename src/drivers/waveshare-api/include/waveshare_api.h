@@ -8,6 +8,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "imagebuffer.h"
+#include "waveshare_spi_impl.h"
+
+#define WAVESHAREAPI_MAX_BUSY_WAIT (60 * 1000)
 
 #define WAVESHARE_BLACK   0x0    /// 000
 #define WAVESHARE_WHITE   0x1    ///	001

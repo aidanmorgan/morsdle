@@ -33,18 +33,28 @@ thbreak main
 Pins:
 
 From the Waveshare doco - STM32F103ZET
-Vcc	- 3.3V
-GND	- GND
-DIN	- PA7  (MOSI1) - (AF_PP, FREQ_HIGH)
-CLK	- PA5 (SCK1) - (AF_PP, FREQ_HIGH)
-CS	- PA4 (NSS1?) - GPIOA-4  (OUTPUT_PP, NO_PULL, FREQ_LOW, RESET)
-DC	- PA2 (GPIO) - GPIOA-2   (OUTPUT_PP, NO_PULL, FREQ_LOW, RESET)
-RST	- PA1 (GPIO) - GPIOA-1   (OUTPUT_PP, NO_PULL, FREQ_LOW, RESET)
-BUSY - PA3 (GPIO) - GPIOA-3  (INPUT, NO_PULL)
+Vcc	- 3.3V  (light purple)
+GND	- GND  (brown/maroon)
+DIN	- PA7  (MOSI1) - (AF_PP, FREQ_HIGH)  (dark blue)
+CLK	- PA5 (SCK1) - (AF_PP, FREQ_HIGH)  (yellow)
+CS	- PA4 (NSS1?) - GPIOA-4  (OUTPUT_PP, NO_PULL, FREQ_LOW, RESET) (orange)
+DC	- PA2 (GPIO) - GPIOA-2   (OUTPUT_PP, NO_PULL, FREQ_LOW, RESET) (green)
+RST	- PA1 (GPIO) - GPIOA-1   (OUTPUT_PP, NO_PULL, FREQ_LOW, RESET) (white)
+BUSY - PA3 (GPIO) - GPIOA-3  (INPUT, NO_PULL) (dark purple)
 
 SPI Settings:
 MASTER, 2LINE, 8BIT, POLARITY_LOW, PHASE_1EDGE, NSS_SOFT, BAUDRATEPRESCALER_64, FIRSTBIT_MSB, TIMODE_DISABLE, CRCCALCULATION_DISABLE, CRCPolynomial=10
 
+For the STM32L476RG
+Vcc	- 3.3V  (light purple)
+GND	- GND  (brown/maroon)
+DIN	-  (MOSI2)  (dark blue)
+CLK	- (SCK2)  (yellow)
+CS	- (GPIOC9) (orange)
+DC	- (GPIOC7)  (green)
+RST	- (GPIOC8)  (white)
+BUSY - (GPIOC6)  (dark purple)
 
 
+https://docs.rs-online.com/a5ba/0900766b81703f88.pdf
 

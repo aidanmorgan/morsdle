@@ -49,8 +49,6 @@ TIM_HandleTypeDef htim1;
 
 UART_HandleTypeDef huart4;
 UART_HandleTypeDef huart2;
-DMA_HandleTypeDef hdma_uart4_tx;
-DMA_HandleTypeDef hdma_uart4_rx;
 
 /* USER CODE BEGIN PV */
 
@@ -63,7 +61,6 @@ static void MX_SPI2_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_RNG_Init(void);
-static void MX_DMA_Init(void);
 static void MX_UART4_Init(void);
 static void MX_QUADSPI_Init(void);
 /* USER CODE BEGIN PFP */
@@ -346,25 +343,6 @@ static void MX_USART2_UART_Init(void)
 }
 
 /**
-  * Enable DMA controller clock
-  */
-static void MX_DMA_Init(void)
-{
-
-  /* DMA controller clock enable */
-  __HAL_RCC_DMA2_CLK_ENABLE();
-
-  /* DMA interrupt init */
-  /* DMA2_Channel3_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Channel3_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA2_Channel3_IRQn);
-  /* DMA2_Channel5_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Channel5_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA2_Channel5_IRQn);
-
-}
-
-/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -383,7 +361,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, Waveshare_Dc_Pin|Waveshare_Rst_Pin|Waveshare_Cs_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, DC_Pin|RST_Pin|SPI_CS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -391,8 +369,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : StartupMode_Pin Waveshare_Busy_Pin */
-  GPIO_InitStruct.Pin = StartupMode_Pin|Waveshare_Busy_Pin;
+  /*Configure GPIO pins : StartupMode_Pin BUSY_Pin */
+  GPIO_InitStruct.Pin = StartupMode_Pin|BUSY_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
@@ -404,8 +382,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : Waveshare_Dc_Pin Waveshare_Rst_Pin Waveshare_Cs_Pin */
-  GPIO_InitStruct.Pin = Waveshare_Dc_Pin|Waveshare_Rst_Pin|Waveshare_Cs_Pin;
+  /*Configure GPIO pins : DC_Pin RST_Pin SPI_CS_Pin */
+  GPIO_InitStruct.Pin = DC_Pin|RST_Pin|SPI_CS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -418,56 +396,18 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void init_stm_board(stm32_config_t* config)
+void init_stm32l476()
 {
-    // this does what the typically generated STM32CubeMX main line does, but does it as a function
-    // that exposes all of the static fields described above (with some renmaing to isolate code generation
-    // changes to this method only).
+    // this does what the typically generated STM32CubeMX main line does
     HAL_Init();
     SystemClock_Config();
     MX_GPIO_Init();
     MX_SPI2_Init();
     MX_USART2_UART_Init();
-    MX_UART4_Init();
-    MX_DMA_Init();
     MX_TIM1_Init();
     MX_RNG_Init();
     MX_QUADSPI_Init();
-
-    config->spi_handle = &hspi2;
-    config->timer_handle = &htim1;
-    config->uart_handle = &huart2;
-    config->rng = &hrng;
-
-    config->busy_port = Waveshare_Busy_GPIO_Port;
-    config->busy_pin = Waveshare_Busy_Pin;
-
-    config->cs_port = Waveshare_Cs_GPIO_Port;
-    config->cs_pin = Waveshare_Cs_Pin;
-
-    config->dc_port = Waveshare_Dc_GPIO_Port;
-    config->dc_pin = Waveshare_Dc_Pin;
-
-    config->rst_port = Waveshare_Rst_GPIO_Port;
-    config->rst_pin = Waveshare_Rst_Pin;
-
-    config->button_port = B1_GPIO_Port;
-    config->button_pin = B1_Pin;
-
-    // currently not used, but included for completeness sake
-    config->led_port = LD2_GPIO_Port;
-    config->led_pin = LD2_Pin;
-
-    config->startup_mode_port = StartupMode_GPIO_Port;
-    config->startup_mode_pin = StartupMode_Pin;
-
-    config->flash_qspi = &hqspi;
-
-#ifdef DEBUG
-    config->debug_uart_handle = &huart4;
-    config->debug_dma_tx = &hdma_uart4_tx;
-    config->debug_dma_rx = &hdma_uart4_rx;
-#endif
+    MX_UART4_Init();
 }
 
 /* USER CODE END 4 */

@@ -9,7 +9,7 @@ enable_testing()
 # build the core libraries
 add_subdirectory(src/core)
 add_subdirectory(src/drivers/waveshare-display)
-add_subdirectory(src/drivers/waveshare-api)
+#add_subdirectory(src/drivers/waveshare-api)
 
 
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL arm)
@@ -17,6 +17,7 @@ if(CMAKE_SYSTEM_PROCESSOR STREQUAL arm)
     set(STM32_LOCAL_HAL_LIB_PATH ${CMAKE_SOURCE_DIR}/lib/stm32l4xx/Drivers/STM32L4xx_HAL_Driver)
 
     add_subdirectory(src/stm/main)
+#    add_subdirectory(src/stm/example)
 else()
     add_subdirectory(lib/unity)
     add_subdirectory(lib/svg)

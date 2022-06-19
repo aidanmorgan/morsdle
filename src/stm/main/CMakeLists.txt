@@ -15,7 +15,6 @@ find_package(HAL COMPONENTS STM32L476 REQUIRED)
 file(GLOB STM32CUBEMX_GENERATED_SRC ${CMAKE_SOURCE_DIR}/ioc/morsdle/Core/*/main.c ${CMAKE_SOURCE_DIR}/ioc/morsdle/Core/*/stm32l4*.c)
 message("STM32CUBEMX_GENERATED_SRC: ${STM32CUBEMX_GENERATED_SRC}")
 
-
 add_dependencies(
         morsdle-stm
 
@@ -23,7 +22,7 @@ add_dependencies(
         morsdle-gfx
         morsdle-game
         morse
-        waveshare-api
+        #waveshare-api
         waveshare-display
 )
 
@@ -32,7 +31,9 @@ target_include_directories(
         PUBLIC
         include
         ${CMAKE_SOURCE_DIR}/ioc/morsdle/core/Inc
+        ${CMAKE_SOURCE_DIR}/src/drivers/waveshare-api/include
         ${CMAKE_SOURCE_DIR}/src/stm/flash/include
+        ${CMAKE_SOURCE_DIR}/src/stm/debug/include
 )
 
 target_sources(
@@ -41,9 +42,10 @@ target_sources(
         morsdle_main.c
         game.c
         loader.c
-        debug.c
         ${STM32CUBEMX_GENERATED_SRC}
+        ${CMAKE_SOURCE_DIR}/src/drivers/waveshare-api/waveshare_api.c
         ${CMAKE_SOURCE_DIR}/src/stm/flash/stm_flash.c
+        ${CMAKE_SOURCE_DIR}/src/stm/debug/stm_stdio.c
 )
 
 target_link_libraries(
@@ -53,7 +55,7 @@ target_link_libraries(
         morsdle-gfx
         morsdle-game
         morse
-        waveshare-api
+#        waveshare-api
         waveshare-display
 
         HAL::STM32::L4::CORTEX

@@ -8,13 +8,18 @@
 #include "stm_flash_read.h"
 #include "waveshare_display.h"
 #include "waveshare_api.h"
-#include "waveshare_spi.h"
+#include "waveshare_spi_impl.h"
 
+static void waveshare_display_init(void) {
+    waveshareapi_moduleinit();
+    waveshareapi_reset();
+    waveshareapi_init();
+}
 
 static morse_t h_morse = (morse_t) {};
 static morsdle_game_t h_game = (morsdle_game_t) {};
 static renderer_t h_renderer = (renderer_t) {
-        .game_mode = MORSDLE_GAME_SINGLE_LETTER
+        .game_mode = MORSDLE_GAME_WHOLE_WORD
 };
 static imagebuffer_t h_image_buffer = (imagebuffer_t) {};
 // this is the waveshare implementation of the handle
@@ -23,7 +28,7 @@ static display_impl_t h_display = (display_impl_t) {
         .render_region = waveshareapi_render_region,
 //        .pre_render = waveshareapi_wake,
 //        .post_render = waveshareapi_sleep,
-        .init = waveshareapi_init
+        .init = waveshare_display_init
 };
 static canvas_t h_canvas = (canvas_t) {
         .fill_rect = waveshare_fill_rect,
@@ -32,14 +37,13 @@ static canvas_t h_canvas = (canvas_t) {
         .draw_char = waveshare_draw_char
 };
 
-static stm32_config_t* h_board_cfg;
 static flash_cfg_t* h_flash_cfg;
 
 static const char *morsdle_random_word() {
     uint32_t base;
 
     // TODO : implement flash dictionary loading here
-    if(HAL_RNG_GenerateRandomNumber(h_board_cfg->rng, &base) == HAL_OK) {
+    if(HAL_RNG_GenerateRandomNumber(&hrng, &base) == HAL_OK) {
         uint32_t index = base % WORDS_LENGTH;
         const char *word = wordle_dictionary[index];
         return word;
@@ -49,8 +53,7 @@ static const char *morsdle_random_word() {
     }
 }
 
-void game_main(stm32_config_t* boardcfg, flash_cfg_t* flashcfg) {
-    h_board_cfg = boardcfg;
+void game_main(flash_cfg_t* flashcfg, console_t* console) {
     h_flash_cfg = flashcfg;
 
     // initialise the morse processor
@@ -67,13 +70,9 @@ void game_main(stm32_config_t* boardcfg, flash_cfg_t* flashcfg) {
         assert(false);
     }
 
-    // TODO : remove this call eventually with something proper, but trying to align with the example code
-    waveshareapi_moduleinit();
-    // initialise the display now, we should have everything in place?
     h_display.init();
-    // TODO : remove this call eventually with something proper, but trying to align with the example code
-    waveshareapi_clear(0x1);
 
+    // TODO : remove these calls eventually with something proper, but trying to align with the example code
     morse_action_event_t result = (morse_action_event_t) {};
     render_pass_t render_pass = (render_pass_t) {
             .display = &h_display,
@@ -104,6 +103,7 @@ void game_main(stm32_config_t* boardcfg, flash_cfg_t* flashcfg) {
             }
         }
 
+
         // are there any game events that may require processing
         if (morsdle_has_events(&h_game)) {
             // we aren't going to bother drawing unless there's an event, and even then they may not dirty the display
@@ -122,20 +122,24 @@ void game_main(stm32_config_t* boardcfg, flash_cfg_t* flashcfg) {
         }
 
         uint64_t looptime = HAL_GetTick() - tick;
+
     }
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-    // if this isn't set then we aren't in the game loop, so return
-    if(h_board_cfg == NULL) {
-        return;
-    }
-
     uint32_t tick = HAL_GetTick();
 
     // TODO : add some form of debouncing here
-    if (GPIO_Pin == h_board_cfg->button_pin) {
-        if (HAL_GPIO_ReadPin(h_board_cfg->button_port, h_board_cfg->button_pin)) {
+    if (GPIO_Pin == B1_Pin) {
+        morsdle_add_letter(&h_game, 'b');
+        morsdle_add_letter(&h_game, 'u');
+        morsdle_add_letter(&h_game, 't');
+        morsdle_add_letter(&h_game, 't');
+        morsdle_add_letter(&h_game, 's');
+        morsdle_submit_word(&h_game);
+
+
+        if (HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)) {
             morse_append_signal(&h_morse, SIGNAL_LOW, tick);
         } else {
             morse_append_signal(&h_morse, SIGNAL_HIGH, tick);
@@ -143,40 +147,3 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     }
 }
 
-// currently configured to PC7
-extern void wavesharespi_write_dc(uint8_t val) {
-    HAL_GPIO_WritePin(h_board_cfg->dc_port, h_board_cfg->dc_pin, val == 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
-}
-
-// currently configured to PC9
-extern void wavesharespi_write_cs(uint8_t val) {
-    HAL_GPIO_WritePin(h_board_cfg->cs_port, h_board_cfg->cs_pin, val == 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
-}
-
-// currently configured to PC8
-extern void wavesharespi_write_rst(uint8_t val) {
-    HAL_GPIO_WritePin(h_board_cfg->rst_port, h_board_cfg->rst_pin, val == 0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
-}
-
-// currently configured to SPI2
-extern void wavesharespi_write_spi(uint8_t val) {
-    HAL_StatusTypeDef writeResult = HAL_SPI_Transmit(h_board_cfg->spi_handle, &val, 1, 1000);
-
-    if(writeResult != HAL_OK) {
-        return;
-    }
-}
-
-// currently configured to PC6
-extern uint8_t wavesharespi_read_busy() {
-    GPIO_PinState readResult = HAL_GPIO_ReadPin(h_board_cfg->busy_port, h_board_cfg->busy_pin);
-    return readResult;
-}
-
-extern void wavesharespi_delay(uint32_t time) {
-    HAL_Delay(time);
-}
-
-extern uint32_t wavesharespi_ticks() {
-    return HAL_GetTick();
-}

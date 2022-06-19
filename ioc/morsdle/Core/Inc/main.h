@@ -68,14 +68,14 @@ void Error_Handler(void);
 #define USART_RX_GPIO_Port GPIOA
 #define LD2_Pin GPIO_PIN_5
 #define LD2_GPIO_Port GPIOA
-#define Waveshare_Busy_Pin GPIO_PIN_6
-#define Waveshare_Busy_GPIO_Port GPIOC
-#define Waveshare_Dc_Pin GPIO_PIN_7
-#define Waveshare_Dc_GPIO_Port GPIOC
-#define Waveshare_Rst_Pin GPIO_PIN_8
-#define Waveshare_Rst_GPIO_Port GPIOC
-#define Waveshare_Cs_Pin GPIO_PIN_9
-#define Waveshare_Cs_GPIO_Port GPIOC
+#define BUSY_Pin GPIO_PIN_6
+#define BUSY_GPIO_Port GPIOC
+#define DC_Pin GPIO_PIN_7
+#define DC_GPIO_Port GPIOC
+#define RST_Pin GPIO_PIN_8
+#define RST_GPIO_Port GPIOC
+#define SPI_CS_Pin GPIO_PIN_9
+#define SPI_CS_GPIO_Port GPIOC
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
@@ -84,7 +84,7 @@ void Error_Handler(void);
 #define SWO_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
-void init_stm_board(stm32_config_t* config);
+void init_stm32l476();
 
 /* USER CODE END Private defines */
 
