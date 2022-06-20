@@ -119,7 +119,9 @@ void waveshare_draw_char(render_pass_t *pass, display_impl_t *display, char c, p
 
             const uint8_t* tmp = ptr + byte_idx;
             // get the bit value for the pixel we're interested in
-            uint8_t pixel = GET_VAL(*tmp, 1u, (8 - bit_idx));
+            // NGL, I rendered this, it was mirrored down the middle, so I subtracted the value from 8
+            // no idea why it works
+            uint8_t pixel = GET_VAL(*tmp, 1u, (7 - bit_idx));
 
             // if it's set, set the value in the the imagebuffer, otherwise, ignore, we're using the font file as a
             // mask, so we only set the pixel if the mask is set, otherwise we leave the background colour the way it is

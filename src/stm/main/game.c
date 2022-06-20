@@ -140,11 +140,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 
         last_push = tick;
 
-        morsdle_add_letter(&h_game, 'B');
-        morsdle_add_letter(&h_game, 'U');
-        morsdle_add_letter(&h_game, 'T');
-        morsdle_add_letter(&h_game, 'T');
-        morsdle_add_letter(&h_game, 'S');
+        char* random = morsdle_random_word();
+
+        for(uint8_t i = 0; i < LETTERS_PER_WORD; i++) {
+            morsdle_add_letter(&h_game, random[i]);
+        }
+
+        morsdle_submit_word(&h_game);
 
         return;
 
