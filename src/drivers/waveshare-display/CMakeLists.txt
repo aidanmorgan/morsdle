@@ -18,6 +18,7 @@ target_include_directories(
 target_sources(
         waveshare-display
         PUBLIC
+        fonts.c
         waveshare_display.c
 )
 

@@ -117,6 +117,10 @@ morsdle_err_t morsdle_add_letter(morsdle_game_t *game, char l) {
 
     morsdle_append_event(game, &event);
 
+    if(game->auto_submit) {
+        morsdle_submit_word(game);
+    }
+
     return MORSDLE_OK;
 }
 

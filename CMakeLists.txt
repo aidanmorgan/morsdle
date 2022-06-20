@@ -9,7 +9,7 @@ enable_testing()
 # build the core libraries
 add_subdirectory(src/core)
 add_subdirectory(src/drivers/waveshare-display)
-#add_subdirectory(src/drivers/waveshare-api)
+add_subdirectory(src/drivers/waveshare-api)
 
 
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL arm)

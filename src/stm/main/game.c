@@ -8,7 +8,6 @@
 #include "stm_flash_read.h"
 #include "waveshare_display.h"
 #include "waveshare_api.h"
-#include "waveshare_spi_impl.h"
 
 static void waveshare_display_init(void) {
     waveshareapi_moduleinit();
@@ -17,7 +16,9 @@ static void waveshare_display_init(void) {
 }
 
 static morse_t h_morse = (morse_t) {};
-static morsdle_game_t h_game = (morsdle_game_t) {};
+static morsdle_game_t h_game = (morsdle_game_t) {
+        .auto_submit = true
+};
 static renderer_t h_renderer = (renderer_t) {
         .game_mode = MORSDLE_GAME_WHOLE_WORD
 };
@@ -131,12 +132,21 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 
     // TODO : add some form of debouncing here
     if (GPIO_Pin == B1_Pin) {
+        static uint32_t last_push = 0;
+
+        if(tick - last_push < 5) {
+            return;
+        }
+
+        last_push = tick;
+
         morsdle_add_letter(&h_game, 'b');
         morsdle_add_letter(&h_game, 'u');
         morsdle_add_letter(&h_game, 't');
         morsdle_add_letter(&h_game, 't');
         morsdle_add_letter(&h_game, 's');
-        morsdle_submit_word(&h_game);
+
+        return;
 
 
         if (HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)) {

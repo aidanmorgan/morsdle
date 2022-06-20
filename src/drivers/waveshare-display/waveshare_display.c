@@ -84,8 +84,9 @@ void waveshare_fill_rect(render_pass_t *pass, display_impl_t *display, point_t t
                          colour_t fill_colour) {
     imagebuffer_t *buffer = display->buffer;
 
-    for (uint16_t x = topleft.x; x < topleft.x; x++) {
-        for (uint16_t y = bottomright.y; y < bottomright.y; y++) {
+
+    for (uint16_t x = topleft.x; x < bottomright.x; x++) {
+        for (uint16_t y = topleft.y; y < bottomright.y; y++) {
             imagebuffer_setpixel(buffer, x, y, display_to_buffer_lookup[fill_colour]);
         }
     }
@@ -99,29 +100,41 @@ void waveshare_fill_rect(render_pass_t *pass, display_impl_t *display, point_t t
 
 void waveshare_draw_char(render_pass_t *pass, display_impl_t *display, char c, point_t topleft, uint8_t size,
                          colour_t colour) {
-    // no-op this until we work out how to store fonts properly
-//    font_t font = font_buffer[(uint8_t) (c - 'A')];
-//
-//    for (uint16_t column = 0; column < font.width; column++) {
-//        for (uint16_t row = 0; row < font.height; row++) {
-//            uint16_t pixel = (row * font.width) + column;
-//
-//            bool value = (font.hex[pixel / 8] >> (pixel % 8)) & 1;
-//
-//            if (value) {
-//                imagebuffer_setpixel(buffer, topleft.x + column, topleft.y + row, display_to_buffer_lookup[colour]);
-//            }
-//        }
-//    }
+    imagebuffer_t *buffer = pass->display->buffer;
+
+    uint32_t offset = (c - 'A') * font_table.height * (font_table.width / 8 + (font_table.width % 8 ? 1 : 0));
+    const uint8_t *ptr = &(font_table.table[offset]);
+
+    uint16_t x_start = (topleft.x + (size / 2)) - (font_table.width  / 2);
+    uint16_t x_end = (topleft.x + (size / 2)) + (font_table.width  / 2);
+    uint16_t y_start = (topleft.y + (size / 2)) - (font_table.height / 2);
+    uint16_t y_end = (topleft.y + (size / 2)) + (font_table.height / 2);
+
+    uint16_t x = 0;
+    uint16_t y = 0;
+
+    for(y = y_start; y < y_end; y++) {
+        for(x = x_start; x < x_end; x++) {
+            // get the byte that we're interested in
+            const uint8_t* tmp = ptr + ((x / 8) * sizeof(uint8_t));
+            // get the bit value for the pixel we're interested in
+            uint8_t pixel = GET_VAL(*tmp, 1u, x % 8);
+
+            // if it's set, set the value in the the imagebuffer, otherwise, ignore
+            if(pixel > 0) {
+                imagebuffer_setpixel(buffer, x, y, display_to_buffer_lookup[colour]);
+            }
+        }
+    }
 
     cbuff_write(pass->dirty_regions, &(rectangle_t) {
             .top_left = (point_t) {
-                    .x = topleft.x,
-                    .y = topleft.y
+                    .x = x_start,
+                    .y = y_start
             },
             .bottom_right = (point_t) {
-                    .x = topleft.x + size,
-                    .y = topleft.y + size
+                    .x = x_end,
+                    .y = y_end
             }
     });
 }

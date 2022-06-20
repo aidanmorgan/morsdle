@@ -1,6 +1,5 @@
 
 #include "morsdle_main.h"
-#include "waveshare_spi_impl.h"
 #include "waveshare_api.h"
 #include "stm_flash.h"
 

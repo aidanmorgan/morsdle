@@ -4,6 +4,7 @@
 
 #include <assert.h>
 #include "waveshare_api.h"
+#include "waveshare_spi.h"
 
 static uint8_t buffer_to_waveshare_lookup[4] = {
         WAVESHARE_WHITE,  // clear
@@ -14,49 +15,49 @@ static uint8_t buffer_to_waveshare_lookup[4] = {
 
 
 inline waveshareapi_error waveshareapi_moduleinit(void) {
-    WAVESHARESPI_WRITE_DC(0);
-    WAVESHARESPI_WRITE_CS(0);
-    WAVESHARESPI_WRITE_RST(1);
+    wavesharespi_write_dc(0);
+    wavesharespi_write_cs(0);
+    wavesharespi_write_rst(1);
 
     return WAVESHAREAPI_OK;
 }
 
 inline void waveshareapi_moduleexit(void) {
-    WAVESHARESPI_WRITE_DC(0);
-    WAVESHARESPI_WRITE_CS(0);
-    WAVESHARESPI_WRITE_RST(0);
+    wavesharespi_write_dc(0);
+    wavesharespi_write_cs(0);
+    wavesharespi_write_rst(0);
 }
 
 
 static void waveshareapi_wait_busyhigh(void) {
-    while(!(WAVESHARESPI_READ_BUSY()));
+    while(!(wavesharespi_read_busy()));
 }
 
 static void waveshareapi_wait_busylow(void) {
-    while((WAVESHARESPI_READ_BUSY()));
+    while((wavesharespi_read_busy()));
 }
 
 void waveshareapi_send_data(uint8_t data) {
-    WAVESHARESPI_WRITE_DC(1);
-    WAVESHARESPI_WRITE_CS(0);
-    WAVESHARESPI_WRITE_SPI(data);
-    WAVESHARESPI_WRITE_CS(1);
+    wavesharespi_write_dc(1);
+    wavesharespi_write_cs(0);
+    wavesharespi_write_spi(data);
+    wavesharespi_write_cs(1);
 }
 
 void waveshareapi_send_command(uint8_t data) {
-    WAVESHARESPI_WRITE_DC(0);
-    WAVESHARESPI_WRITE_CS(0);
-    WAVESHARESPI_WRITE_SPI(data);
-    WAVESHARESPI_WRITE_CS(1);
+    wavesharespi_write_dc(0);
+    wavesharespi_write_cs(0);
+    wavesharespi_write_spi(data);
+    wavesharespi_write_cs(1);
 }
 
 void waveshareapi_reset(void) {
-    WAVESHARESPI_WRITE_RST(1);
-    WAVESHARESPI_DELAY(200);
-    WAVESHARESPI_WRITE_RST(0);
-    WAVESHARESPI_DELAY(1);
-    WAVESHARESPI_WRITE_RST(1);
-    WAVESHARESPI_DELAY(200);
+    wavesharespi_write_rst(1);
+    wavesharespi_delay(200);
+    wavesharespi_write_rst(0);
+    wavesharespi_delay(1);
+    wavesharespi_write_rst(1);
+    wavesharespi_delay(200);
 }
 
 void waveshareapi_init(void) {
@@ -93,7 +94,7 @@ void waveshareapi_init(void) {
     waveshareapi_send_command(0xE3);
     waveshareapi_send_data(0xAA);
 
-    WAVESHARESPI_DELAY(100);
+    wavesharespi_delay(100);
     waveshareapi_send_command(0x50);
     waveshareapi_send_data(0x37);
 }
@@ -141,17 +142,17 @@ void waveshareapi_destroy(void) {
     // device encodes two pixels into each horizontal only, whereas I encode 2 in both directions (because im using less colours).
     for (i = 0; i < buffer->height; i++) {
         for (j = 0; j < buffer->width; j += 2) {
-            if(i >= ystart && i < (ystart+region_height) && j >= xstart && j < (xstart + region_width)) {
+//            if(i >= ystart && i < (ystart+region_height) && j >= xstart && j < (xstart + region_width)) {
+//
+            imagebuffer_getpixel(buffer, j, i, &left);
+            imagebuffer_getpixel(buffer, j + 1, i, &right);
 
-                imagebuffer_getpixel(buffer, j, i, &left);
-                imagebuffer_getpixel(buffer, j + 1, i, &right);
-
-                 data = (buffer_to_waveshare_lookup[left] << 4) | buffer_to_waveshare_lookup[right];
-                waveshareapi_send_data(data);
-            }
-            else {
-                waveshareapi_send_data(0x11);
-            }
+             data = (buffer_to_waveshare_lookup[left] << 4) | buffer_to_waveshare_lookup[right];
+            waveshareapi_send_data(data);
+//            }
+//            else {
+//                waveshareapi_send_data(0x11);
+//            }
         }
     }
 
@@ -161,7 +162,7 @@ void waveshareapi_destroy(void) {
     waveshareapi_wait_busyhigh();
     waveshareapi_send_command(0x02);  //0x02
     waveshareapi_wait_busylow();
-    WAVESHARESPI_DELAY(200);
+    wavesharespi_delay(200);
 }
 
 void waveshareapi_clear(uint8_t colour) {
@@ -185,7 +186,7 @@ void waveshareapi_clear(uint8_t colour) {
     waveshareapi_wait_busyhigh();
     waveshareapi_send_command(0x02);  //0x02
     waveshareapi_wait_busylow();
-    WAVESHARESPI_DELAY(500);
+    wavesharespi_delay(500);
 }
 
 

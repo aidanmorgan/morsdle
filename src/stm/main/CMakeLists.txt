@@ -22,7 +22,7 @@ add_dependencies(
         morsdle-gfx
         morsdle-game
         morse
-        #waveshare-api
+        waveshare-api
         waveshare-display
 )
 
@@ -31,7 +31,6 @@ target_include_directories(
         PUBLIC
         include
         ${CMAKE_SOURCE_DIR}/ioc/morsdle/core/Inc
-        ${CMAKE_SOURCE_DIR}/src/drivers/waveshare-api/include
         ${CMAKE_SOURCE_DIR}/src/stm/flash/include
         ${CMAKE_SOURCE_DIR}/src/stm/debug/include
 )
@@ -42,8 +41,8 @@ target_sources(
         morsdle_main.c
         game.c
         loader.c
+        waveshare_spi.c
         ${STM32CUBEMX_GENERATED_SRC}
-        ${CMAKE_SOURCE_DIR}/src/drivers/waveshare-api/waveshare_api.c
         ${CMAKE_SOURCE_DIR}/src/stm/flash/stm_flash.c
         ${CMAKE_SOURCE_DIR}/src/stm/debug/stm_stdio.c
 )
@@ -55,7 +54,7 @@ target_link_libraries(
         morsdle-gfx
         morsdle-game
         morse
-#        waveshare-api
+        waveshare-api
         waveshare-display
 
         HAL::STM32::L4::CORTEX
@@ -107,5 +106,14 @@ add_custom_target(gdb
         -c "reset halt"
         DEPENDS ${PRJ}.elf
         COMMENT "Running OpenOCD as a GDB host.")
+
+add_custom_target(run
+        openocd
+        -f interface/stlink.cfg
+        -f board/stm32l4discovery.cfg
+        -c "init"
+        -c "reset run"
+        DEPENDS ${PRJ}.elf
+        )
 
 

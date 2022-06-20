@@ -83,6 +83,7 @@ typedef struct {
     const char *word;
     game_state_t state;
     cbuff_t *events;
+    bool auto_submit;
 
     morsdle_word_t *answers[WORDS_PER_GAME];
 } morsdle_game_t;

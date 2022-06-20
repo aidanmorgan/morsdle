@@ -16,7 +16,13 @@
 #define WAVESHARE_PIXEL_WIDTH 600
 #define WAVESHARE_PIXEL_HEIGHT 448
 
+typedef struct  {
+    const uint8_t *table;
+    uint16_t width;
+    uint16_t height;
+} font_t;
 
+extern font_t font_table;
 
 struct display_impl_t {
     imagebuffer_t *buffer;

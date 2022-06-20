@@ -162,7 +162,7 @@ static void render_letter_cell(canvas_t *drawops,
                            pass->display,
                            c,
                            (point_t) {start_x, start_y},
-                           renderopts->font_size,
+                           min(renderopts->letter_cell_width, renderopts->letter_cell_height),
                            foreground_colour
         );
     }
