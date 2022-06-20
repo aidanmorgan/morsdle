@@ -140,11 +140,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 
         last_push = tick;
 
-        morsdle_add_letter(&h_game, 'b');
-        morsdle_add_letter(&h_game, 'u');
-        morsdle_add_letter(&h_game, 't');
-        morsdle_add_letter(&h_game, 't');
-        morsdle_add_letter(&h_game, 's');
+        morsdle_add_letter(&h_game, 'B');
+        morsdle_add_letter(&h_game, 'U');
+        morsdle_add_letter(&h_game, 'T');
+        morsdle_add_letter(&h_game, 'T');
+        morsdle_add_letter(&h_game, 'S');
 
         return;
 

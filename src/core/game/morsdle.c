@@ -2,6 +2,7 @@
 // Created by aidan on 20/04/2022.
 //
 
+#include <ctype.h>
 #include "morsdle.h"
 
 
@@ -20,7 +21,15 @@ static bool morsdle_clear_events(morsdle_game_t *game) {
     return cbuff_clear(game->events);
 }
 
-void morsdle_init_game(morsdle_game_t *game, const char *word) {
+static inline void force_uppercase(char* word) {
+    char *s = word;
+    while(s) {
+        *s = toupper((unsigned char) *s);
+        s++;
+    }
+}
+
+void morsdle_init_game(morsdle_game_t *game, char *word) {
     cbuff_init(event_buffer, (void **) &event_buffer_storage, EVENT_BUFFER_SIZE, sizeof(morsdle_game_event_t));
     game->events = event_buffer;
     game->word = word;
@@ -106,7 +115,7 @@ morsdle_err_t morsdle_add_letter(morsdle_game_t *game, char l) {
         return MORSDLE_ERR_NOINPROGRESSLETTER;
     }
 
-    letter->letter = l;
+    letter->letter = toupper(l);
     letter->state = LETTER_STATE_SET;
 
     morsdle_game_event_t event = (morsdle_game_event_t) {
@@ -144,18 +153,20 @@ morsdle_err_t morsdle_submit_word(morsdle_game_t *game) {
     uint8_t validcount = 0;
     // go through each letter
     for (uint8_t i = 0; i < LETTERS_PER_WORD; i++) {
+        morsdle_letter_t *letter = word->letters[i];
+
         // right letter, right postion
-        if (word->letters[i]->letter == game->word[i]) {
-            word->letters[i]->state = LETTER_STATE_VALID;
+        if (letter->letter == game->word[i]) {
+            letter->state = LETTER_STATE_VALID;
             validcount++;
         }
             // right letter, wrong position
-        else if (strstr(game->word, &word->letters[i]->letter) != NULL) {
-            word->letters[i]->state = LETTER_STATE_VALID_LETTER_INVALID_POSITION;
+        else if (strstr(game->word, &letter->letter) != NULL) {
+            letter->state = LETTER_STATE_VALID_LETTER_INVALID_POSITION;
         }
             // wrong letter
         else {
-            word->letters[i]->state = LETTER_STATE_INVALID_LETTER;
+            letter->state = LETTER_STATE_INVALID_LETTER;
         }
     }
 

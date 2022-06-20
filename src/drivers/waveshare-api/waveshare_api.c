@@ -123,10 +123,6 @@ void waveshareapi_destroy(void) {
     uint16_t region_width = xend - xstart;
     uint16_t region_height = yend - ystart;
 
-    if (region_width % 2 != 0 || region_height % 2 != 0) {
-        assert(false);
-    }
-
     waveshareapi_send_command(0x61);//Set Resolution setting
     waveshareapi_send_data(0x02);
     waveshareapi_send_data(0x58);
@@ -142,17 +138,11 @@ void waveshareapi_destroy(void) {
     // device encodes two pixels into each horizontal only, whereas I encode 2 in both directions (because im using less colours).
     for (i = 0; i < buffer->height; i++) {
         for (j = 0; j < buffer->width; j += 2) {
-//            if(i >= ystart && i < (ystart+region_height) && j >= xstart && j < (xstart + region_width)) {
-//
             imagebuffer_getpixel(buffer, j, i, &left);
             imagebuffer_getpixel(buffer, j + 1, i, &right);
 
-             data = (buffer_to_waveshare_lookup[left] << 4) | buffer_to_waveshare_lookup[right];
+            data = (buffer_to_waveshare_lookup[right] << 4) | buffer_to_waveshare_lookup[left];
             waveshareapi_send_data(data);
-//            }
-//            else {
-//                waveshareapi_send_data(0x11);
-//            }
         }
     }
 

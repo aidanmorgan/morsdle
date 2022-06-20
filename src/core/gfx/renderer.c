@@ -108,61 +108,31 @@ static void render_letter_cell(canvas_t *drawops,
     uint16_t start_y = renderopts->grid_top_border + (word_idx * renderopts->grid_line_width) +
                        (word_idx * renderopts->letter_cell_height);
 
-    // i dont want to lose this code, but I realised there is a LOT of wasted drawing instructions that aren't really needed, as long as we keep
-    // filling the "inside" of the grid we don't need to actually redraw it all the time, so I've moved the grid drawing into the clear operation
-    // and will now only fill the inside of the rectangle (and draw the letter if need be) rather than redrawing the grid cells
-    /*
-    // top line
-    drawops->draw_line(drawops->handle,
-                       (point_t){start_x, start_y},
-                       (point_t){start_x + renderopts->letter_cell_width, start_y},
-                       renderopts->grid_line_width,
-                       renderopts->grid_line_colour
-                       );
-    // left line
-    drawops->draw_line(drawops->handle,
-                       (point_t){start_x, start_y},
-                       (point_t){start_x, start_y + renderopts->letter_cell_height},
-                       renderopts->grid_line_width,
-                       renderopts->grid_line_colour
-    );
-
-    // right line
-    drawops->draw_line(drawops->handle,
-                       (point_t){start_x + renderopts->letter_cell_width, start_y},
-                       (point_t){start_x + renderopts->letter_cell_width, start_y + renderopts->letter_cell_height},
-                       renderopts->grid_line_width,
-                       renderopts->grid_line_colour
-    );
-
-    // right line
-    drawops->draw_line(drawops->handle,
-                       (point_t){start_x, start_y+ renderopts->letter_cell_height},
-                       (point_t){start_x + renderopts->letter_cell_width, start_y + renderopts->letter_cell_height},
-                       renderopts->grid_line_width,
-                       renderopts->grid_line_colour
-    );
-
-     */
     // draw a rect that is grid_line_width smaller in all directons in the actual colour we want the background to be
     drawops->fill_rect(pass,
                        pass->display,
                        (point_t) {start_x + renderopts->grid_line_width, start_y + renderopts->grid_line_width},
-                       (point_t) {start_x + renderopts->letter_cell_width, start_y + renderopts->letter_cell_height},
+                       (point_t) {start_x + renderopts->letter_cell_width + 1, start_y + renderopts->letter_cell_height + 1},
                        background_colour
     );
 
     if (c != NULL_CHAR) {
-        start_x = renderopts->grid_left_border + (letter_idx * renderopts->grid_line_width) +
-                  (letter_idx * renderopts->letter_cell_width) + (letter_idx * renderopts->cell_padding * 2);
-        start_y = renderopts->grid_top_border + (word_idx * renderopts->grid_line_width) +
-                  (word_idx * renderopts->letter_cell_width) + (word_idx * renderopts->cell_padding * 2);
+        start_x = renderopts->grid_left_border
+                + (letter_idx * renderopts->grid_line_width)
+                + (letter_idx * renderopts->letter_cell_width)
+                + (renderopts->cell_padding);
+
+        start_y = renderopts->grid_top_border
+                + (word_idx * renderopts->grid_line_width)
+                + (word_idx * renderopts->letter_cell_width)
+                + (renderopts->cell_padding);
 
         drawops->draw_char(pass,
                            pass->display,
                            c,
-                           (point_t) {start_x, start_y},
-                           min(renderopts->letter_cell_width, renderopts->letter_cell_height),
+                           (point_t) {start_x + renderopts->cell_padding, start_y + renderopts->cell_padding},
+                           // should actually be the same size
+                           min(renderopts->letter_cell_width - (2 * renderopts->cell_padding), renderopts->letter_cell_height - (2 * renderopts->cell_padding)),
                            foreground_colour
         );
     }

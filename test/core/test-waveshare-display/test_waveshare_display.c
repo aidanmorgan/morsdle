@@ -38,6 +38,48 @@ static uint8_t blue_table[4] = {
     0
 };
 
+void process_events(canvas_t *canvas, display_impl_t * display, renderer_t *renderer, morsdle_game_t *game) {
+    render_pass_t *pass = &(render_pass_t) {
+        .canvas = canvas,
+        .display = display
+    };
+    render_pass_init(pass);
+
+    while(morsdle_has_events(game)) {
+        morsdle_game_event_t ev;
+        morsdle_read_event(game, &ev);
+
+        renderer_handle_event(canvas, renderer, pass, &ev);
+    }
+
+    render_pass_end(pass);
+}
+
+void write_ppm_image(imagebuffer_t *buffer, const char * filename) {// http://www.cs.cmu.edu/~maxwell/misc/vascHelpPages/ppmFormat.html
+    FILE * file = fopen(filename, "w");
+    fprintf(file, "P3\n");
+    fprintf(file, "600 448\n");
+    fprintf(file, "255\n");
+
+    for(uint16_t y = 0; y < 448; y++) {
+        for(uint16_t x = 0; x < 600; x++) {
+            imagebuffer_colour_t pixel;
+            imagebuffer_getpixel(buffer, x, y, &pixel);
+
+            if(x > 0) {
+                fprintf(file, "   ");
+            }
+
+            fprintf(file, "%u %u %u", red_table[pixel], green_table[pixel], blue_table[pixel]);
+        }
+
+        fprintf(file, "\n");
+    }
+
+    fflush(file);
+    fclose(file);
+}
+
 void test_full_board(void) {
     imagebuffer_t buffer = (imagebuffer_t) {  };
     imagebuffer_init(&buffer, 600, 448);
@@ -60,70 +102,50 @@ void test_full_board(void) {
     renderer_init(renderer, 600, 448);
 
     morsdle_game_t* game = &(morsdle_game_t) {
-        .auto_submit = true,
+        .auto_submit = false,
     };
-    morsdle_init_game(game, "ratio");
+    morsdle_init_game(game, "RATIO");
 
-    render_pass_t * pass = &(render_pass_t) {
-        .canvas = canvas,
-        .display = display
-    };
-    render_pass_init(pass);
 
-    morsdle_add_letter(game, 'b');
-    morsdle_add_letter(game, 'u');
-    morsdle_add_letter(game, 't');
-    morsdle_add_letter(game, 't');
-    morsdle_add_letter(game, 's');
+    morsdle_add_letter(game, 'B');
+    morsdle_add_letter(game, 'U');
+    morsdle_add_letter(game, 'T');
+    morsdle_add_letter(game, 'T');
+    morsdle_add_letter(game, 'S');
+    morsdle_submit_word(game);
 
-    morsdle_add_letter(game, 'h');
-    morsdle_add_letter(game, 'e');
-    morsdle_add_letter(game, 'r');
-    morsdle_add_letter(game, 'o');
-    morsdle_add_letter(game, 's');
+    process_events(canvas, display, renderer, game);
+    write_ppm_image(&buffer, "morsdle-board-1.ppm");
 
-    morsdle_add_letter(game, 'e');
-    morsdle_add_letter(game, 'l');
-    morsdle_add_letter(game,'b');
-    morsdle_add_letter(game, 'o');
-    morsdle_add_letter(game, 'w');
 
-    morsdle_add_letter(game, 'r');
-    morsdle_add_letter(game, 'a');
-    morsdle_add_letter(game, 't');
-    morsdle_add_letter(game, 'i');
-    morsdle_add_letter(game, 'o');
+    morsdle_add_letter(game, 'H');
+    morsdle_add_letter(game, 'E');
+    morsdle_add_letter(game, 'R');
+    morsdle_add_letter(game, 'O');
+    morsdle_add_letter(game, 'S');
+    morsdle_submit_word(game);
+    process_events(canvas, display, renderer, game);
+    write_ppm_image(&buffer, "morsdle-board-2.ppm");
 
-    while(morsdle_has_events(game)) {
-        morsdle_game_event_t ev;
-        morsdle_read_event(game, &ev);
 
-        renderer_handle_event(canvas, renderer, pass, &ev);
-    }
+    morsdle_add_letter(game, 'E');
+    morsdle_add_letter(game, 'L');
+    morsdle_add_letter(game,'B');
+    morsdle_add_letter(game, 'O');
+    morsdle_add_letter(game, 'W');
+    morsdle_submit_word(game);
+    process_events(canvas, display, renderer, game);
+    write_ppm_image(&buffer, "morsdle-board-3.ppm");
 
-    // http://www.cs.cmu.edu/~maxwell/misc/vascHelpPages/ppmFormat.html
-    FILE * file = fopen("morsdle-board.ppm", "w");
-    fprintf(file, "P3\n");
-    fprintf(file, "600 448\n");
-    fprintf(file, "255\n");
 
-    for(uint16_t x = 0; x < 600; x++) {
-        for(uint16_t y = 0; y < 448; y++) {
-            imagebuffer_colour_t pixel;
-            imagebuffer_getpixel(&buffer, x, y, &pixel);
-
-            if(y > 0) {
-                fprintf(file, "  ");
-            }
-
-            fprintf(file, "%u %u %u", red_table[pixel], green_table[pixel], blue_table[pixel]);
-        }
-
-        fprintf(file, "\n");
-    }
-
-    fflush(file);
-    fclose(file);
+    morsdle_add_letter(game, 'R');
+    morsdle_add_letter(game, 'A');
+    morsdle_add_letter(game, 'T');
+    morsdle_add_letter(game, 'I');
+    morsdle_add_letter(game, 'O');
+    morsdle_submit_word(game);
+    process_events(canvas,  display, renderer, game);
+    write_ppm_image(&buffer, "morsdle-board-4.ppm");
 }
 
 int main(void)

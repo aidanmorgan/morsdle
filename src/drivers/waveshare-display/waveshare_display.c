@@ -30,9 +30,9 @@ static imagebuffer_colour_t display_to_buffer_lookup[7] = {
         IMAGEBUFFER_ORANGE
 };
 
-void
-waveshare_draw_line_impl(render_pass_t *pass, display_impl_t *display, point_t start, point_t end, uint8_t thickness,
-                         colour_t colour, bool updateDirtyRegions) {
+
+void waveshare_draw_line(render_pass_t *pass, display_impl_t *display, point_t start, point_t end, uint8_t thickness,
+                         colour_t colour) {
     imagebuffer_t *buffer = display->buffer;
 
     uint16_t current_x = start.x;
@@ -66,19 +66,11 @@ waveshare_draw_line_impl(render_pass_t *pass, display_impl_t *display, point_t s
         }
     }
 
-    if (updateDirtyRegions) {
-        cbuff_write(pass->dirty_regions, &(rectangle_t) {
-                .top_left = start,
-                .bottom_right = end
-        });
-    }
+    cbuff_write(pass->dirty_regions, &(rectangle_t) {
+            .top_left = start,
+            .bottom_right = end
+    });
 }
-
-void waveshare_draw_line(render_pass_t *pass, display_impl_t *display, point_t start, point_t end, uint8_t thickness,
-                         colour_t colour) {
-    waveshare_draw_line_impl(pass, display, start, end, thickness, colour, true);
-}
-
 
 void waveshare_fill_rect(render_pass_t *pass, display_impl_t *display, point_t topleft, point_t bottomright,
                          colour_t fill_colour) {
@@ -103,26 +95,36 @@ void waveshare_draw_char(render_pass_t *pass, display_impl_t *display, char c, p
     imagebuffer_t *buffer = pass->display->buffer;
 
     uint32_t offset = (c - 'A') * font_table.height * (font_table.width / 8 + (font_table.width % 8 ? 1 : 0));
+    // this is a pointer to (width / 8) * (height) pixel data entries
     const uint8_t *ptr = &(font_table.table[offset]);
 
+    // find the mid-line of the box and then come back half of the font width which SHOULD center the character in the
+    // cell
     uint16_t x_start = (topleft.x + (size / 2)) - (font_table.width  / 2);
-    uint16_t x_end = (topleft.x + (size / 2)) + (font_table.width  / 2);
     uint16_t y_start = (topleft.y + (size / 2)) - (font_table.height / 2);
-    uint16_t y_end = (topleft.y + (size / 2)) + (font_table.height / 2);
 
     uint16_t x = 0;
     uint16_t y = 0;
 
-    for(y = y_start; y < y_end; y++) {
-        for(x = x_start; x < x_end; x++) {
-            // get the byte that we're interested in
-            const uint8_t* tmp = ptr + ((x / 8) * sizeof(uint8_t));
-            // get the bit value for the pixel we're interested in
-            uint8_t pixel = GET_VAL(*tmp, 1u, x % 8);
+    uint8_t font_colour = display_to_buffer_lookup[colour];
+    uint8_t font_width_bytes = (font_table.width / 8) + (font_table.width % 8 == 0 ? 0 : 1);
 
-            // if it's set, set the value in the the imagebuffer, otherwise, ignore
+    for(y = 0; y < font_table.height; y++) {
+        for(x = 0; x < font_table.width; x++) {
+
+            // get the byte that we're interested in, it's a bit field, but only in the horizontal axis, so the
+            // weird offsetting bit for the height kinda makes sense?
+            uint16_t byte_idx = (x / 8) + (y * font_width_bytes);
+            uint8_t bit_idx = x % 8;
+
+            const uint8_t* tmp = ptr + byte_idx;
+            // get the bit value for the pixel we're interested in
+            uint8_t pixel = GET_VAL(*tmp, 1u, (8 - bit_idx));
+
+            // if it's set, set the value in the the imagebuffer, otherwise, ignore, we're using the font file as a
+            // mask, so we only set the pixel if the mask is set, otherwise we leave the background colour the way it is
             if(pixel > 0) {
-                imagebuffer_setpixel(buffer, x, y, display_to_buffer_lookup[colour]);
+                imagebuffer_setpixel(buffer, x_start + x, y_start + y, font_colour);
             }
         }
     }
@@ -133,8 +135,8 @@ void waveshare_draw_char(render_pass_t *pass, display_impl_t *display, char c, p
                     .y = y_start
             },
             .bottom_right = (point_t) {
-                    .x = x_end,
-                    .y = y_end
+                    .x = x_start + font_table.width,
+                    .y = y_start + font_table.height
             }
     });
 }
