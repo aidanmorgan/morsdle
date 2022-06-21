@@ -13,7 +13,22 @@ const char *const wordle_dictionary[] = {
         "HOIST",
         "WOOER",
         "LEGAL",
-        "DWARF"
+        "DWARF",
+        "GAYLY",
+        "GLEAM",
+        "LIEGE",
+        "WOOLY",
+        "KIOSK",
+        "LEASH",
+        "REIGN",
+        "GRIND",
+        "STASH",
+        "KNAVE",
+        "CHAFE",
+        "SNORE",
+        "SMOKY",
+        "CARAT",
+        "PUREE"
 };
 
 #endif //WORDS_H

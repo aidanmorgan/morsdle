@@ -225,9 +225,9 @@ extern void render_pass_end(render_pass_t *render) {
 void canvas_init(canvas_t *ops) {
     cbuff_init(&dirty_regions, &dirty_regions_raw, MAX_DIRTY_REGIONS, sizeof(rectangle_t));
 
-    ops->height = WAVESHARE_PIXEL_HEIGHT;
-    ops->width = WAVESHARE_PIXEL_WIDTH;
-    ops->rotation = ROTATION_NONE;
+    ops->height = WAVESHARE_PIXEL_WIDTH;
+    ops->width = WAVESHARE_PIXEL_HEIGHT;
+    ops->rotation = ROTATION_NINETY;
 }
 
 void canvas_destroy(canvas_t *ops) {

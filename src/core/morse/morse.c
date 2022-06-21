@@ -242,12 +242,12 @@ bool morse_decode(morse_t *morse, morse_action_event_t *letter) {
         // they have made a mistake and want to backspace we will clear their input up to the hold and
         // take that action - effectively throwing away the partially completed letter
         if (inputs[i] == MORSE_SHORT_HOLD) {
-            letter->type = MORSE_ACTION_BACKSPACE;
+            letter->type = MORSE_ACTION_RESET_WORD;
             cbuff_seek(morse->morse_input_buffer, offset + i + 1);
 
             return true;
         } else if (inputs[i] == MORSE_LONG_HOLD) {
-            letter->type = MORSE_ACTION_RESET;
+            letter->type = MORSE_ACTION_RESET_GAME;
             cbuff_seek(morse->morse_input_buffer, offset + i + 1);
 
             return true;

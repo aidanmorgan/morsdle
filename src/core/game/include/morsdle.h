@@ -96,6 +96,8 @@ morsdle_err_t morsdle_remove_letter(morsdle_game_t *game);
 
 morsdle_err_t morsdle_submit_word(morsdle_game_t *game);
 
+morsdle_err_t morsdle_reset_word(morsdle_game_t* game);
+
 void morsdle_clear(morsdle_game_t *game);
 
 // event management stuff here

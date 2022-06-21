@@ -34,8 +34,8 @@ typedef enum {
 typedef enum {
     MORSE_ACTION_NOOP,
     MORSE_ACTION_ADD_LETTER,
-    MORSE_ACTION_BACKSPACE,
-    MORSE_ACTION_RESET
+    MORSE_ACTION_RESET_WORD,
+    MORSE_ACTION_RESET_GAME
 } morse_action_t;
 
 typedef struct {

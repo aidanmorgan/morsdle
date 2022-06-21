@@ -390,7 +390,7 @@ void test_morse_short_hold() {
     morse_action_event_t result = (morse_action_event_t){};
     TEST_ASSERT_TRUE(morse_decode(morseconfig, &result));
 
-    TEST_ASSERT_EQUAL(MORSE_ACTION_BACKSPACE, result.type);
+    TEST_ASSERT_EQUAL(MORSE_ACTION_RESET_WORD, result.type);
 }
 
 void test_morse_long_hold() {
@@ -410,7 +410,7 @@ void test_morse_long_hold() {
     morse_action_event_t result = (morse_action_event_t){};
     TEST_ASSERT_TRUE(morse_decode(morseconfig, &result));
 
-    TEST_ASSERT_EQUAL(MORSE_ACTION_RESET, result.type);
+    TEST_ASSERT_EQUAL(MORSE_ACTION_RESET_GAME, result.type);
 }
 
 void test_morse_letter_then_hold() {
@@ -436,7 +436,7 @@ void test_morse_letter_then_hold() {
     TEST_ASSERT_EQUAL('I', result.ch);
 
     TEST_ASSERT_TRUE(morse_decode(morseconfig, &result));
-    TEST_ASSERT_EQUAL(MORSE_ACTION_BACKSPACE, result.type);
+    TEST_ASSERT_EQUAL(MORSE_ACTION_RESET_WORD, result.type);
 }
 
 void test_morse_letter_and_hold() {
@@ -468,7 +468,7 @@ void test_morse_letter_and_hold() {
     morse_action_event_t result = (morse_action_event_t){};
 
     TEST_ASSERT_TRUE(morse_decode(morseconfig, &result));
-    TEST_ASSERT_EQUAL(MORSE_ACTION_BACKSPACE, result.type);
+    TEST_ASSERT_EQUAL(MORSE_ACTION_RESET_WORD, result.type);
 
     TEST_ASSERT_FALSE(morse_decode(morseconfig, &result));
 }

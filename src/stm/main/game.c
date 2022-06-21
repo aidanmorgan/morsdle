@@ -93,9 +93,18 @@ void game_main(flash_cfg_t* flashcfg, console_t* console) {
             while (morse_decode(&h_morse, &result)) {
                 if (result.type == MORSE_ACTION_ADD_LETTER) {
                     morsdle_add_letter(&h_game, result.ch);
-                } else if (result.type == MORSE_ACTION_BACKSPACE) {
-                    morsdle_remove_letter(&h_game);
-                } else if (result.type == MORSE_ACTION_RESET) {
+                } else if (result.type == MORSE_ACTION_RESET_WORD) {
+                    // if we are only rendering when there is a completed word then the reset
+                    // should reset the whole word
+                    if(h_renderer.game_mode == MORSDLE_GAME_WHOLE_WORD) {
+                        morsdle_reset_word(&h_game);
+                    }
+                    // if we are rendering on each letter addition then just treat the reset
+                    // as a backspace
+                    else {
+                        morsdle_remove_letter(&h_game);
+                    }
+                } else if (result.type == MORSE_ACTION_RESET_GAME) {
                     h_game.word = morsdle_random_word();
                     morsdle_clear(&h_game);
                 } else {
@@ -131,24 +140,24 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     uint32_t tick = HAL_GetTick();
 
     // TODO : add some form of debouncing here
-    if (GPIO_Pin == B1_Pin) {
-        static uint32_t last_push = 0;
-
-        if(tick - last_push < 5) {
-            return;
-        }
-
-        last_push = tick;
-
-        char* random = morsdle_random_word();
-
-        for(uint8_t i = 0; i < LETTERS_PER_WORD; i++) {
-            morsdle_add_letter(&h_game, random[i]);
-        }
-
-        morsdle_submit_word(&h_game);
-
-        return;
+//    if (GPIO_Pin == B1_Pin) { && HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)) {
+//        static uint32_t last_push = 0;
+//
+//        if(tick - last_push < 5) {
+//            return;
+//        }
+//
+//        last_push = tick;
+//
+//        char* random = morsdle_random_word();
+//
+//        for(uint8_t i = 0; i < LETTERS_PER_WORD; i++) {
+//            morsdle_add_letter(&h_game, random[i]);
+//        }
+//
+//        morsdle_submit_word(&h_game);
+//
+//        return;
 
 
         if (HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)) {
@@ -156,6 +165,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
         } else {
             morse_append_signal(&h_morse, SIGNAL_HIGH, tick);
         }
-    }
+
 }
 

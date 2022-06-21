@@ -107,7 +107,7 @@ void waveshareapi_destroy(void) {
 #define EPD_5IN65F_WIDTH 600
 
  void waveshareapi_render_region(imagebuffer_t *buffer, uint16_t xstart, uint16_t ystart, uint16_t xend, uint16_t yend,
-                                uint8_t rotation) {
+                                uint16_t rotation) {
     uint64_t i, j;
 
     // The waveshare device encodes two colours to a byte in the width direction, so we need to always make sure
@@ -136,12 +136,25 @@ void waveshareapi_destroy(void) {
 
     // step through in twos in the x-direction, because we're going to read out two values in one go as the waveshare
     // device encodes two pixels into each horizontal only, whereas I encode 2 in both directions (because im using less colours).
-    for (i = 0; i < buffer->height; i++) {
-        for (j = 0; j < buffer->width; j += 2) {
-            imagebuffer_getpixel(buffer, j, i, &left);
-            imagebuffer_getpixel(buffer, j + 1, i, &right);
+    for (i = 0; i < EPD_5IN65F_HEIGHT; i++) {
+        for (j = 0; j < EPD_5IN65F_WIDTH; j += 2) {
+            if(rotation == 0) {
+                imagebuffer_getpixel(buffer, j, i, &left);
+                imagebuffer_getpixel(buffer, j + 1, i, &right);
+            } else if (rotation == 90) {
+                imagebuffer_getpixel(buffer,  i, EPD_5IN65F_WIDTH - j, &left);
+                imagebuffer_getpixel(buffer, i, EPD_5IN65F_WIDTH - j - 1, &right);
+            }
+            else if(rotation == 180) {
+                imagebuffer_getpixel(buffer,  EPD_5IN65F_WIDTH - j, EPD_5IN65F_HEIGHT - i, &left);
+                imagebuffer_getpixel(buffer, EPD_5IN65F_WIDTH - j + 1, EPD_5IN65F_HEIGHT - i, &right);
+            }
+            else if(rotation == 270) {
+                imagebuffer_getpixel(buffer,  i - 1, EPD_5IN65F_WIDTH - j, &left);
+                imagebuffer_getpixel(buffer, i - 1, EPD_5IN65F_WIDTH - j - 1, &right);
+            }
 
-            data = (buffer_to_waveshare_lookup[right] << 4) | buffer_to_waveshare_lookup[left];
+            data = (buffer_to_waveshare_lookup[left] << 4) | buffer_to_waveshare_lookup[right];
             waveshareapi_send_data(data);
         }
     }

@@ -115,7 +115,7 @@ morsdle_err_t morsdle_add_letter(morsdle_game_t *game, char l) {
         return MORSDLE_ERR_NOINPROGRESSLETTER;
     }
 
-    letter->letter = toupper(l);
+    letter->letter = l;
     letter->state = LETTER_STATE_SET;
 
     morsdle_game_event_t event = (morsdle_game_event_t) {
@@ -234,6 +234,26 @@ morsdle_err_t morsdle_remove_letter(morsdle_game_t *game) {
             .letter = letter
     };
     morsdle_append_event(game, &event);
+
+    return MORSDLE_OK;
+}
+
+morsdle_err_t morsdle_reset_word(morsdle_game_t* game) {
+    if (game->state != GAME_STATE_IN_PROGRESS) {
+        return MORSDLE_ERR_GAMENOTINPROGRESS;
+    }
+
+    morsdle_word_t *word = get_next_word(game, WORD_STATE_IN_PROGRESS);
+    if (word == NULL) {
+        return MORSDLE_ERR_NOINPROGRESSWORD;
+    }
+
+    for(uint8_t i = 0; i < LETTERS_PER_WORD; i++) {
+        morsdle_letter_t* letter = word->letters[i];
+
+        letter->state = LETTER_STATE_UNSET;
+        letter->letter = NULL_CHAR;
+    }
 
     return MORSDLE_OK;
 }
