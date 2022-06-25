@@ -3,10 +3,9 @@
 //
 #include "unity.h"
 #include "cbuff.h"
-#include "display.h"
+#include "canvas.h"
 #include "renderer.h"
-#include "waveshare_display.h"
-#include "svg.h"
+#include "waveshare_canvas.h"
 
 void setUp (void) {} /* Is run before every test, put unit init calls here. */
 void tearDown (void) {} /* Is run after every test, put unit clean-up calls here. */
@@ -15,7 +14,7 @@ static void no_op_init(){
 
 }
 
-static void no_op_render_region(imagebuffer_t *ptr, uint16_t i, uint16_t i1, uint16_t i2, uint16_t i3, uint8_t i4) {
+static void no_op_render_region(imagebuffer_t *ptr, uint16_t i, uint16_t i1, uint16_t i2, uint16_t i3, uint16_t i4) {
 
 }
 
@@ -63,7 +62,7 @@ void write_ppm_image(imagebuffer_t *buffer, const char * filename) {// http://ww
 
     for(uint16_t y = 0; y < 448; y++) {
         for(uint16_t x = 0; x < 600; x++) {
-            imagebuffer_colour_t pixel;
+            colour_t pixel;
             imagebuffer_getpixel(buffer, x, y, &pixel);
 
             if(x > 0) {
@@ -80,9 +79,15 @@ void write_ppm_image(imagebuffer_t *buffer, const char * filename) {// http://ww
     fclose(file);
 }
 
-void test_full_board(void) {
+
+void create_filename(char *filename, uint8_t len, uint8_t num, const char *suffix) {
+    memset(filename, 0, len);
+    snprintf(filename, len, "%s%d%s%s%s", "morsdle-board-", num, "-", suffix, ".ppm");
+}
+
+void test_full_board(uint16_t width, uint16_t height, char* suffix) {
     imagebuffer_t buffer = (imagebuffer_t) {  };
-    imagebuffer_init(&buffer, 600, 448);
+    imagebuffer_init(&buffer, width, height);
 
     display_impl_t* display = &(display_impl_t) {
         .buffer = &buffer,
@@ -96,16 +101,15 @@ void test_full_board(void) {
         .clear = waveshare_clear,
         .draw_char = waveshare_draw_char
     };
-    canvas_init(canvas);
+    canvas_init(canvas, width > height ? ROTATION_NONE : ROTATION_NINETY);
 
     renderer_t* renderer = &(renderer_t) {};
-    renderer_init(renderer, 600, 448);
+    renderer_init(renderer, width, height);
 
     morsdle_game_t* game = &(morsdle_game_t) {
         .auto_submit = false,
     };
     morsdle_init_game(game, "RATIO");
-
 
     morsdle_add_letter(game, 'B');
     morsdle_add_letter(game, 'U');
@@ -114,8 +118,12 @@ void test_full_board(void) {
     morsdle_add_letter(game, 'S');
     morsdle_submit_word(game);
 
+    const uint8_t filename_length = strlen(suffix) + strlen("morsdle-board-0-.ppm") + 1;
+    char filename[filename_length];
+    create_filename(filename, filename_length, 1, suffix);
+
     process_events(canvas, display, renderer, game);
-    write_ppm_image(&buffer, "morsdle-board-1.ppm");
+    write_ppm_image(&buffer, filename);
 
 
     morsdle_add_letter(game, 'H');
@@ -125,7 +133,9 @@ void test_full_board(void) {
     morsdle_add_letter(game, 'S');
     morsdle_submit_word(game);
     process_events(canvas, display, renderer, game);
-    write_ppm_image(&buffer, "morsdle-board-2.ppm");
+
+    create_filename(filename, filename_length, 2, suffix);
+    write_ppm_image(&buffer, filename);
 
 
     morsdle_add_letter(game, 'E');
@@ -135,7 +145,9 @@ void test_full_board(void) {
     morsdle_add_letter(game, 'W');
     morsdle_submit_word(game);
     process_events(canvas, display, renderer, game);
-    write_ppm_image(&buffer, "morsdle-board-3.ppm");
+
+    create_filename(filename, filename_length, 3, suffix);
+    write_ppm_image(&buffer, filename);
 
 
     morsdle_add_letter(game, 'R');
@@ -145,13 +157,24 @@ void test_full_board(void) {
     morsdle_add_letter(game, 'O');
     morsdle_submit_word(game);
     process_events(canvas,  display, renderer, game);
-    write_ppm_image(&buffer, "morsdle-board-4.ppm");
+
+    create_filename(filename, filename_length, 4, suffix);
+    write_ppm_image(&buffer, filename);
+}
+
+void test_full_board_horizontal(void) {
+    test_full_board(600, 448, "horizontal");
+}
+
+void test_full_board_vertical(void) {
+    test_full_board(448, 600, "vertical");
 }
 
 int main(void)
 {
     UNITY_BEGIN();
-    RUN_TEST(test_full_board);
+    RUN_TEST(test_full_board_vertical);
+    RUN_TEST(test_full_board_horizontal);
 
     return UNITY_END();
 }

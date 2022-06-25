@@ -19,7 +19,7 @@ target_sources(
         waveshare-display
         PUBLIC
         fonts.c
-        waveshare_display.c
+        waveshare_canvas.c
 )
 
 target_link_libraries(

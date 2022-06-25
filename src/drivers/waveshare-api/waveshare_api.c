@@ -130,8 +130,8 @@ void waveshareapi_destroy(void) {
     waveshareapi_send_data(0xC0);
     waveshareapi_send_command(0x10);
 
-    imagebuffer_colour_t left = IMAGEBUFFER_INVALID;
-    imagebuffer_colour_t right = IMAGEBUFFER_INVALID;
+    colour_t left = COLOUR_INVALID;
+    colour_t right = COLOUR_INVALID;
     uint8_t data;
 
     // step through in twos in the x-direction, because we're going to read out two values in one go as the waveshare

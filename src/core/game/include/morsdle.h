@@ -5,7 +5,6 @@
 #ifndef __MORSDLE_H__
 #define __MORSDLE_H__
 
-#include "allocations.h"
 #include "cbuff.h"
 
 #include <stdint.h>
@@ -28,7 +27,6 @@ typedef enum {
 typedef enum {
     LETTER_STATE_UNSET,
     LETTER_STATE_SET,
-
     LETTER_STATE_VALID,
     LETTER_STATE_VALID_LETTER_INVALID_POSITION,
     LETTER_STATE_INVALID_LETTER
@@ -61,10 +59,8 @@ typedef enum {
 typedef struct {
     char letter;
     letter_state_t state;
-
     uint8_t x;
     uint8_t y;
-
 } morsdle_letter_t;
 
 typedef struct {
@@ -84,11 +80,10 @@ typedef struct {
     game_state_t state;
     cbuff_t *events;
     bool auto_submit;
-
     morsdle_word_t *answers[WORDS_PER_GAME];
 } morsdle_game_t;
 
-void morsdle_init_game(morsdle_game_t *game, char *word);
+void morsdle_init_game(morsdle_game_t *game, const char *word);
 
 morsdle_err_t morsdle_add_letter(morsdle_game_t *game, char letter);
 

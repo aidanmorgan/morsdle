@@ -21,8 +21,8 @@ imagebuffer_error_t imagebuffer_init(imagebuffer_t *buffer, uint16_t width, uint
 }
 
 
-void imagebuffer_setpixel(imagebuffer_t *buffer, uint16_t x, uint16_t y, imagebuffer_colour_t colour) {
-    if (colour == IMAGEBUFFER_INVALID) {
+void imagebuffer_setpixel(imagebuffer_t *buffer, uint16_t x, uint16_t y, colour_t colour) {
+    if (colour == COLOUR_INVALID) {
         return;
     }
 
@@ -46,9 +46,9 @@ void imagebuffer_setpixel(imagebuffer_t *buffer, uint16_t x, uint16_t y, imagebu
     SET_VAL((*data), 2U, ((2U*x)+(4U*y)), colour);
 }
 
-void imagebuffer_getpixel(imagebuffer_t *buffer, uint16_t x, uint16_t y, imagebuffer_colour_t *colour) {
+void imagebuffer_getpixel(imagebuffer_t *buffer, uint16_t x, uint16_t y, colour_t *colour) {
     if(x > buffer->width || y > buffer->height) {
-        *colour = IMAGEBUFFER_INVALID;
+        *colour = COLOUR_INVALID;
         return;
     }
 
@@ -65,5 +65,5 @@ void imagebuffer_getpixel(imagebuffer_t *buffer, uint16_t x, uint16_t y, imagebu
     // 1, 0 = 2
     // 0, 1 = 4
     // 1, 1 = 6
-    (*colour) = (imagebuffer_colour_t) GET_VAL((*data), 2U, ((2U*x)+(4U*y)));
+    (*colour) = (colour_t) GET_VAL((*data), 2U, ((2U * x) + (4U * y)));
 }

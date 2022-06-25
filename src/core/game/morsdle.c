@@ -21,15 +21,7 @@ static bool morsdle_clear_events(morsdle_game_t *game) {
     return cbuff_clear(game->events);
 }
 
-static inline void force_uppercase(char* word) {
-    char *s = word;
-    while(s) {
-        *s = toupper((unsigned char) *s);
-        s++;
-    }
-}
-
-void morsdle_init_game(morsdle_game_t *game, char *word) {
+void morsdle_init_game(morsdle_game_t *game, const char *word) {
     cbuff_init(event_buffer, (void **) &event_buffer_storage, EVENT_BUFFER_SIZE, sizeof(morsdle_game_event_t));
     game->events = event_buffer;
     game->word = word;
@@ -153,20 +145,23 @@ morsdle_err_t morsdle_submit_word(morsdle_game_t *game) {
     uint8_t validcount = 0;
     // go through each letter
     for (uint8_t i = 0; i < LETTERS_PER_WORD; i++) {
-        morsdle_letter_t *letter = word->letters[i];
+        letter = word->letters[i];
 
-        // right letter, right postion
-        if (letter->letter == game->word[i]) {
-            letter->state = LETTER_STATE_VALID;
-            validcount++;
-        }
-            // right letter, wrong position
-        else if (strstr(game->word, &letter->letter) != NULL) {
-            letter->state = LETTER_STATE_VALID_LETTER_INVALID_POSITION;
-        }
-            // wrong letter
-        else {
+        char* found = strchr(game->word, letter->letter);
+
+        if(found == NULL) {
             letter->state = LETTER_STATE_INVALID_LETTER;
+        }
+        else {
+            uint8_t index = (uint8_t)(found - game->word);
+
+            if(index == i) {
+                letter->state = LETTER_STATE_VALID;
+                validcount++;
+            }
+            else {
+                letter->state = LETTER_STATE_VALID_LETTER_INVALID_POSITION;
+            }
         }
     }
 
@@ -183,18 +178,21 @@ morsdle_err_t morsdle_submit_word(morsdle_game_t *game) {
         event = (morsdle_game_event_t) {
                 .type = EVENT_GAME_COMPLETED
         };
+
         morsdle_append_event(game, &event);
     } else {
         word->state = WORD_STATE_COMPLETE;
         // get the next word and update it's state to start filling it, if it's null then we're at the end of the
         // list and the game is over - you failed.
         morsdle_word_t *nextword = get_next_word(game, WORD_STATE_NEW);
+
         if (nextword == NULL) {
             game->state = GAME_STATE_FAILED;
 
             event = (morsdle_game_event_t) {
                     .type = EVENT_GAME_COMPLETED
             };
+
             morsdle_append_event(game, &event);
         } else {
             nextword->state = WORD_STATE_IN_PROGRESS;
@@ -203,6 +201,7 @@ morsdle_err_t morsdle_submit_word(morsdle_game_t *game) {
                     .type = EVENT_WORD_STARTED,
                     .word = word
             };
+
             morsdle_append_event(game, &event);
         }
     }

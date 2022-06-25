@@ -1,5 +1,5 @@
 #include "unity.h"
-#include "display.h"
+#include "canvas.h"
 #include "renderer.h"
 #include "mock_display.h"
 
@@ -14,7 +14,7 @@ void test_gamecreatedevent(uint16_t width, uint16_t height, char* filename) {
     display_impl_t* display = (display_impl_t*)INLINE_MALLOC(display_impl_t, .buffer = svg_create(width, height), .width = width, .height = height);
 
     canvas_t* canvas = &(canvas_t){ };
-    canvas_init(canvas);
+    canvas_init(canvas, width > height ? ROTATION_NONE : ROTATION_NINETY);
 
     renderer_t* renderer = &(renderer_t) {};
     renderer_init(renderer, width, height);
@@ -60,7 +60,7 @@ void test_wordcompletedevent(uint16_t width, uint16_t height, char* filename) {
     display_impl_t* display = (display_impl_t*)INLINE_MALLOC(display_impl_t, .buffer = svg_create(width, height), .width = width, .height = height);
 
     canvas_t* operations = &(canvas_t){};
-    canvas_init(operations);
+    canvas_init(operations, width > height ? ROTATION_NONE : ROTATION_NINETY);
 
     renderer_t* options = &(renderer_t) {};
     renderer_init(options, width, height);

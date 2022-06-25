@@ -23,12 +23,12 @@ typedef enum {
 } imagebuffer_error_t;
 
 typedef enum {
-    IMAGEBUFFER_CLEAR = 0,
-    IMAGEBUFFER_ORANGE = 1,
-    IMAGEBUFFER_GREEN = 2,
-    IMAGEBUFFER_BLACK = 3,
-    IMAGEBUFFER_INVALID = 255
-} imagebuffer_colour_t;
+    COLOUR_WHITE = 0,
+    COLOUR_ORANGE = 1,
+    COLOUR_GREEN = 2,
+    COLOUR_BLACK = 3,
+    COLOUR_INVALID = 255
+} colour_t;
 
 typedef struct {
     uint16_t width;
@@ -52,11 +52,13 @@ typedef struct {
  *  To try and be clever, I am actually encoding the x and y values, so I am encoding a 2x2 matrix of
  *  pixels into each byte, that means that each "row" in the data is actually 2-pixels high and 2-pixels
  *  wide.
+ *
+ *  The order is x0, x1, y0, y1 for reference.
  */
 imagebuffer_error_t imagebuffer_init(imagebuffer_t *buffer, uint16_t width, uint16_t height);
 
-void imagebuffer_setpixel(imagebuffer_t *buffer, uint16_t x, uint16_t y, imagebuffer_colour_t colour);
+void imagebuffer_setpixel(imagebuffer_t *buffer, uint16_t x, uint16_t y, colour_t colour);
 
-void imagebuffer_getpixel(imagebuffer_t *buffer, uint16_t x, uint16_t y, imagebuffer_colour_t *colour);
+void imagebuffer_getpixel(imagebuffer_t *buffer, uint16_t x, uint16_t y, colour_t *colour);
 
 #endif //MORSDLE_IMAGEBUFFER_H

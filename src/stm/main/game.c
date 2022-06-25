@@ -6,7 +6,7 @@
 #include "morsdle.h"
 #include "renderer.h"
 #include "stm_flash_read.h"
-#include "waveshare_display.h"
+#include "waveshare_canvas.h"
 #include "waveshare_api.h"
 
 static void waveshare_display_init(void) {
@@ -62,7 +62,7 @@ void game_main(flash_cfg_t* flashcfg, console_t* console) {
     // initialise the  morsdle game engine
     morsdle_init_game(&h_game, morsdle_random_word());
     // plug the waveshare handle into the display container and then initialise
-    canvas_init(&h_canvas);
+    canvas_init(&h_canvas, ROTATION_NINETY);
     // initialise the renderer that connects the morsdle game with the display
     renderer_init(&h_renderer, h_canvas.width, h_canvas.height);
 
@@ -112,7 +112,6 @@ void game_main(flash_cfg_t* flashcfg, console_t* console) {
                 }
             }
         }
-
 
         // are there any game events that may require processing
         if (morsdle_has_events(&h_game)) {

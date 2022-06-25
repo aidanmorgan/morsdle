@@ -7,21 +7,13 @@
 
 #include <stdint.h>
 #include "cbuff.h"
+#include "imagebuffer.h"
 
 typedef struct {
     uint16_t x;
     uint16_t y;
 } point_t;
 
-typedef enum {
-    COLOUR_BLACK,
-    COLOUR_WHITE,
-    COLOUR_GREEN,
-    COLOUR_BLUE,
-    COLOUR_RED,
-    COLOUR_YELLOW,
-    COLOUR_ORANGE
-} colour_t;
 
 // an opaque handle, defined by the implementor
 typedef struct display_impl_t display_impl_t;
@@ -51,6 +43,7 @@ typedef struct {
     display_impl_t *display;
 } render_pass_t;
 
+
 struct canvas {
     void (*draw_line)(render_pass_t *pass, display_impl_t *display, point_t start, point_t end, uint8_t thickness,
                       colour_t colour);
@@ -68,9 +61,15 @@ struct canvas {
 };
 
 
-extern void canvas_init(canvas_t *ops);
+extern void canvas_init(canvas_t *ops, rotation_t rotation);
 
 extern void canvas_destroy(canvas_t *ops);
+
+size_t renderpass_regions_size(render_pass_t* pass);
+bool renderpass_clear_regions(render_pass_t* pass);
+
+size_t renderpass_read_regions(render_pass_t* pass, rectangle_t* out, size_t size);
+bool renderpass_add_region(render_pass_t* pass, point_t ul, point_t br);
 
 // start a rendering pass, indicating to the underlyign display that we are going to soon be
 // sending updated dirty regions
@@ -79,5 +78,7 @@ extern void render_pass_init(render_pass_t *render);
 // end the render pass, update the display with the buffer in the handle, updating the regions
 // that are marked
 extern void render_pass_end(render_pass_t *render);
+
+
 
 #endif //DISPLAY_H

@@ -1,5 +1,5 @@
 
-#include "waveshare_display.h"
+#include "waveshare_canvas.h"
 
 const uint8_t data_table [] =
                 // @2376 'A' (17 pixels wide)

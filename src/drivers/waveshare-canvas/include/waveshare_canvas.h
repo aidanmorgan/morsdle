@@ -5,9 +5,8 @@
 #ifndef WAVESHARE_DISPLAY_H
 #define WAVESHARE_DISPLAY_H
 
-
 #include "morsdle.h"
-#include "display.h"
+#include "canvas.h"
 #include "renderer.h"
 #include "imagebuffer.h"
 #include <assert.h>
@@ -28,7 +27,7 @@ struct display_impl_t {
     imagebuffer_t *buffer;
 
     // this is the callback to perform the actual render, required to be set by the implementation
-    void (*render_region)(imagebuffer_t *, uint16_t, uint16_t, uint16_t, uint16_t, uint8_t);
+    void (*render_region)(imagebuffer_t *, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t);
 
     void (*init)();
 

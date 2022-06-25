@@ -17,6 +17,7 @@ target_sources(
         PUBLIC
         renderer.c
         display.c
+        render_pass.c
 )
 
 target_link_libraries(

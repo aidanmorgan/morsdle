@@ -57,9 +57,10 @@ void mockdisplay_write_buffer(display_impl_t* handle, char* filename) {
 #define MOCK_DISPLAY_WIDTH 448
 #define MOCK_DISPLAY_HEIGHT 600
 
-void canvas_init(canvas_t* ops) {
+void canvas_init(canvas_t* ops, rotation_t rotation) {
     ops->height = MOCK_DISPLAY_HEIGHT;
     ops->width = MOCK_DISPLAY_WIDTH;
+    ops->rotation = rotation;
 
     ops->fill_rect=mockdisplay_fill_rect;
     ops->draw_char=mockdisplay_draw_text;

@@ -5,7 +5,7 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#include "display.h"
+#include "canvas.h"
 #include "morsdle.h"
 
 typedef enum {

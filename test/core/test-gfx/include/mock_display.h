@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 #include <math.h>
-#include "display.h"
+#include "canvas.h"
 #include "allocations.h"
 #include "svg.h"
 
