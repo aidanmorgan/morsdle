@@ -138,32 +138,27 @@ void game_main(flash_cfg_t* flashcfg, console_t* console) {
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     uint32_t tick = HAL_GetTick();
 
-    // TODO : add some form of debouncing here
-//    if (GPIO_Pin == B1_Pin) { && HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)) {
-//        static uint32_t last_push = 0;
-//
-//        if(tick - last_push < 5) {
-//            return;
-//        }
-//
-//        last_push = tick;
-//
-//        char* random = morsdle_random_word();
-//
-//        for(uint8_t i = 0; i < LETTERS_PER_WORD; i++) {
-//            morsdle_add_letter(&h_game, random[i]);
-//        }
-//
-//        morsdle_submit_word(&h_game);
-//
-//        return;
+    // the circuit now contains a hardware debounce in the loop, so we can just assume that any
+    // rising/falling edge we get is what we need to process.
+    if(GPIO_Pin == MorseKey_Pin) {
+        if (HAL_GPIO_ReadPin(MorseKey_GPIO_Port, MorseKey_Pin)) {
+            HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+            morse_append_signal(&h_morse, SIGNAL_LOW, tick);
+        } else {
+            HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
-
+            morse_append_signal(&h_morse, SIGNAL_HIGH, tick);
+        }
+    }
+    else if(GPIO_Pin == B1_Pin) {
         if (HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)) {
             morse_append_signal(&h_morse, SIGNAL_LOW, tick);
         } else {
             morse_append_signal(&h_morse, SIGNAL_HIGH, tick);
         }
+
+    }
+
 
 }
 

@@ -76,6 +76,9 @@ void Error_Handler(void);
 #define RST_GPIO_Port GPIOC
 #define SPI_CS_Pin GPIO_PIN_9
 #define SPI_CS_GPIO_Port GPIOC
+#define MorseKey_Pin GPIO_PIN_12
+#define MorseKey_GPIO_Port GPIOA
+#define MorseKey_EXTI_IRQn EXTI15_10_IRQn
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
