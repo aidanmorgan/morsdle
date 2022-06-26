@@ -153,9 +153,10 @@ morsdle_err_t morsdle_submit_word(morsdle_game_t *game) {
             letter->state = LETTER_STATE_INVALID_LETTER;
         }
         else {
-            uint8_t index = (uint8_t)(found - game->word);
-
-            if(index == i) {
+            // need to handle the case where the letter is at the end, and it also appears elswhere in the word
+            // this is a weird corner case of how the strchr function works, so we only use strchr to determine if
+            // the letter is in the actual word, then we do an index check to see if it's actually in the right place
+            if(word->letters[i]->letter == game->word[i]) {
                 letter->state = LETTER_STATE_VALID;
                 validcount++;
             }

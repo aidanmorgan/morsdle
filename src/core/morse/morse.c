@@ -1,8 +1,10 @@
 #include "morse.h"
 
+#define MAX_INPUTS_PER_LETTER 5
+
 typedef struct {
     uint8_t letter;
-    morse_input_t values[5];
+    morse_input_t values[MAX_INPUTS_PER_LETTER];
 } morse_table_entry_t;
 
 // This lookup table is based on (what I believe) the fact that the most common occuring letters are shorter in sequence
@@ -196,10 +198,6 @@ bool morse_convert_input(morse_t *morse, uint32_t timestamp) {
 
     return processing_performed;
 }
-
-
-#define MAX_INPUTS_PER_LETTER 5
-#define MAX_LETTERS 26
 
 static inline uint8_t min(uint8_t a, uint8_t b) {
     return a < b ? a : b;
