@@ -1,7 +1,7 @@
 # morsdle
 An implementation of Wordle, running on a STM32 where the input is a morse-key.
 
-![Working system](/doc/assembled.jpeg "Assembled Solution")
+![Working system](doc/assembled.jpeg "Assembled Solution")
 
 
 To build the STM code for a STM32 Nucleo-64 (STM32L476RG) specify the following command line arguments to cmake:
@@ -35,6 +35,14 @@ There are copies of some libraries as submodules in the lib directory, make sure
 * 0.1 uF Cap
 * 10k resistors (2)
 * SPDT (long lever) switch
+* Breadboard (one day I will make a PCB for it)
+
+![HW Debounce](doc/hw_debounce.jpg "HW Debounce Schematic")
+(sorry for the poor quality sketch)
+
+
+## Total Cost
+I'd estimate around $150 AUD, with the display ~ $70 and the STM32 ~ $40 of that
 
 # Pinout:
 
