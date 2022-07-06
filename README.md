@@ -10,13 +10,11 @@ I built this because I have an amateur radio licence and morse code seems to be 
 
 # Dependencies:
 
-## ARM Development Toolchain:
-
-Link: https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/downloads-1
+## [ARM Development Toolchain](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/downloads-1)
 
 You'll need to compile this for your platform (I am using a mac and it works fine)
 
-## OpenOCD
+## [OpenOCD](https://github.com/openocd-org/openocd)
 
 Used by the cmake scripts to flash and debug (using gdb), you'll need to compile this for your platform yourself
 
@@ -26,15 +24,15 @@ There are copies of some libraries as submodules in the lib directory, make sure
 # Parts:
 
 ## Core
-* STM32L476RG (NUCLEO-L476RG)
-* Waveshare 5.56" 7-colour e-ink display
-* 32 Mb NOR Flash (QSpi)
+* [STM32L476RG (NUCLEO-L476RG)](https://au.element14.com/stmicroelectronics/nucleo-l476rg/dev-board-arduino-mbed-nucleo/dp/2493816)
+* [Waveshare 5.56" 7-colour e-ink display](https://www.waveshare.com/wiki/5.65inch_e-Paper_Module_(F))
+* [32 Mb NOR Flash (QSpi)](https://au.element14.com/digilent/410-340/pmod-board-32-mb-serial-nor-flash/dp/2726218) -- Ideally wouldnt have used this, but getting flash is next to IMPOSSIBLE at the moment in Australia.
 
 ## Hardware Debounce:
-* 74HC14 (Inverting Schmitt Trigger)
+* [74HC14 (Inverting Schmitt Trigger)](https://au.element14.com/texas-instruments/sn74hc14dr/hex-schmitt-trigger-inverter-smd/dp/9594566?st=74hc14)
 * 0.1 uF Cap
 * 10k resistors (2)
-* SPDT (long lever) switch
+* [SPDT (long lever) switch](https://au.element14.com/multicomp/m141t02-ad0302d/microswitch-spdt-10a-long-lever/dp/1735359)
 * Breadboard (one day I will make a PCB for it)
 
 ![HW Debounce](doc/hw_debounce.jpg "HW Debounce Schematic")
