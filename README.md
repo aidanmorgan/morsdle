@@ -82,12 +82,11 @@ Using the SPI2 on the STM32L476 board (pin collision for SPI1..?)
 # General Notes
 
 * To build the STM code for a STM32 Nucleo-64 (STM32L476RG) specify the following command line arguments to cmake:
-`-DSTM32_TOOLCHAIN_PATH=/home/aidan/gcc-arm -DCMAKE_TOOLCHAIN_FILE=$CMakeProjectDir$/cmake/stm32_gcc.cmake`
+`-DSTM32_TOOLCHAIN_PATH={gcc-arm-path}/gcc-arm -DCMAKE_TOOLCHAIN_FILE=$CMakeProjectDir$/cmake/stm32_gcc.cmake`
 * The waveshare display is awesome, but has a really long render time making the game kinda slow to play, but given you need some "thinking time" with wordle, it's probably not the end of the world
 * The STM32L476 has very limited RAM so whilst the waveshare display supports 7 colours I have had to do some dodgy bit-smashing to only use four colours (black, white, green and orange) to be able to keep an imagebuffer in ram for rendering
 * The waveshare display apparently supports updating a "region" of the display, rather than re-rendering the whole display - this is why the code is designed around a "bounding box" and render passes, but I haven't managed to get it working IRL, so at the moment it still renders the whole screen each time.
 * The  morse code input uses a fixed "dit" time of 75 ms, which is a touch slow (or fast) depening on how comfortable you are with morse code, eventually I will either add a pot to the design to allow this time to be changed, or work out a different algorithm for making the timing more "adaptive" to the user
-* Fonts at the moment are hard coded into the fonts.c file as uint8_t arrays, but should be loaded from the flash the same as the dictionary
 * There is no spell checking or "valid entry" checking at the moment, scanning through all the words even in flash seems like a waste, a smarter data structure (ternary tree) would probbaly allow this to happen
 * The morse code input is relatively efficient for what is a linear scan (it's subdivided by the number of dots/dashes), but a binary tree would probably be even faster to implement
 * You can enter letters while the screen is displaying (although it is jarring to do so), probably need to move "rendering" into a background thread (but don't want to use FreeRTOS, but building a simple scheduler should be doable)
@@ -95,3 +94,4 @@ Using the SPI2 on the STM32L476 board (pin collision for SPI1..?)
 # Things to do in the future
 
 * Add the game configuration settings into the flash as well (short hold vs. long hold behaviour), rendering mode etc.
+* Fonts at the moment are hard coded into the fonts.c file as uint8_t arrays, but should be loaded from the flash the same as the dictionary
